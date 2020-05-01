@@ -13,7 +13,7 @@ namespace CSScript
     {
         private static int Main(string[] args)
         {
-            // для динамической подгрузки библиотек, используемых скриптом (#define)
+            // для подгрузки библиотек рантаймом, которые он не может найти самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
             int exitCode;
@@ -42,7 +42,7 @@ namespace CSScript
                     Environment.CurrentDirectory = GetScriptWorkDirectory(inputArguments);
 
                     ScriptData scriptData = ParseScriptData(script);
-                    definedAssemblies = LoadDefinedAssemblies(scriptData);
+                    resolvedAssemblies = LoadAssembliesForResolve(scriptData);
                     CompilerResults compilerResults = Compile(scriptData);
 
                     if (compilerResults.Errors.Count == 0)
@@ -80,11 +80,27 @@ namespace CSScript
         // Работа со сборками
 
         /// <summary>
+        /// Получение списка всех связанных с выполнением скрипта сборок
+        /// </summary>
+        /// <param name="scriptData"></param>
+        /// <returns></returns>
+        private static string[] GetDefinedAssemblies(ScriptData scriptData)
+        {
+            List<string> definedAssemblies = new List<string>();
+            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
+            foreach (string defineAssembly in scriptData.DefineList)
+            {
+                definedAssemblies.Add(defineAssembly);
+            }
+            return definedAssemblies.ToArray();
+        }
+
+        /// <summary>
         /// Загрузка используемых в скрипте сборок для последующей подгрузки в рантайм
         /// </summary>
         /// <param name="scriptData"></param>
         /// <returns></returns>
-        private static Dictionary<string, Assembly> LoadDefinedAssemblies(ScriptData scriptData)
+        private static Dictionary<string, Assembly> LoadAssembliesForResolve(ScriptData scriptData)
         {
             string[] definedAssemblies = GetDefinedAssemblies(scriptData);
 
@@ -103,22 +119,6 @@ namespace CSScript
         }
 
         /// <summary>
-        /// Получение списка всех связанных с выполнением скрипта сборок
-        /// </summary>
-        /// <param name="scriptData"></param>
-        /// <returns></returns>
-        private static string[] GetDefinedAssemblies(ScriptData scriptData)
-        {
-            List<string> definedAssemblies = new List<string>();
-            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-            foreach (string defineAssembly in scriptData.DefineList)
-            {
-                definedAssemblies.Add(defineAssembly);
-            }
-            return definedAssemblies.ToArray();
-        }
-
-        /// <summary>
         /// Подгрузка сборок рантаймом по мере необходимости
         /// </summary>
         /// <param name="sender"></param>
@@ -126,10 +126,10 @@ namespace CSScript
         /// <returns></returns>
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
-            if (definedAssemblies != null && definedAssemblies.ContainsKey(args.Name))
+            if (resolvedAssemblies != null && resolvedAssemblies.ContainsKey(args.Name))
             {
-                // загружаются только те сборки, которые рантайм не может подцепить автоматически
-                Assembly assembly = definedAssemblies[args.Name];
+                // подгружаются только те сборки, которые рантайм не может подцепить автоматически
+                Assembly assembly = resolvedAssemblies[args.Name];
                 return assembly;
             }
             return null;
@@ -318,16 +318,16 @@ namespace CSScript
         /// <returns></returns>
         private static CompilerResults Compile(ScriptData scriptData)
         {
-            string[] assemblies = GetDefinedAssemblies(scriptData);
+            string[] definedAssemblies = GetDefinedAssemblies(scriptData);
+            string sourceCode = GetSourceCode(scriptData);
 
             using (CSharpCodeProvider provider = new CSharpCodeProvider())
             {
-                CompilerParameters compileParameters = new CompilerParameters(assemblies);
+                CompilerParameters compileParameters = new CompilerParameters(definedAssemblies);
                 compileParameters.GenerateInMemory = true;
                 compileParameters.GenerateExecutable = false;
 
-                string source = GetSourceCode(scriptData);
-                CompilerResults compilerResults = provider.CompileAssemblyFromSource(compileParameters, source);
+                CompilerResults compilerResults = provider.CompileAssemblyFromSource(compileParameters, sourceCode);
                 return compilerResults;
             }
         }
@@ -498,6 +498,6 @@ namespace CSScript
         /// <summary>
         /// Загруженные сборки, используемые скриптом
         /// </summary>
-        private static Dictionary<string, Assembly> definedAssemblies;
+        private static Dictionary<string, Assembly> resolvedAssemblies;
     }
 }
