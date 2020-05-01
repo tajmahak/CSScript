@@ -13,7 +13,7 @@ namespace CSScript
     {
         private static int Main(string[] args)
         {
-            // для подгрузки библиотек рантаймом, которые он не может найти самостоятельно
+            // для подгрузки библиотек рантаймом, которые он не может подгрузить самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
             int exitCode;
@@ -35,7 +35,7 @@ namespace CSScript
                         HideConsole();
                     }
 
-                    string script = GetScriptContent(inputArguments);
+                    string script = GetScriptText(inputArguments);
 
                     // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
                     // (для возможности указания коротких путей к файлам, в т.ч. загружаемым в скрипте сборкам)
@@ -214,7 +214,7 @@ namespace CSScript
         /// </summary>
         /// <param name="inputArguments"></param>
         /// <returns></returns>
-        private static string GetScriptContent(InputArguments inputArguments)
+        private static string GetScriptText(InputArguments inputArguments)
         {
             string scriptPath = GetScriptPath(inputArguments);
             string script = File.ReadAllText(scriptPath, Encoding.UTF8);
@@ -224,9 +224,9 @@ namespace CSScript
         /// <summary>
         /// Парсинг скрипта на отдельные блоки
         /// </summary>
-        /// <param name="script"></param>
+        /// <param name="scriptText"></param>
         /// <returns></returns>
-        private static ScriptData ParseScriptData(string script)
+        private static ScriptData ParseScriptData(string scriptText)
         {
             List<string> defineList = new List<string>();
             List<string> usingList = new List<string>();
@@ -237,7 +237,7 @@ namespace CSScript
 
             StringBuilder currentBlock = sourceCodeBlock;
 
-            string[] opLines = script.Split(new string[] { ";" }, StringSplitOptions.None);
+            string[] opLines = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
             for (int i = 0; i < opLines.Length; i++)
             {
                 string opLine = opLines[i];
