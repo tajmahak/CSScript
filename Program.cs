@@ -77,66 +77,6 @@ namespace CSScript
         }
 
 
-        // Работа со сборками
-
-        /// <summary>
-        /// Получение списка всех связанных с выполнением скрипта сборок
-        /// </summary>
-        /// <param name="scriptData"></param>
-        /// <returns></returns>
-        private static string[] GetDefinedAssemblies(ScriptData scriptData)
-        {
-            List<string> definedAssemblies = new List<string>();
-            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-            foreach (string defineAssembly in scriptData.DefineList)
-            {
-                definedAssemblies.Add(defineAssembly);
-            }
-            return definedAssemblies.ToArray();
-        }
-
-        /// <summary>
-        /// Загрузка используемых в скрипте сборок для последующей подгрузки в рантайм
-        /// </summary>
-        /// <param name="scriptData"></param>
-        /// <returns></returns>
-        private static Dictionary<string, Assembly> LoadAssembliesForResolve(ScriptData scriptData)
-        {
-            string[] definedAssemblies = GetDefinedAssemblies(scriptData);
-
-            Dictionary<string, Assembly> assemblyDict = new Dictionary<string, Assembly>();
-            foreach (string defineAssembly in definedAssemblies)
-            {
-                if (File.Exists(defineAssembly))
-                {
-                    // загружаются только те сборки, которые рантайм не может подгрузить автоматически
-                    Assembly assembly = Assembly.LoadFrom(defineAssembly);
-                    assemblyDict.Add(assembly.FullName, assembly);
-                }
-            }
-
-            return assemblyDict;
-        }
-
-        /// <summary>
-        /// Подгрузка сборок рантаймом по мере необходимости
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            if (resolvedAssemblies != null && resolvedAssemblies.ContainsKey(args.Name))
-            {
-                // подгружаются только те сборки, которые рантайм не может подцепить автоматически
-                Assembly assembly = resolvedAssemblies[args.Name];
-                return assembly;
-            }
-            return null;
-        }
-
-
-
         /// <summary>
         /// Получение полного пути к скрипту
         /// </summary>
@@ -342,6 +282,65 @@ namespace CSScript
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
             object instance = compiledAssembly.CreateInstance("CSScript.CompileClass");
             return (ICompile)instance;
+        }
+
+
+        // Работа со сборками
+
+        /// <summary>
+        /// Получение списка всех связанных с выполнением скрипта сборок
+        /// </summary>
+        /// <param name="scriptData"></param>
+        /// <returns></returns>
+        private static string[] GetDefinedAssemblies(ScriptData scriptData)
+        {
+            List<string> definedAssemblies = new List<string>();
+            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
+            foreach (string defineAssembly in scriptData.DefineList)
+            {
+                definedAssemblies.Add(defineAssembly);
+            }
+            return definedAssemblies.ToArray();
+        }
+
+        /// <summary>
+        /// Загрузка используемых в скрипте сборок для последующей подгрузки в рантайм
+        /// </summary>
+        /// <param name="scriptData"></param>
+        /// <returns></returns>
+        private static Dictionary<string, Assembly> LoadAssembliesForResolve(ScriptData scriptData)
+        {
+            string[] definedAssemblies = GetDefinedAssemblies(scriptData);
+
+            Dictionary<string, Assembly> assemblyDict = new Dictionary<string, Assembly>();
+            foreach (string defineAssembly in definedAssemblies)
+            {
+                if (File.Exists(defineAssembly))
+                {
+                    // загружаются только те сборки, которые рантайм не может подгрузить автоматически
+                    Assembly assembly = Assembly.LoadFrom(defineAssembly);
+                    assemblyDict.Add(assembly.FullName, assembly);
+                }
+            }
+
+            return assemblyDict;
+        }
+
+        /// <summary>
+        /// Подгрузка сборок рантаймом по мере необходимости
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            if (resolvedAssemblies != null && resolvedAssemblies.ContainsKey(args.Name))
+            {
+                // подгружаются только те сборки, которые рантайм не может подцепить автоматически
+                Assembly assembly = resolvedAssemblies[args.Name];
+                return assembly;
+            }
+            return null;
         }
 
 
