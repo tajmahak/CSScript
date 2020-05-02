@@ -93,7 +93,7 @@ namespace CSScript.Properties {
         ///   Ищет локализованную строку, похожую на namespace CSScript
         ///{
         ///##using##
-        ///public class CompileScript : ScriptRuntime
+        ///internal class CompileScript : ScriptRuntime
         ///{
         ///public override int _Main(string arg)
         ///{
