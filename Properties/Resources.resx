@@ -142,6 +142,13 @@
  return {...};  - значение формата int. Допускается для кода возврата скрипта;
  void ScriptRuntime.Write(object value, [Color color])       - вывод информации в лог;
  void ScriptRuntime.WriteLine([object value], [Color color]) - вывод информации в лог;
+ ScriptRuntime.Settings - конфигурация программы:
+&lt;i&gt;  .BackColor            - цвет фона консоли;
+&lt;i&gt;  .CaptionColor         - цвет текста заголовков;
+&lt;i&gt;  .ErrorColor           - цвет текста ошибок;
+&lt;i&gt;  .ForeColor            - цвет текста основного текста;
+&lt;i&gt;  .InfoColor            - цвет дополнительного информационного текста;
+&lt;i&gt;  .SourceCodeColor      - цвет исходного кода;
 
 &lt;c&gt;Пример скрипта:
  #using System.Drawing
@@ -149,7 +156,8 @@
  #class
  void PrintHelloWorld()
  {
-     ScriptRuntime.WriteLine("Привет Мир!", Color.Green);
+     ScriptRuntime.WriteLine("Привет Мир!", ScriptRuntime.Settings.CaptionColor);
+     System.Threading.Thread.Sleep(3000);
  }</value>
   </data>
   <data name="SourceCodeTemplate" xml:space="preserve">

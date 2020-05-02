@@ -15,9 +15,23 @@ namespace CSScript
         [STAThread]
         private static int Main(string[] args)
         {
+            OutputLog = new Log();
+#if DEBUG
+            return ExecuteDebugScript(args);
+#else
+            return ExecuteScript(args);
+#endif
+        }
+
+        /// <summary>
+        /// Запуск действий для работы скрипта
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static int ExecuteScript(string[] args)
+        {
             int exitCode;
             InputArguments inputArguments = null;
-            OutputLog = new Log();
 
             // для подгрузки библиотек рантаймом, которые он не может подгрузить самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
@@ -99,6 +113,43 @@ namespace CSScript
             return exitCode;
         }
 
+#if DEBUG
+        /// <summary>
+        /// Запуск действий для работы отладочного скрипта
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static int ExecuteDebugScript(string[] args)
+        {
+            int exitCode;
+            InputArguments inputArguments = null;
+
+            // для подгрузки библиотек рантаймом, которые он не может подгрузить самостоятельно
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
+            try
+            {
+                inputArguments = ParseArguments(args);
+                ShowModalForm();
+
+                var debugScript = new DebugScript();
+                exitCode = debugScript.RunScript(inputArguments.ScriptArgument);
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
+                exitCode = 1;
+            }
+
+            OutputLog.WriteLine();
+            OutputLog.WriteLine($"# Выполнено с кодом возврата: {exitCode}", Settings.InfoColor);
+
+            Finished = true;
+            WaitFormForExit();
+            return exitCode;
+        }
+#endif
+
 
         /// <summary>
         /// Извлечение структурированных аргументов из аргументов командной строки
@@ -136,7 +187,10 @@ namespace CSScript
                     }
                     else
                     {
-                        inputArguments.ScriptPath = arg;
+                        if (inputArguments.ScriptPath == null)
+                        {
+                            inputArguments.ScriptPath = arg;
+                        }
                     }
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using CSScript.Properties;
+using System;
 using System.Windows.Forms;
 
 namespace CSScript
@@ -42,17 +43,32 @@ namespace CSScript
 
         private void Print(LogItem block)
         {
-            string text = block.Text.Replace("\r", ""); // RichTextBox автоматически отсекает '\r'
-
-            richTextBox.AppendText(text);
-            if (block.ForeColor.HasValue)
+            InvokeEx(() => 
             {
-                richTextBox.Select(richTextBox.TextLength - text.Length, text.Length);
-                richTextBox.SelectionColor = block.ForeColor.Value;
-            }
-            richTextBox.Select(richTextBox.TextLength, 0);
+                string text = block.Text.Replace("\r", ""); // RichTextBox автоматически отсекает '\r'
 
-            Application.DoEvents(); // для того, чтобы нажатия клавиш не уходили в очередь сообщений
+                richTextBox.AppendText(text);
+                if (block.ForeColor.HasValue)
+                {
+                    richTextBox.Select(richTextBox.TextLength - text.Length, text.Length);
+                    richTextBox.SelectionColor = block.ForeColor.Value;
+                }
+                richTextBox.Select(richTextBox.TextLength, 0);
+
+                Application.DoEvents(); // для того, чтобы нажатия клавиш не уходили в очередь сообщений
+            });
+        }
+
+        private void InvokeEx(Action action)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(action);
+            }
+            else
+            {
+                action();
+            }
         }
     }
 }

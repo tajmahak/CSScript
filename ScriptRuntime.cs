@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using CSScript.Properties;
+using System.Drawing;
 
 namespace CSScript
 {
@@ -14,6 +15,8 @@ namespace CSScript
         /// <returns></returns>
         public abstract int RunScript(string arg);
 
+        // Сущности, используемые в скрипте (public):
+
         public static void Write(object value, Color? color = null)
         {
             Program.OutputLog.Write(value.ToString(), color);
@@ -28,5 +31,7 @@ namespace CSScript
         {
             Program.OutputLog.WriteLine();
         }
+
+        public static readonly Settings Settings  = Settings.Default;
     }
 }
