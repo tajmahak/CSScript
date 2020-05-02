@@ -50,6 +50,8 @@ namespace CSScript
                     resolvedAssemblies = LoadAssembliesForResolve(scriptParsingInfo);
                     CompilerResults compilerResults = Compile(scriptParsingInfo);
 
+                    WriteStartInfo(inputArguments);
+
                     if (compilerResults.Errors.Count == 0)
                     {
                         ScriptRuntime scriptRuntime = GetCompiledScript(compilerResults);
@@ -60,7 +62,7 @@ namespace CSScript
                         WriteCompileErrors(compilerResults);
                         string sourceCode = GetSourceCode(scriptParsingInfo);
 
-                        OutputLog.AddLine();
+                        OutputLog.WriteLine();
 
                         WriteSourceCode(sourceCode, compilerResults);
                         exitCode = 1;
@@ -73,8 +75,21 @@ namespace CSScript
                 exitCode = 1;
             }
 
-            OutputLog.AddLine();
-            OutputLog.AddLine($"# Выполнено с кодом возврата: {exitCode}");
+            OutputLog.WriteLine();
+            OutputLog.WriteLine($"# Выполнено с кодом возврата: {exitCode}");
+
+            if (inputArguments != null && !string.IsNullOrEmpty(inputArguments.LogPath))
+            {
+                try
+                {
+                    SaveLogs(inputArguments.LogPath);
+                }
+                catch (Exception ex)
+                {
+                    OutputLog.WriteLine($"# Не удалось сохранить лог: {ex.Message}", Color.Red);
+                }
+            }
+
             Finished = true;
 
             if (inputArguments != null && (inputArguments.WaitMode || inputArguments.IsEmpty))
@@ -85,6 +100,50 @@ namespace CSScript
             return exitCode;
         }
 
+
+
+        /// <summary>
+        /// Извлечение структурированных аргументов из аргументов командной строки
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static InputArguments ParseArguments(string[] args)
+        {
+            InputArguments inputArguments = new InputArguments();
+            if (args.Length == 0)
+            {
+                inputArguments.IsEmpty = true;
+            }
+            else
+            {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    string arg = args[i];
+                    string preparedArg = arg.Trim().ToLower();
+                    if (preparedArg == "/h" || preparedArg == "/hide")
+                    {
+                        inputArguments.HideMode = true;
+                    }
+                    else if (preparedArg == "/w" || preparedArg == "/wait")
+                    {
+                        inputArguments.WaitMode = true;
+                    }
+                    else if (preparedArg == "/a" || preparedArg == "/arg")
+                    {
+                        inputArguments.ScriptArgument = args[++i];
+                    }
+                    else if (preparedArg == "/l" || preparedArg == "/log")
+                    {
+                        inputArguments.LogPath = args[++i];
+                    }
+                    else
+                    {
+                        inputArguments.ScriptPath = arg;
+                    }
+                }
+            }
+            return inputArguments;
+        }
 
         /// <summary>
         /// Получение полного пути к скрипту
@@ -117,45 +176,6 @@ namespace CSScript
         {
             string scriptPath = GetScriptPath(inputArguments);
             return Path.GetDirectoryName(scriptPath);
-        }
-
-        /// <summary>
-        /// Извлечение структурированных аргументов из аргументов командной строки
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private static InputArguments ParseArguments(string[] args)
-        {
-            InputArguments inputArguments = new InputArguments();
-            if (args.Length == 0)
-            {
-                inputArguments.IsEmpty = true;
-            }
-            else
-            {
-                for (int i = 0; i < args.Length; i++)
-                {
-                    string arg = args[i];
-                    string preparedArg = arg.Trim().ToLower();
-                    if (preparedArg == "/h" || preparedArg == "/hide")
-                    {
-                        inputArguments.HideMode = true;
-                    }
-                    else if (preparedArg == "/w" || preparedArg == "/wait")
-                    {
-                        inputArguments.WaitMode = true;
-                    }
-                    else if (preparedArg == "/a" || preparedArg == "/arg")
-                    {
-                        inputArguments.ScriptArgument = args[++i];
-                    }
-                    else
-                    {
-                        inputArguments.ScriptPath = arg;
-                    }
-                }
-            }
-            return inputArguments;
         }
 
         /// <summary>
@@ -369,14 +389,25 @@ namespace CSScript
                 if (line.StartsWith("<r>"))
                 {
                     line = line.Substring(3); //<r>
-                    OutputLog.AddLine(line, Color.Red);
+                    OutputLog.WriteLine(line, Color.Red);
                 }
                 else
                 {
-                    OutputLog.AddLine(line);
+                    OutputLog.WriteLine(line);
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Вывод начальной информации при обработке скрипта
+        /// </summary>
+        /// <param name="inputArguments"></param>
+        private static void WriteStartInfo(InputArguments inputArguments)
+        {
+            OutputLog.WriteLine($"## {GetScriptPath(inputArguments)}");
+            OutputLog.WriteLine($"## {DateTime.Now}");
+            OutputLog.WriteLine();
         }
 
         /// <summary>
@@ -385,7 +416,7 @@ namespace CSScript
         /// <param name="ex"></param>
         private static void WriteException(Exception ex)
         {
-            OutputLog.AddLine($"# Ошибка: {ex.Message}", Color.Red);
+            OutputLog.WriteLine($"# Ошибка: {ex.Message}", Color.Red);
         }
 
         /// <summary>
@@ -394,17 +425,17 @@ namespace CSScript
         /// <param name="compilerResults"></param>
         private static void WriteCompileErrors(CompilerResults compilerResults)
         {
-            OutputLog.AddLine($"# Ошибок: {compilerResults.Errors.Count}", Color.Red);
+            OutputLog.WriteLine($"# Ошибок: {compilerResults.Errors.Count}", Color.Red);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors)
             {
                 if (error.Line > 0)
                 {
-                    OutputLog.AddLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Color.Red);
+                    OutputLog.WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Color.Red);
                 }
                 else
                 {
-                    OutputLog.AddLine($"# {errorNumber++}: {error.ErrorText}", Color.Red);
+                    OutputLog.WriteLine($"# {errorNumber++}: {error.ErrorText}", Color.Red);
                 }
             }
         }
@@ -430,15 +461,30 @@ namespace CSScript
             {
                 int lineNumber = i + 1;
 
-                OutputLog.Add(lineNumber.ToString().PadLeft(4) + ": ");
+                OutputLog.Write(lineNumber.ToString().PadLeft(4) + ": ");
                 if (errorLines.Contains(lineNumber))
                 {
-                    OutputLog.AddLine(lines[i], Color.Red);
+                    OutputLog.WriteLine(lines[i], Color.Red);
                 }
                 else
                 {
-                    OutputLog.AddLine(lines[i], Color.Blue);
+                    OutputLog.WriteLine(lines[i], Color.Blue);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Сохранение логов программы в файл
+        /// </summary>
+        /// <param name="logPath"></param>
+        private static void SaveLogs(string logPath)
+        {
+            var logText = OutputLog.ToString();
+            using (var writer = new StreamWriter(logPath, true, Encoding.UTF8))
+            {
+                writer.WriteLine(logText);
+                writer.WriteLine();
+                writer.WriteLine();
             }
         }
 

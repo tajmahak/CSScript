@@ -16,17 +16,17 @@ namespace CSScript
 
         protected void _Write(object value, Color? color = null)
         {
-            Program.OutputLog.Add(value.ToString(), color);
+            Program.OutputLog.Write(value.ToString(), color);
         }
 
         protected void _WriteLine(object value, Color? color = null)
         {
-            Program.OutputLog.AddLine(value.ToString(), color);
+            Program.OutputLog.WriteLine(value.ToString(), color);
         }
 
         protected void _WriteLine()
         {
-            Program.OutputLog.AddLine();
+            Program.OutputLog.WriteLine();
         }
     }
 }

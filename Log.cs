@@ -19,21 +19,21 @@ namespace CSScript
         public event Action<LogItem> ItemAppened;
 
 
-        public void Add(string text, Color? foreColor = null)
+        public void Write(string text, Color? foreColor = null)
         {
             LogItem item = new LogItem(text, foreColor);
             items.Add(item);
             ItemAppened?.Invoke(item);
         }
 
-        public void AddLine(string text, Color? foreColor = null)
+        public void WriteLine(string text, Color? foreColor = null)
         {
-            Add(text + Environment.NewLine, foreColor);
+            Write(text + Environment.NewLine, foreColor);
         }
 
-        public void AddLine()
+        public void WriteLine()
         {
-            Add(Environment.NewLine);
+            Write(Environment.NewLine);
         }
 
         public override string ToString()
