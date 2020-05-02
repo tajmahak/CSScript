@@ -12,6 +12,8 @@ namespace CSScript
         {
             InitializeComponent();
             Icon = Resources.favicon;
+            richTextBox.BackColor = Program.Settings.BackColor;
+            richTextBox.ForeColor = Program.Settings.ForeColor;
 
             Program.OutputLog.ItemAppened += OutputLog_ItemAppened;
 

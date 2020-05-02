@@ -71,17 +71,17 @@ namespace CSScript.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на &lt;r&gt;Утилита для выполнения C# скриптов.
+        ///   Ищет локализованную строку, похожую на &lt;i&gt;Утилита для выполнения C# скриптов.
         ///
-        ///&lt;r&gt;Аргументы командной строки:
+        ///&lt;c&gt;Аргументы командной строки:
         /// - {...}          - путь к файлу скрипта;
         /// - [/h[ide]]      - скрыть консоль во время выполнения;
         /// - [/w[ait]]      - не закрывать консоль автоматически после выполнения;
         /// - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);
         /// - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
         ///
-        ///&lt;r&gt;Информация по синтаксису скрипта:
-        /// #define {...} - подключение другой сборки. Указывается путь [остаток строки не уместился]&quot;;.
+        ///&lt;c&gt;Информация по синтаксису скрипта:
+        /// #define {...}  - подключение другой сборки. Указывается пут [остаток строки не уместился]&quot;;.
         /// </summary>
         internal static string HelpText {
             get {
@@ -90,19 +90,19 @@ namespace CSScript.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на namespace CSScript
+        ///   Ищет локализованную строку, похожую на ##using##
+        ///namespace CSScript
         ///{
-        ///##using##
         ///internal class CompileScript : ScriptRuntime
         ///{
-        ///public override int _Main(string arg)
+        ///public override int RunScript(string arg)
         ///{
-        ///##source##
+        ///##function##
         ///return 0;
         ///}
-        ///##func##
-        ///}
         ///##class##
+        ///}
+        ///##namespace##
         ///}.
         /// </summary>
         internal static string SourceCodeTemplate {

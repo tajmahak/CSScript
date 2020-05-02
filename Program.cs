@@ -3,7 +3,6 @@ using Microsoft.CSharp;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -42,6 +41,8 @@ namespace CSScript
 
                     string script = GetScriptText(inputArguments);
 
+                    WriteStartInfo(inputArguments);
+
                     // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
                     // (для возможности указания коротких путей к файлам, в т.ч. загружаемым в скрипте сборкам)
                     Environment.CurrentDirectory = GetScriptWorkDirectory(inputArguments);
@@ -50,12 +51,10 @@ namespace CSScript
                     resolvedAssemblies = LoadAssembliesForResolve(scriptParsingInfo);
                     CompilerResults compilerResults = Compile(scriptParsingInfo);
 
-                    WriteStartInfo(inputArguments);
-
                     if (compilerResults.Errors.Count == 0)
                     {
                         ScriptRuntime scriptRuntime = GetCompiledScript(compilerResults);
-                        exitCode = scriptRuntime._Main(inputArguments.ScriptArgument);
+                        exitCode = scriptRuntime.RunScript(inputArguments.ScriptArgument);
                     }
                     else
                     {
@@ -76,7 +75,7 @@ namespace CSScript
             }
 
             OutputLog.WriteLine();
-            OutputLog.WriteLine($"# Выполнено с кодом возврата: {exitCode}");
+            OutputLog.WriteLine($"# Выполнено с кодом возврата: {exitCode}", Settings.InfoColor);
 
             if (inputArguments != null && !string.IsNullOrEmpty(inputArguments.LogPath))
             {
@@ -86,7 +85,7 @@ namespace CSScript
                 }
                 catch (Exception ex)
                 {
-                    OutputLog.WriteLine($"# Не удалось сохранить лог: {ex.Message}", Color.Red);
+                    OutputLog.WriteLine($"# Не удалось сохранить лог: {ex.Message}", Settings.ErrorColor);
                 }
             }
 
@@ -99,7 +98,6 @@ namespace CSScript
 
             return exitCode;
         }
-
 
 
         /// <summary>
@@ -200,11 +198,11 @@ namespace CSScript
             List<string> defineList = new List<string>();
             List<string> usingList = new List<string>();
 
-            StringBuilder sourceCodeBlock = new StringBuilder();
             StringBuilder functionBlock = new StringBuilder();
             StringBuilder classBlock = new StringBuilder();
+            StringBuilder namespaceBlock = new StringBuilder();
 
-            StringBuilder currentBlock = sourceCodeBlock;
+            StringBuilder currentBlock = functionBlock;
 
             string[] opLines = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
             for (int i = 0; i < opLines.Length; i++)
@@ -229,14 +227,14 @@ namespace CSScript
                                 string preparedLine = line.Replace("#", "").Trim() + ";";
                                 usingList.Add(preparedLine);
                             }
-                            else if (trimLine.StartsWith("#func"))
-                            {
-                                currentBlock = functionBlock;
-                                continue;
-                            }
                             else if (trimLine.StartsWith("#class"))
                             {
                                 currentBlock = classBlock;
+                                continue;
+                            }
+                            else if (trimLine.StartsWith("#ns") || trimLine.StartsWith("#namespace"))
+                            {
+                                currentBlock = namespaceBlock;
                                 continue;
                             }
                         }
@@ -259,9 +257,9 @@ namespace CSScript
             {
                 DefineList = defineList.ToArray(),
                 UsingBlock = string.Join("\r\n", usingList.ToArray()),
-                SourceCodeBlock = sourceCodeBlock.ToString(),
                 FunctionBlock = functionBlock.ToString(),
                 ClassBlock = classBlock.ToString(),
+                NamespaceBlock = namespaceBlock.ToString(),
             };
         }
 
@@ -274,9 +272,9 @@ namespace CSScript
         {
             string source = Resources.SourceCodeTemplate;
             source = source.Replace("##using##", scriptParsingInfo.UsingBlock);
-            source = source.Replace("##source##", scriptParsingInfo.SourceCodeBlock);
-            source = source.Replace("##func##", scriptParsingInfo.FunctionBlock);
+            source = source.Replace("##function##", scriptParsingInfo.FunctionBlock);
             source = source.Replace("##class##", scriptParsingInfo.ClassBlock);
+            source = source.Replace("##namespace##", scriptParsingInfo.NamespaceBlock);
             return source;
         }
 
@@ -292,10 +290,11 @@ namespace CSScript
 
             using (CSharpCodeProvider provider = new CSharpCodeProvider())
             {
-                CompilerParameters compileParameters = new CompilerParameters(assemblies);
-                compileParameters.GenerateInMemory = true;
-                compileParameters.GenerateExecutable = false;
-
+                CompilerParameters compileParameters = new CompilerParameters(assemblies)
+                {
+                    GenerateInMemory = true,
+                    GenerateExecutable = false
+                };
                 CompilerResults compilerResults = provider.CompileAssemblyFromSource(compileParameters, sourceCode);
                 return compilerResults;
             }
@@ -386,10 +385,15 @@ namespace CSScript
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
-                if (line.StartsWith("<r>"))
+                if (line.StartsWith("<c>"))
                 {
-                    line = line.Substring(3); //<r>
-                    OutputLog.WriteLine(line, Color.Red);
+                    line = line.Substring(3); //<c>
+                    OutputLog.WriteLine(line, Settings.CaptionColor);
+                }
+                else if (line.StartsWith("<i>"))
+                {
+                    line = line.Substring(3); //<i>
+                    OutputLog.WriteLine(line, Settings.InfoColor);
                 }
                 else
                 {
@@ -405,8 +409,8 @@ namespace CSScript
         /// <param name="inputArguments"></param>
         private static void WriteStartInfo(InputArguments inputArguments)
         {
-            OutputLog.WriteLine($"## {GetScriptPath(inputArguments)}");
-            OutputLog.WriteLine($"## {DateTime.Now}");
+            OutputLog.WriteLine($"## {GetScriptPath(inputArguments)}", Settings.InfoColor);
+            OutputLog.WriteLine($"## {DateTime.Now}", Settings.InfoColor);
             OutputLog.WriteLine();
         }
 
@@ -416,7 +420,7 @@ namespace CSScript
         /// <param name="ex"></param>
         private static void WriteException(Exception ex)
         {
-            OutputLog.WriteLine($"# Ошибка: {ex.Message}", Color.Red);
+            OutputLog.WriteLine($"# Ошибка: {ex.Message}", Settings.ErrorColor);
         }
 
         /// <summary>
@@ -425,17 +429,17 @@ namespace CSScript
         /// <param name="compilerResults"></param>
         private static void WriteCompileErrors(CompilerResults compilerResults)
         {
-            OutputLog.WriteLine($"# Ошибок: {compilerResults.Errors.Count}", Color.Red);
+            OutputLog.WriteLine($"# Ошибок: {compilerResults.Errors.Count}", Settings.ErrorColor);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors)
             {
                 if (error.Line > 0)
                 {
-                    OutputLog.WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Color.Red);
+                    OutputLog.WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Settings.ErrorColor);
                 }
                 else
                 {
-                    OutputLog.WriteLine($"# {errorNumber++}: {error.ErrorText}", Color.Red);
+                    OutputLog.WriteLine($"# {errorNumber++}: {error.ErrorText}", Settings.ErrorColor);
                 }
             }
         }
@@ -464,11 +468,11 @@ namespace CSScript
                 OutputLog.Write(lineNumber.ToString().PadLeft(4) + ": ");
                 if (errorLines.Contains(lineNumber))
                 {
-                    OutputLog.WriteLine(lines[i], Color.Red);
+                    OutputLog.WriteLine(lines[i], Settings.ErrorColor);
                 }
                 else
                 {
-                    OutputLog.WriteLine(lines[i], Color.Blue);
+                    OutputLog.WriteLine(lines[i], Settings.SourceCodeColor);
                 }
             }
         }
@@ -479,8 +483,8 @@ namespace CSScript
         /// <param name="logPath"></param>
         private static void SaveLogs(string logPath)
         {
-            var logText = OutputLog.ToString();
-            using (var writer = new StreamWriter(logPath, true, Encoding.UTF8))
+            string logText = OutputLog.ToString();
+            using (StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8))
             {
                 writer.WriteLine(logText);
                 writer.WriteLine();
@@ -521,12 +525,17 @@ namespace CSScript
         /// <summary>
         /// Лог работы программы
         /// </summary>
-        internal static Log OutputLog;
+        internal static Log OutputLog { get; private set; }
 
         /// <summary>
         /// Указывает на окончание работы программы
         /// </summary>
-        internal static bool Finished;
+        internal static bool Finished { get; private set; }
+
+        /// <summary>
+        /// Настройки программы
+        /// </summary>
+        internal static Settings Settings { get; private set; } = Settings.Default;
 
         /// <summary>
         /// Загруженные сборки, используемые скриптом

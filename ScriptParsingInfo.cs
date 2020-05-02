@@ -7,8 +7,8 @@
     {
         public string[] DefineList;
         public string UsingBlock;
-        public string SourceCodeBlock;
-        public string ClassBlock;
         public string FunctionBlock;
+        public string ClassBlock;
+        public string NamespaceBlock;
     }
 }

@@ -12,19 +12,19 @@ namespace CSScript
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
-        public abstract int _Main(string arg);
+        public abstract int RunScript(string arg);
 
-        protected void _Write(object value, Color? color = null)
+        public static void Write(object value, Color? color = null)
         {
             Program.OutputLog.Write(value.ToString(), color);
         }
 
-        protected void _WriteLine(object value, Color? color = null)
+        public static void WriteLine(object value, Color? color = null)
         {
             Program.OutputLog.WriteLine(value.ToString(), color);
         }
 
-        protected void _WriteLine()
+        public static void WriteLine()
         {
             Program.OutputLog.WriteLine();
         }

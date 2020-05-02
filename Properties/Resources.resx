@@ -122,50 +122,50 @@
     <value>..\Resources\favicon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="HelpText" xml:space="preserve">
-    <value>&lt;r&gt;Утилита для выполнения C# скриптов.
+    <value>&lt;i&gt;Утилита для выполнения C# скриптов.
 
-&lt;r&gt;Аргументы командной строки:
+&lt;c&gt;Аргументы командной строки:
  - {...}          - путь к файлу скрипта;
  - [/h[ide]]      - скрыть консоль во время выполнения;
  - [/w[ait]]      - не закрывать консоль автоматически после выполнения;
  - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);
  - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
 
-&lt;r&gt;Информация по синтаксису скрипта:
- #define {...} - подключение другой сборки. Указывается путь к сборке;
- #using {...}  - конструкция C# using. Используется # в начале строки;
- #func         - начало блока для декларирования внутренних сущностей (функции, методы, свойства и т.п.);
- #class        - начало блока для декларирования внешних сущностей (классов, интерфейсов, т.п.);
+&lt;c&gt;Информация по синтаксису скрипта:
+ #define {...}  - подключение другой сборки. Указывается путь к сборке;
+ #using {...}   - конструкция C# using. Используется # в начале строки;
+ #class         - область внутри класса;
+ #ns/#namespace - область внутри пространства имён;
 
-&lt;r&gt;Взаимодействие с окружением:
+&lt;c&gt;Взаимодействие с окружением:
  string arg     - входящий аргумент командной строки;
  return {...};  - значение формата int. Допускается для кода возврата скрипта;
- void   _Write(object value, [Color color])       - вывод информации в лог;
- void   _WriteLine([object value], [Color color]) - вывод информации в лог;
+ void ScriptRuntime.Write(object value, [Color color])       - вывод информации в лог;
+ void ScriptRuntime.WriteLine([object value], [Color color]) - вывод информации в лог;
 
-&lt;r&gt;Пример скрипта:
+&lt;c&gt;Пример скрипта:
  #using System.Drawing
  PrintHelloWorld();
- #func
+ #class
  void PrintHelloWorld()
  {
-     _WriteLine("Привет Мир!", Color.Green);
+     ScriptRuntime.WriteLine("Привет Мир!", Color.Green);
  }</value>
   </data>
   <data name="SourceCodeTemplate" xml:space="preserve">
-    <value>namespace CSScript
+    <value>##using##
+namespace CSScript
 {
-##using##
 internal class CompileScript : ScriptRuntime
 {
-public override int _Main(string arg)
+public override int RunScript(string arg)
 {
-##source##
+##function##
 return 0;
 }
-##func##
-}
 ##class##
+}
+##namespace##
 }</value>
   </data>
 </root>
