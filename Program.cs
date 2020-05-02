@@ -3,36 +3,41 @@ using Microsoft.CSharp;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Windows.Forms;
 
 namespace CSScript
 {
     internal static class Program
     {
+        [STAThread]
         private static int Main(string[] args)
         {
+            int exitCode;
+            InputArguments inputArguments = null;
+            OutputLog = new Log();
+
             // для подгрузки библиотек рантаймом, которые он не может подгрузить самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
-            int exitCode;
-            InputArguments inputArguments = null;
             try
             {
                 inputArguments = ParseArguments(args);
 
                 if (inputArguments.IsEmpty)
                 {
-                    PrintHelpInfo();
-                    WaitForExitConsole();
+                    WriteHelpInfo();
+                    ShowModalForm();
                     exitCode = 0;
                 }
                 else
                 {
-                    if (inputArguments.HideMode)
+                    if (!inputArguments.HideMode)
                     {
-                        HideConsole();
+                        ShowModalForm();
                     }
 
                     string script = GetScriptText(inputArguments);
@@ -41,36 +46,40 @@ namespace CSScript
                     // (для возможности указания коротких путей к файлам, в т.ч. загружаемым в скрипте сборкам)
                     Environment.CurrentDirectory = GetScriptWorkDirectory(inputArguments);
 
-                    ScriptData scriptData = ParseScriptData(script);
-                    resolvedAssemblies = LoadAssembliesForResolve(scriptData);
-                    CompilerResults compilerResults = Compile(scriptData);
+                    ScriptParsingInfo scriptParsingInfo = ParseScriptInfo(script);
+                    resolvedAssemblies = LoadAssembliesForResolve(scriptParsingInfo);
+                    CompilerResults compilerResults = Compile(scriptParsingInfo);
 
                     if (compilerResults.Errors.Count == 0)
                     {
-                        ICompile compiledClass = GetCompiledObject(compilerResults);
-                        exitCode = compiledClass.Execute(inputArguments.ScriptArgument);
+                        ScriptRuntime scriptRuntime = GetCompiledScript(compilerResults);
+                        exitCode = scriptRuntime._Main(inputArguments.ScriptArgument);
                     }
                     else
                     {
-                        PrintCompileErrors(compilerResults);
-                        string sourceCode = GetSourceCode(scriptData);
+                        WriteCompileErrors(compilerResults);
+                        string sourceCode = GetSourceCode(scriptParsingInfo);
 
-                        Console.WriteLine();
+                        OutputLog.AddLine();
 
-                        PrintSourceCode(sourceCode, compilerResults);
+                        WriteSourceCode(sourceCode, compilerResults);
                         exitCode = 1;
                     }
                 }
             }
             catch (Exception ex)
             {
-                PrintException(ex);
+                WriteException(ex);
                 exitCode = 1;
             }
 
-            if (inputArguments != null && inputArguments.WaitMode)
+            OutputLog.AddLine();
+            OutputLog.AddLine($"# Выполнено с кодом возврата: {exitCode}");
+            Finished = true;
+
+            if (inputArguments != null && (inputArguments.WaitMode || inputArguments.IsEmpty))
             {
-                WaitForExitConsole();
+                WaitFormForExit();
             }
 
             return exitCode;
@@ -166,7 +175,7 @@ namespace CSScript
         /// </summary>
         /// <param name="scriptText"></param>
         /// <returns></returns>
-        private static ScriptData ParseScriptData(string scriptText)
+        private static ScriptParsingInfo ParseScriptInfo(string scriptText)
         {
             List<string> defineList = new List<string>();
             List<string> usingList = new List<string>();
@@ -226,7 +235,7 @@ namespace CSScript
                     currentBlock.Append(';');
                 }
             }
-            return new ScriptData()
+            return new ScriptParsingInfo()
             {
                 DefineList = defineList.ToArray(),
                 UsingBlock = string.Join("\r\n", usingList.ToArray()),
@@ -239,31 +248,31 @@ namespace CSScript
         /// <summary>
         /// Сборка блоков скрипта в исходный код, готовый к динамической компиляции
         /// </summary>
-        /// <param name="scriptData"></param>
+        /// <param name="scriptParsingInfo"></param>
         /// <returns></returns>
-        private static string GetSourceCode(ScriptData scriptData)
+        private static string GetSourceCode(ScriptParsingInfo scriptParsingInfo)
         {
             string source = Resources.SourceCodeTemplate;
-            source = source.Replace("##using##", scriptData.UsingBlock);
-            source = source.Replace("##source##", scriptData.SourceCodeBlock);
-            source = source.Replace("##func##", scriptData.FunctionBlock);
-            source = source.Replace("##class##", scriptData.ClassBlock);
+            source = source.Replace("##using##", scriptParsingInfo.UsingBlock);
+            source = source.Replace("##source##", scriptParsingInfo.SourceCodeBlock);
+            source = source.Replace("##func##", scriptParsingInfo.FunctionBlock);
+            source = source.Replace("##class##", scriptParsingInfo.ClassBlock);
             return source;
         }
 
         /// <summary>
         /// Динамическая компиляция блоков скрипта в сборку
         /// </summary>
-        /// <param name="scriptData"></param>
+        /// <param name="scriptParsingInfo"></param>
         /// <returns></returns>
-        private static CompilerResults Compile(ScriptData scriptData)
+        private static CompilerResults Compile(ScriptParsingInfo scriptParsingInfo)
         {
-            string[] definedAssemblies = GetDefinedAssemblies(scriptData);
-            string sourceCode = GetSourceCode(scriptData);
+            string[] assemblies = GetReferencedAssemblies(scriptParsingInfo);
+            string sourceCode = GetSourceCode(scriptParsingInfo);
 
             using (CSharpCodeProvider provider = new CSharpCodeProvider())
             {
-                CompilerParameters compileParameters = new CompilerParameters(definedAssemblies);
+                CompilerParameters compileParameters = new CompilerParameters(assemblies);
                 compileParameters.GenerateInMemory = true;
                 compileParameters.GenerateExecutable = false;
 
@@ -277,11 +286,11 @@ namespace CSScript
         /// </summary>
         /// <param name="compilerResults"></param>
         /// <returns></returns>
-        private static ICompile GetCompiledObject(CompilerResults compilerResults)
+        private static ScriptRuntime GetCompiledScript(CompilerResults compilerResults)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance("CSScript.CompileClass");
-            return (ICompile)instance;
+            object instance = compiledAssembly.CreateInstance("CSScript.CompileScript");
+            return (ScriptRuntime)instance;
         }
 
 
@@ -290,13 +299,15 @@ namespace CSScript
         /// <summary>
         /// Получение списка всех связанных с выполнением скрипта сборок
         /// </summary>
-        /// <param name="scriptData"></param>
+        /// <param name="scriptParsingInfo"></param>
         /// <returns></returns>
-        private static string[] GetDefinedAssemblies(ScriptData scriptData)
+        private static string[] GetReferencedAssemblies(ScriptParsingInfo scriptParsingInfo)
         {
             List<string> definedAssemblies = new List<string>();
-            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-            foreach (string defineAssembly in scriptData.DefineList)
+            definedAssemblies.Add("System.dll"); // библиотека для работы множества основных функций
+            definedAssemblies.Add("System.Drawing.dll"); // для работы команд вывода в лог
+            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой
+            foreach (string defineAssembly in scriptParsingInfo.DefineList) // дополнительные библиотеки, указанные в #define
             {
                 definedAssemblies.Add(defineAssembly);
             }
@@ -306,20 +317,20 @@ namespace CSScript
         /// <summary>
         /// Загрузка используемых в скрипте сборок для последующей подгрузки в рантайм
         /// </summary>
-        /// <param name="scriptData"></param>
+        /// <param name="scriptParsingInfo"></param>
         /// <returns></returns>
-        private static Dictionary<string, Assembly> LoadAssembliesForResolve(ScriptData scriptData)
+        private static Dictionary<string, Assembly> LoadAssembliesForResolve(ScriptParsingInfo scriptParsingInfo)
         {
-            string[] definedAssemblies = GetDefinedAssemblies(scriptData);
+            string[] assemblies = GetReferencedAssemblies(scriptParsingInfo);
 
             Dictionary<string, Assembly> assemblyDict = new Dictionary<string, Assembly>();
-            foreach (string defineAssembly in definedAssemblies)
+            foreach (string assembly in assemblies)
             {
-                if (File.Exists(defineAssembly))
+                if (File.Exists(assembly))
                 {
                     // загружаются только те сборки, которые рантайм не может подгрузить автоматически
-                    Assembly assembly = Assembly.LoadFrom(defineAssembly);
-                    assemblyDict.Add(assembly.FullName, assembly);
+                    Assembly loadedAssembly = Assembly.LoadFrom(assembly);
+                    assemblyDict.Add(loadedAssembly.FullName, loadedAssembly);
                 }
             }
 
@@ -344,72 +355,58 @@ namespace CSScript
         }
 
 
-        // Работа с консолью
+        // Вывод логов 
 
         /// <summary>
         /// Вывод на консоль справочной информации о функциях программы
         /// </summary>
-        private static void PrintHelpInfo()
+        private static void WriteHelpInfo()
         {
-            ConsoleColor startColor = Console.ForegroundColor;
-
             string[] lines = Resources.HelpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
                 if (line.StartsWith("<r>"))
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
                     line = line.Substring(3); //<r>
+                    OutputLog.AddLine(line, Color.Red);
                 }
                 else
                 {
-                    Console.ForegroundColor = startColor;
+                    OutputLog.AddLine(line);
                 }
-                Console.WriteLine(line);
             }
 
-            Console.ForegroundColor = startColor;
         }
 
         /// <summary>
         /// Вывод на консоль Exception
         /// </summary>
         /// <param name="ex"></param>
-        private static void PrintException(Exception ex)
+        private static void WriteException(Exception ex)
         {
-            ConsoleColor startColor = Console.ForegroundColor;
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("# Ошибка: {0}", ex.Message);
-
-            Console.ForegroundColor = startColor;
+            OutputLog.AddLine($"# Ошибка: {ex.Message}", Color.Red);
         }
 
         /// <summary>
         /// Вывод на консоль ошибок динамической компиляции
         /// </summary>
         /// <param name="compilerResults"></param>
-        private static void PrintCompileErrors(CompilerResults compilerResults)
+        private static void WriteCompileErrors(CompilerResults compilerResults)
         {
-            ConsoleColor startColor = Console.ForegroundColor;
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("# Ошибок: {0}", compilerResults.Errors.Count);
+            OutputLog.AddLine($"# Ошибок: {compilerResults.Errors.Count}", Color.Red);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors)
             {
                 if (error.Line > 0)
                 {
-                    Console.WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}");
+                    OutputLog.AddLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Color.Red);
                 }
                 else
                 {
-                    Console.WriteLine($"# {errorNumber++}: {error.ErrorText}");
+                    OutputLog.AddLine($"# {errorNumber++}: {error.ErrorText}", Color.Red);
                 }
             }
-
-            Console.ForegroundColor = startColor;
         }
 
         /// <summary>
@@ -417,10 +414,8 @@ namespace CSScript
         /// </summary>
         /// <param name="sourceCode"></param>
         /// <param name="compilerResults"></param>
-        private static void PrintSourceCode(string sourceCode, CompilerResults compilerResults = null)
+        private static void WriteSourceCode(string sourceCode, CompilerResults compilerResults = null)
         {
-            ConsoleColor startColor = Console.ForegroundColor;
-
             HashSet<int> errorLines = new HashSet<int>();
             if (compilerResults != null)
             {
@@ -435,68 +430,66 @@ namespace CSScript
             {
                 int lineNumber = i + 1;
 
-                Console.ForegroundColor = startColor;
-                Console.Write(lineNumber.ToString().PadLeft(4) + ": ");
+                OutputLog.Add(lineNumber.ToString().PadLeft(4) + ": ");
                 if (errorLines.Contains(lineNumber))
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
+                    OutputLog.AddLine(lines[i], Color.Red);
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
+                    OutputLog.AddLine(lines[i], Color.Blue);
                 }
-                Console.WriteLine(lines[i]);
             }
-
-            Console.ForegroundColor = startColor;
         }
 
-        /// <summary>
-        /// Скрытие окна консоли
-        /// </summary>
-        private static void HideConsole()
-        {
-            IntPtr handle = NativeMethods.GetConsoleWindow();
-            NativeMethods.ShowWindow(handle, NativeMethods.SW_HIDE);
-            consoleVisible = false;
-        }
+
+        // Работа с GUI
 
         /// <summary>
-        /// Отображение окна консоли после скрытия
+        /// Отображение окна вывода лога в модальном представлении
         /// </summary>
-        private static void ShowConsole()
+        private static void ShowModalForm()
         {
-            IntPtr handle = NativeMethods.GetConsoleWindow();
-            NativeMethods.ShowWindow(handle, NativeMethods.SW_SHOW);
-            consoleVisible = true;
-        }
-
-        /// <summary>
-        /// Предупреждение о выходе из программы
-        /// </summary>
-        private static void WaitForExitConsole()
-        {
-            if (!consoleVisible)
+            if (form == null)
             {
-                ShowConsole();
-            }
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
 
-            Console.WriteLine();
-            Console.WriteLine("Для выхода нажмите любую клавишу...");
-            Console.ReadKey();
+                form = new MainForm();
+                form.Show();
+            }
+        }
+
+        /// <summary>
+        /// Переключение из модального режима в диалоговый, чтобы программа автоматически не закрывалась
+        /// </summary>
+        private static void WaitFormForExit()
+        {
+            ShowModalForm();
+            Application.Run(form);
         }
 
 
         // Переменные
 
         /// <summary>
-        /// Текущее состоянии видимости консоли
+        /// Лог работы программы
         /// </summary>
-        private static bool consoleVisible = true;
+        internal static Log OutputLog;
+
+        /// <summary>
+        /// Указывает на окончание работы программы
+        /// </summary>
+        internal static bool Finished;
 
         /// <summary>
         /// Загруженные сборки, используемые скриптом
         /// </summary>
         private static Dictionary<string, Assembly> resolvedAssemblies;
+
+        /// <summary>
+        /// Форма для вывода лога
+        /// </summary>
+        private static MainForm form;
     }
 }

@@ -77,12 +77,11 @@ namespace CSScript.Properties {
         /// - {...}          - путь к файлу скрипта;
         /// - [/h[ide]]      - скрыть консоль во время выполнения;
         /// - [/w[ait]]      - не закрывать консоль автоматически после выполнения;
-        /// - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);  
-        /// 
+        /// - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);
+        /// - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
+        ///
         ///&lt;r&gt;Информация по синтаксису скрипта:
-        /// string arg     - входящий аргумент командной строки;
-        /// return {...};  - значение формата int. Допускается для кода возврата скрипта;
-        /// #def [остаток строки не уместился]&quot;;.
+        /// #define {...} - подключение другой сборки. Указывается путь [остаток строки не уместился]&quot;;.
         /// </summary>
         internal static string HelpText {
             get {
@@ -94,9 +93,9 @@ namespace CSScript.Properties {
         ///   Ищет локализованную строку, похожую на namespace CSScript
         ///{
         ///##using##
-        ///public class CompileClass : ICompile
+        ///public class CompileScript : ScriptRuntime
         ///{
-        ///public int Execute(string arg)
+        ///public override int _Main(string arg)
         ///{
         ///##source##
         ///return 0;
