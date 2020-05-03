@@ -10,7 +10,7 @@ namespace CSScript
 {
 	internal class DebugScript : ScriptRuntime
 	{
-		public override int RunScript(string arg)
+		public override int StartScript(string arg)
 		{
 			var projectFolder = @"D:\Develop\VisualStudio\Projects";
 

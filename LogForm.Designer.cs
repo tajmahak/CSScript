@@ -1,6 +1,6 @@
 ﻿namespace CSScript
 {
-    partial class MainForm
+    partial class LogForm
     {
         /// <summary>
         /// Обязательная переменная конструктора.
@@ -45,16 +45,18 @@
             this.richTextBox.TabIndex = 0;
             this.richTextBox.Text = "";
             // 
-            // MainForm
+            // LogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.richTextBox);
             this.KeyPreview = true;
-            this.Name = "MainForm";
+            this.Name = "LogForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "CSScript";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form_FormClosed);
+            this.Shown += new System.EventHandler(this.Form_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form_KeyDown);
             this.ResumeLayout(false);
 

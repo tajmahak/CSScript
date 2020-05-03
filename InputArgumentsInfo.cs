@@ -3,7 +3,7 @@
     /// <summary>
     /// Структурированные аргументы командной строки
     /// </summary>
-    internal class InputArguments
+    internal class InputArgumentsInfo
     {
         public bool IsEmpty;
         public bool HideMode;

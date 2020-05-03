@@ -95,7 +95,7 @@ namespace CSScript.Properties {
         ///{
         ///internal class CompileScript : ScriptRuntime
         ///{
-        ///public override int RunScript(string arg)
+        ///public override int StartScript(string arg)
         ///{
         ///##function##
         ///return 0;
