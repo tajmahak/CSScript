@@ -164,7 +164,7 @@
     <value>##using##
 namespace CSScript
 {
-internal class CompileScript : ScriptRuntime
+internal class CompiledScript : ScriptRuntime
 {
 public override int StartScript(string arg)
 {

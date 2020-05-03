@@ -466,7 +466,7 @@ namespace CSScript
         private static ScriptRuntime GetCompiledScript(CompilerResults compilerResults)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance("CSScript.CompileScript");
+            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript");
             return (ScriptRuntime)instance;
         }
 
