@@ -76,5 +76,14 @@ namespace CSScript.Properties {
                 return ((global::System.Drawing.Color)(this["SourceCodeColor"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool WordWrap {
+            get {
+                return ((bool)(this["WordWrap"]));
+            }
+        }
     }
 }

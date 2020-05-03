@@ -18,6 +18,7 @@ namespace CSScript
             Icon = Resources.favicon;
             richTextBox.BackColor = Settings.Default.BackColor;
             richTextBox.ForeColor = Settings.Default.ForeColor;
+            richTextBox.WordWrap = Settings.Default.WordWrap;
 
             timer = new Timer();
             timer.Interval = 100;
