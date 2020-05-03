@@ -36,6 +36,7 @@ namespace CSScript
 
         private Thread executingThread;
 
+        private bool startDebugScript;
 
 
         public event Action FinishedEvent;
@@ -45,6 +46,11 @@ namespace CSScript
         public event Action<LogItem> AddLogEvent;
 
 
+        public ProgramModel()
+        {
+            startDebugScript = true;
+            GUIMode = true;
+        }
 
         public ProgramModel(string[] args)
         {
@@ -55,7 +61,7 @@ namespace CSScript
 
         public void ExecuteScriptAsync()
         {
-            executingThread = new Thread(ExecuteScript);
+            executingThread = startDebugScript ? new Thread(StartDebugScript) : new Thread(StartScript);
             executingThread.Start();
         }
 
@@ -75,6 +81,7 @@ namespace CSScript
 
         public void WriteLog(string text, Color? foreColor = null)
         {
+            text = text ?? string.Empty;
             LogItem item = new LogItem(text, foreColor);
             logItems.Add(item);
             AddLogEvent?.Invoke(item);
@@ -93,7 +100,7 @@ namespace CSScript
 
 
 
-        private void ExecuteScript()
+        private void StartScript()
         {
             try
             {
@@ -167,6 +174,29 @@ namespace CSScript
                 OnShowGUI();
             }
 
+            FinishedEvent?.Invoke();
+        }
+
+        private void StartDebugScript()
+        {
+            try
+            {
+                OnShowGUI();
+
+                var debugScript = new DebugScript();
+                debugScript.StartScript(null);
+                ExitCode = debugScript.StartScript(inputArguments.ScriptArgument);
+            }
+            catch (Exception ex)
+            {
+                WriteLogException(ex);
+                ExitCode = 1;
+            }
+
+            WriteLineLog();
+            WriteLineLog($"# Выполнено с кодом возврата: {ExitCode}", Settings.Default.InfoColor);
+
+            Finished = true;
             FinishedEvent?.Invoke();
         }
 

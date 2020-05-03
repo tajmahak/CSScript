@@ -24,6 +24,7 @@ namespace CSScript
 
         public static void WriteLine(object value, Color? color = null)
         {
+            value = value ?? string.Empty;
             Program.ProgramModel.WriteLineLog(value.ToString(), color);
         }
 

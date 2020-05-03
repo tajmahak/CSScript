@@ -9,7 +9,12 @@ namespace CSScript
         [STAThread]
         private static int Main(string[] args)
         {
-            ProgramModel = new ProgramModel(args);
+            bool startDebugScript = false;
+#if DEBUG
+            startDebugScript = true;
+#endif
+
+            ProgramModel = startDebugScript ? new ProgramModel() : new ProgramModel(args);
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
             ProgramModel.ShowGUIEvent += ProgramModel_ShowGUIEvent;
 
