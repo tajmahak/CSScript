@@ -126,29 +126,30 @@
 
 &lt;c&gt;Аргументы командной строки:
  - {...}          - путь к файлу скрипта;
- - [/h[ide]]      - скрыть консоль во время выполнения;
- - [/w[ait]]      - не закрывать консоль автоматически после выполнения;
+ - [/h[ide]]      - выполнение скрипта в скрытом режиме;
  - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);
  - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
 
-&lt;c&gt;Информация по синтаксису скрипта:
+&lt;c&gt;Служебный синтаксис скрипта:
  #define {...}  - подключение другой сборки. Указывается путь к сборке;
  #using {...}   - конструкция C# using. Используется # в начале строки;
- #class         - область внутри класса;
- #ns/#namespace - область внутри пространства имён;
+ #class         - указывает начало области внутри класса;
+ #ns/#namespace - указывает начало области внутри пространства имён;
 
 &lt;c&gt;Взаимодействие с окружением:
  string arg     - входящий аргумент командной строки;
  return {...};  - значение формата int. Допускается для кода возврата скрипта;
- void ScriptRuntime.Write(object value, [Color color])       - вывод информации в лог;
- void ScriptRuntime.WriteLine([object value], [Color color]) - вывод информации в лог;
- ScriptRuntime.Settings - конфигурация программы:
-&lt;i&gt;  .BackColor            - цвет фона консоли;
-&lt;i&gt;  .CaptionColor         - цвет текста заголовков;
-&lt;i&gt;  .ErrorColor           - цвет текста ошибок;
-&lt;i&gt;  .ForeColor            - цвет текста основного текста;
-&lt;i&gt;  .InfoColor            - цвет дополнительного информационного текста;
-&lt;i&gt;  .SourceCodeColor      - цвет исходного кода;
+ ScriptRuntime  - класс, в котором выполняется скрипт:
+  .WriteLog(object value, [Color color])       : void - вывод информации в лог;
+  .WriteLineLog([object value], [Color color]) : void - вывод информации в лог;
+  .CreateManagedProcess() : Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
+  .Settings - настройки программы:
+&lt;i&gt;   .BackColor       - цвет фона консоли;
+&lt;i&gt;   .CaptionColor    - цвет текста заголовков;
+&lt;i&gt;   .ErrorColor      - цвет текста ошибок;
+&lt;i&gt;   .ForeColor       - цвет текста основного текста;
+&lt;i&gt;   .InfoColor       - цвет дополнительного информационного текста;
+&lt;i&gt;   .SourceCodeColor - цвет исходного кода;
 
 &lt;c&gt;Пример скрипта:
  #using System.Drawing
@@ -156,8 +157,7 @@
  #class
  void PrintHelloWorld()
  {
-     ScriptRuntime.WriteLine("Привет Мир!", ScriptRuntime.Settings.CaptionColor);
-     System.Threading.Thread.Sleep(3000);
+     ScriptRuntime.WriteLineLog("Привет Мир!", ScriptRuntime.Settings.CaptionColor);
  }</value>
   </data>
   <data name="SourceCodeTemplate" xml:space="preserve">

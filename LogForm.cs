@@ -11,7 +11,6 @@ namespace CSScript
     {
         private readonly Timer timer;
         private int currentLogPosition;
-        private bool initialized;
 
         public LogForm()
         {
@@ -24,29 +23,6 @@ namespace CSScript
             timer.Interval = 100;
             timer.Tick += Timer_Tick;
             timer.Start();
-        }
-
-        public void ShowForm()
-        {
-            if (initialized)
-            {
-                InvokeEx(Show);
-            }
-        }
-
-        public void CloseForm()
-        {
-            InvokeEx(Close);
-        }
-
-
-        private void Form_Shown(object sender, EventArgs e)
-        {
-            initialized = true;
-            if (!Program.ProgramModel.NeedShowGUI)
-            {
-                Hide();
-            }
         }
 
         private void Form_FormClosed(object sender, FormClosedEventArgs e)
@@ -95,7 +71,6 @@ namespace CSScript
                 richTextBox.SelectionColor = log.ForeColor.Value;
             }
             richTextBox.Select(richTextBox.TextLength, 0);
-
             Application.DoEvents(); // для того, чтобы нажатия клавиш не уходили в очередь сообщений
         }
 

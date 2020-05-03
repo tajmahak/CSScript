@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace CSScript
 {
@@ -6,12 +7,15 @@ namespace CSScript
     {
         public string Text { get; private set; }
 
+        public DateTime DateTime { get; private set; }
+
         public Color? ForeColor { get; private set; }
 
 
-        public LogItem(string text, Color? foreColor)
+        public LogItem(string text, DateTime dateTime, Color? foreColor)
         {
             Text = text;
+            DateTime = dateTime;
             ForeColor = foreColor;
         }
     }

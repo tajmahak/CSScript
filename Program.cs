@@ -12,12 +12,10 @@ namespace CSScript
         {
             bool startDebugScript = false;
 #if DEBUG
-            startDebugScript = true;
+            startDebugScript = false;
 #endif
 
             ProgramModel = startDebugScript ? new ProgramModel() : new ProgramModel(args);
-            ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
-            ProgramModel.ShowGUIEvent += ProgramModel_ShowGUIEvent;
             ProgramModel.AddLogEvent += ProgramModel_AddLogEvent;
 
             // для подгрузки библиотек рантаймом, которые не подгружаются самостоятельно
@@ -52,22 +50,9 @@ namespace CSScript
             return ProgramModel.ResolveAssembly(args.Name);
         }
 
-        private static void ProgramModel_ShowGUIEvent()
-        {
-            logForm.ShowForm();
-        }
-
-        private static void ProgramModel_FinishedEvent()
-        {
-            if (ProgramModel.GUIMode && ProgramModel.AutoCloseGUI)
-            {
-                logForm.CloseForm();
-            }
-        }
-
         private static void ProgramModel_AddLogEvent(LogItem logItem)
         {
-            Debug.WriteLine(logItem.Text);
+            Debug.Write(logItem.Text);
         }
 
 

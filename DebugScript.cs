@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace CSScript
@@ -14,14 +15,57 @@ namespace CSScript
         public override int StartScript(string arg)
         {
             string projectFolder = @"D:\Develop\VisualStudio\Projects";
-
-            string[] directories = Directory.GetDirectories(projectFolder);
-            foreach (string directory in directories)
-            {
-                int a = StartManaged("libs\\7z.exe", Get7ZipArgs(directory + "\\*", directory + ".7z"), outputColor: Color.Yellow, padCount: 10);
-            }
+            string backupFolder = @"D:\Хранилище\Разработка\Проекты";
+            BackupProjectDirectory(projectFolder, backupFolder);
 
             return 0;
+        }
+
+        private void BackupProjectDirectory(string projectDirectory, string backupDirectory)
+        {
+            CreateDirectory(backupDirectory);
+
+            string[] directories = Directory.GetDirectories(projectDirectory);
+            foreach (string directory in directories)
+            {
+                string archivePath = directory + ".7z";
+                string archiveName = Path.GetFileName(archivePath);
+                string backupArchivePath = Path.Combine(backupDirectory, archiveName);
+
+                File.Delete(archivePath);
+
+                WriteLog("Упаковка '" + archiveName + "'...");
+                int errorCode = StartManaged(@"C:\Program Files\7-Zip\7z.exe", Get7ZipArgs(directory + "\\*", archivePath), false);
+                if (errorCode == 0)
+                {
+                    WriteLog(" - успешно.");
+                    string archiveHash = CalculateMD5Hash(archivePath);
+
+                    string backupArchiveHash = null;
+                    if (File.Exists(backupArchivePath))
+                    {
+                        backupArchiveHash = CalculateMD5Hash(backupArchivePath);
+                    }
+
+                    if (string.Equals(archiveHash, backupArchiveHash))
+                    {
+                        File.Delete(archivePath);
+                        WriteLog(" Без изменений.", Color.Gray);
+                    }
+                    else
+                    {
+                        File.Delete(backupArchivePath);
+                        File.Move(archivePath, backupArchivePath);
+                        WriteLog(" Выполнена замена.", Color.Green);
+                    }
+                }
+                else
+                {
+                    WriteLog(" - с ошибками (код " + errorCode + ").");
+                    File.Delete(archivePath);
+                }
+                WriteLineLog();
+            }
         }
 
 
@@ -33,9 +77,7 @@ namespace CSScript
 
 
 
-
-
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.05) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.07) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, int padCount = 0)
@@ -69,7 +111,7 @@ namespace CSScript
         }
 
         // Создание папки
-        private bool CreateDir(string path, bool isFilePath = false)
+        private bool CreateDirectory(string path, bool isFilePath = false)
         {
             string dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
             if (!Directory.Exists(dirPath))
@@ -111,6 +153,26 @@ namespace CSScript
         {
             string dirPath = Path.GetDirectoryName(path);
             return dirPath + "\\" + newName;
+        }
+
+        // Удаление списка файлов
+        private int DeleteFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        {
+            if (Directory.Exists(path))
+            {
+                string[] files = Directory.GetFiles(path, searchPattern, searchOption);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+                return files.Length;
+            }
+            else if (File.Exists(path))
+            {
+                File.Delete(path);
+                return 1;
+            }
+            return 0;
         }
 
         // Удаление старых файлов в папке (по дате изменения)
@@ -156,12 +218,29 @@ namespace CSScript
             return newFileList;
         }
 
+        // Вычисление MD5 хэша для файла
+        private string CalculateMD5Hash(string filePath)
+        {
+            __CheckFileExists(filePath);
+            byte[] hash;
+            using (MD5 md5 = MD5.Create())
+            {
+                using (FileStream stream = File.OpenRead(filePath))
+                {
+                    hash = md5.ComputeHash(stream);
+                }
+            }
+            StringBuilder hashString = new StringBuilder(hash.Length * 2);
+            for (int i = 0; i < hash.Length; i++)
+            {
+                hashString.Append(hash[i].ToString("x2"));
+            }
+            return hashString.ToString();
+        }
+
         private int __StartProcess(Process process, string program, string args, bool printOutput, Color? outputColor, int padCount)
         {
-            if (!File.Exists(program))
-            {
-                throw new Exception("Не удаётся найти '" + program + "'");
-            }
+            __CheckFileExists(program);
             using (process)
             {
                 process.StartInfo = new ProcessStartInfo()
@@ -186,6 +265,16 @@ namespace CSScript
                 return process.ExitCode;
             }
         }
+
+        private void __CheckFileExists(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                throw new Exception("Не удаётся найти '" + filePath + "'.");
+            }
+        }
+
+
 
 
 

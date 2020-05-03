@@ -17,10 +17,6 @@ namespace CSScript
     {
         public bool GUIMode { get; private set; }
 
-        public bool NeedShowGUI { get; private set; }
-
-        public bool AutoCloseGUI { get; private set; }
-
         public bool Finished { get; private set; }
 
         public int ExitCode { get; private set; }
@@ -43,11 +39,9 @@ namespace CSScript
 
 
 
-        public event Action FinishedEvent;
-
-        public event Action ShowGUIEvent;
-
         public event Action<LogItem> AddLogEvent;
+
+        public event Action FinishedEvent;
 
 
 
@@ -60,8 +54,7 @@ namespace CSScript
         public ProgramModel(string[] args)
         {
             ParseInputArguments(args);
-            GUIMode = !inputArguments.HideMode || inputArguments.IsEmpty || inputArguments.WaitMode;
-            AutoCloseGUI = !(inputArguments.IsEmpty || inputArguments.WaitMode);
+            GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
         }
 
 
@@ -118,7 +111,7 @@ namespace CSScript
         public void WriteLog(string text, Color? foreColor = null)
         {
             text = text ?? string.Empty;
-            LogItem item = new LogItem(text, foreColor);
+            LogItem item = new LogItem(text, DateTime.Now, foreColor);
             logItems.Add(item);
             AddLogEvent?.Invoke(item);
         }
@@ -142,16 +135,10 @@ namespace CSScript
                 if (inputArguments.IsEmpty)
                 {
                     WriteLogHelpInfo();
-                    OnShowGUI();
                     ExitCode = 0;
                 }
                 else
                 {
-                    if (!inputArguments.HideMode)
-                    {
-                        OnShowGUI();
-                    }
-
                     string script = GetScriptText();
 
                     WriteLogStartInfo();
@@ -203,12 +190,6 @@ namespace CSScript
             }
 
             Finished = true;
-
-            if (GUIMode)
-            {
-                OnShowGUI();
-            }
-
             FinishedEvent?.Invoke();
         }
 
@@ -217,8 +198,6 @@ namespace CSScript
 #if DEBUG
             try
             {
-                OnShowGUI();
-
                 DebugScript debugScript = new DebugScript();
                 debugScript.StartScript(null);
                 ExitCode = debugScript.StartScript(inputArguments.ScriptArgument);
@@ -252,10 +231,6 @@ namespace CSScript
                     if (preparedArg == "/h" || preparedArg == "/hide")
                     {
                         inputArguments.HideMode = true;
-                    }
-                    else if (preparedArg == "/w" || preparedArg == "/wait")
-                    {
-                        inputArguments.WaitMode = true;
                     }
                     else if (preparedArg == "/a" || preparedArg == "/arg")
                     {
@@ -419,15 +394,6 @@ namespace CSScript
                 writer.WriteLine(logText);
                 writer.WriteLine();
                 writer.WriteLine();
-            }
-        }
-
-        private void OnShowGUI()
-        {
-            if (!NeedShowGUI)
-            {
-                NeedShowGUI = true;
-                ShowGUIEvent?.Invoke();
             }
         }
 
