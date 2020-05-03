@@ -4,6 +4,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -34,9 +35,12 @@ namespace CSScript
 
         private readonly Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
 
+        private readonly Queue<Process> managedProcesses = new Queue<Process>();
+
         private Thread executingThread;
 
-        private bool startDebugScript;
+        private readonly bool startDebugScript;
+
 
 
         public event Action FinishedEvent;
@@ -44,6 +48,7 @@ namespace CSScript
         public event Action ShowGUIEvent;
 
         public event Action<LogItem> AddLogEvent;
+
 
 
         public ProgramModel()
@@ -56,12 +61,15 @@ namespace CSScript
         {
             ParseInputArguments(args);
             GUIMode = !inputArguments.HideMode || inputArguments.IsEmpty || inputArguments.WaitMode;
-            AutoCloseGUI = !inputArguments.WaitMode;
+            AutoCloseGUI = !(inputArguments.IsEmpty || inputArguments.WaitMode);
         }
+
+
 
         public void ExecuteScriptAsync()
         {
             executingThread = startDebugScript ? new Thread(StartDebugScript) : new Thread(StartScript);
+            executingThread.IsBackground = true;
             executingThread.Start();
         }
 
@@ -77,6 +85,34 @@ namespace CSScript
         {
             resolvedAssemblies.TryGetValue(assemblyName, out Assembly assembly);
             return assembly;
+        }
+
+        public Process CreateManagedProcess()
+        {
+            Process process = new Process();
+            lock (managedProcesses)
+            {
+                managedProcesses.Enqueue(process);
+            }
+            return process;
+        }
+
+        public void KillManagedProcesses()
+        {
+            lock (managedProcesses)
+            {
+                while (managedProcesses.Count > 0)
+                {
+                    Process process = managedProcesses.Dequeue();
+                    try
+                    {
+                        process.Kill();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
         }
 
         public void WriteLog(string text, Color? foreColor = null)
@@ -96,7 +132,6 @@ namespace CSScript
         {
             WriteLog(Environment.NewLine);
         }
-
 
 
 
@@ -179,11 +214,12 @@ namespace CSScript
 
         private void StartDebugScript()
         {
+#if DEBUG
             try
             {
                 OnShowGUI();
 
-                var debugScript = new DebugScript();
+                DebugScript debugScript = new DebugScript();
                 debugScript.StartScript(null);
                 ExitCode = debugScript.StartScript(inputArguments.ScriptArgument);
             }
@@ -198,6 +234,7 @@ namespace CSScript
 
             Finished = true;
             FinishedEvent?.Invoke();
+#endif
         }
 
         private void ParseInputArguments(string[] args)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -17,9 +18,12 @@ namespace CSScript
             ProgramModel = startDebugScript ? new ProgramModel() : new ProgramModel(args);
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
             ProgramModel.ShowGUIEvent += ProgramModel_ShowGUIEvent;
+            ProgramModel.AddLogEvent += ProgramModel_AddLogEvent;
 
             // для подгрузки библиотек рантаймом, которые не подгружаются самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolveEvent;
+
+            Application.ApplicationExit += Application_ApplicationExit;
 
             if (ProgramModel.GUIMode)
             {
@@ -38,6 +42,11 @@ namespace CSScript
             return ProgramModel.ExitCode;
         }
 
+        private static void Application_ApplicationExit(object sender, EventArgs e)
+        {
+            ProgramModel.KillManagedProcesses();
+        }
+
         private static Assembly CurrentDomain_AssemblyResolveEvent(object sender, ResolveEventArgs args)
         {
             return ProgramModel.ResolveAssembly(args.Name);
@@ -54,6 +63,11 @@ namespace CSScript
             {
                 logForm.CloseForm();
             }
+        }
+
+        private static void ProgramModel_AddLogEvent(LogItem logItem)
+        {
+            Debug.WriteLine(logItem.Text);
         }
 
 

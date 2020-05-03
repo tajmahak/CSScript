@@ -1,4 +1,5 @@
 ﻿using CSScript.Properties;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace CSScript
@@ -17,20 +18,25 @@ namespace CSScript
 
         // Сущности, используемые в скрипте (public):
 
-        public static void Write(object value, Color? color = null)
+        public static void WriteLog(object value, Color? color = null)
         {
             Program.ProgramModel.WriteLog(value.ToString(), color);
         }
 
-        public static void WriteLine(object value, Color? color = null)
+        public static void WriteLineLog(object value, Color? color = null)
         {
             value = value ?? string.Empty;
             Program.ProgramModel.WriteLineLog(value.ToString(), color);
         }
 
-        public static void WriteLine()
+        public static void WriteLineLog()
         {
             Program.ProgramModel.WriteLineLog();
+        }
+
+        public static Process CreateManagedProcess()
+        {
+            return Program.ProgramModel.CreateManagedProcess();
         }
 
         public static readonly Settings Settings = Settings.Default;
