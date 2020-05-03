@@ -14,9 +14,11 @@ namespace CSScript
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
-        public abstract int StartScript(string arg);
+        public abstract void StartScript(string arg);
 
         // Сущности, используемые в скрипте (public):
+
+        public int ExitCode { get; set; }
 
         public static void WriteLog(object value, Color? color = null)
         {

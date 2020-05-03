@@ -70,7 +70,7 @@ namespace CSScript.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Blue")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PowderBlue")]
         public global::System.Drawing.Color SourceCodeColor {
             get {
                 return ((global::System.Drawing.Color)(this["SourceCodeColor"]));
@@ -83,6 +83,15 @@ namespace CSScript.Properties {
         public bool WordWrap {
             get {
                 return ((bool)(this["WordWrap"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Green")]
+        public global::System.Drawing.Color CommentColor {
+            get {
+                return ((global::System.Drawing.Color)(this["CommentColor"]));
             }
         }
     }

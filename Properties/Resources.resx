@@ -131,15 +131,16 @@
  - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
 
 &lt;c&gt;Служебный синтаксис скрипта:
- #define {...}  - подключение другой сборки. Указывается путь к сборке;
+ #define {...}       - подключение другой сборки (.exe, .dll);
+ #definescript {...} - подключение другого скрипта;
  #using {...}   - конструкция C# using. Используется # в начале строки;
  #class         - указывает начало области внутри класса;
  #ns/#namespace - указывает начало области внутри пространства имён;
 
 &lt;c&gt;Взаимодействие с окружением:
- string arg     - входящий аргумент командной строки;
- return {...};  - значение формата int. Допускается для кода возврата скрипта;
- ScriptRuntime  - класс, в котором выполняется скрипт:
+ arg : string - входящий аргумент командной строки;
+ ScriptRuntime - класс, в котором выполняется скрипт:
+  .ExitCode : int - код возврата скрипта;
   .WriteLog(object value, [Color color])       : void - вывод информации в лог;
   .WriteLineLog([object value], [Color color]) : void - вывод информации в лог;
   .CreateManagedProcess() : Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
@@ -166,10 +167,9 @@ namespace CSScript
 {
 internal class CompiledScript : ScriptRuntime
 {
-public override int StartScript(string arg)
+public override void StartScript(string arg)
 {
-##function##
-return 0;
+##procedure##
 }
 ##class##
 }

@@ -139,22 +139,24 @@ namespace CSScript
                 }
                 else
                 {
-                    string script = GetScriptText();
+                    string scriptPath = GetFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+                    string scriptText = GetScriptText(scriptPath);
 
-                    WriteLogStartInfo();
+                    WriteLogStartInfo(scriptPath);
 
                     // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-                    // (для возможности указания коротких путей к файлам, в т.ч. загружаемым в скрипте сборкам)
-                    Environment.CurrentDirectory = GetScriptDirectoryPath();
+                    // (для возможности указания коротких путей к файлам)
+                    Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
 
-                    ScriptParsingInfo scriptParsingInfo = ParseScriptInfo(script);
+                    ScriptParsingInfo scriptParsingInfo = ParseScriptInfo(scriptText, scriptPath);
                     LoadAssembliesForResolve(scriptParsingInfo);
                     CompilerResults compilerResults = Compile(scriptParsingInfo);
 
                     if (compilerResults.Errors.Count == 0)
                     {
                         ScriptRuntime scriptRuntime = GetCompiledScript(compilerResults);
-                        ExitCode = scriptRuntime.StartScript(inputArguments.ScriptArgument);
+                        scriptRuntime.StartScript(inputArguments.ScriptArgument);
+                        ExitCode = scriptRuntime.ExitCode;
                     }
                     else
                     {
@@ -199,8 +201,8 @@ namespace CSScript
             try
             {
                 DebugScript debugScript = new DebugScript();
-                debugScript.StartScript(null);
-                ExitCode = debugScript.StartScript(inputArguments.ScriptArgument);
+                debugScript.StartScript(inputArguments.ScriptArgument);
+                ExitCode = debugScript.ExitCode;
             }
             catch (Exception ex)
             {
@@ -265,36 +267,6 @@ namespace CSScript
             }
         }
 
-        private string GetScriptPath()
-        {
-            if (string.IsNullOrEmpty(inputArguments.ScriptPath))
-            {
-                throw new Exception("Отсутствует путь к скрипту.");
-            }
-
-            string scriptPath = Path.GetFullPath(inputArguments.ScriptPath);
-
-            if (!File.Exists(scriptPath))
-            {
-                throw new Exception("Скрипт по указанному пути не найден.");
-            }
-
-            return scriptPath;
-        }
-
-        private string GetScriptDirectoryPath()
-        {
-            string scriptPath = GetScriptPath();
-            return Path.GetDirectoryName(scriptPath);
-        }
-
-        private string GetScriptText()
-        {
-            string scriptPath = GetScriptPath();
-            string script = File.ReadAllText(scriptPath, Encoding.UTF8);
-            return script;
-        }
-
         private void WriteLogHelpInfo()
         {
             string[] lines = Resources.HelpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
@@ -319,9 +291,9 @@ namespace CSScript
 
         }
 
-        private void WriteLogStartInfo()
+        private void WriteLogStartInfo(string scriptPath)
         {
-            WriteLineLog($"## {GetScriptPath()}", Settings.Default.InfoColor);
+            WriteLineLog($"## {scriptPath}", Settings.Default.InfoColor);
             WriteLineLog($"## {DateTime.Now}", Settings.Default.InfoColor);
             WriteLineLog();
         }
@@ -333,7 +305,7 @@ namespace CSScript
 
         private void WriteLogCompileErrors(CompilerResults compilerResults)
         {
-            WriteLineLog($"# Ошибок: {compilerResults.Errors.Count}", Settings.Default.ErrorColor);
+            WriteLineLog($"# Ошибок компиляции: {compilerResults.Errors.Count}", Settings.Default.ErrorColor);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors)
             {
@@ -362,16 +334,24 @@ namespace CSScript
             string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++)
             {
+                string line = lines[i];
                 int lineNumber = i + 1;
 
                 WriteLog(lineNumber.ToString().PadLeft(4) + ": ");
                 if (errorLines.Contains(lineNumber))
                 {
-                    WriteLineLog(lines[i], Settings.Default.ErrorColor);
+                    WriteLineLog(line, Settings.Default.ErrorColor);
                 }
                 else
                 {
-                    WriteLineLog(lines[i], Settings.Default.SourceCodeColor);
+                    if (line.TrimStart().StartsWith("//"))
+                    {
+                        WriteLineLog(line, Settings.Default.CommentColor);
+                    }
+                    else
+                    {
+                        WriteLineLog(line, Settings.Default.SourceCodeColor);
+                    }
                 }
             }
         }
@@ -399,9 +379,10 @@ namespace CSScript
 
 
 
-        private static ScriptParsingInfo ParseScriptInfo(string scriptText)
+        private static ScriptParsingInfo ParseScriptInfo(string scriptText, string scriptPath)
         {
-            List<string> defineList = new List<string>();
+            List<string> definedScriptsList = new List<string>();
+            List<string> definedAssemblyList = new List<string>();
             List<string> usingList = new List<string>();
 
             StringBuilder functionBlock = new StringBuilder();
@@ -410,11 +391,11 @@ namespace CSScript
 
             StringBuilder currentBlock = functionBlock;
 
-            string[] opLines = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
-            for (int i = 0; i < opLines.Length; i++)
+            string[] operatorBlocks = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
+            for (int i = 0; i < operatorBlocks.Length; i++)
             {
-                string opLine = opLines[i];
-                string[] lines = opLine.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+                string operatorBlock = operatorBlocks[i];
+                string[] lines = operatorBlock.Split(new string[] { "\r\n" }, StringSplitOptions.None);
                 for (int j = 0; j < lines.Length; j++)
                 {
                     string line = lines[j];
@@ -423,11 +404,17 @@ namespace CSScript
                     {
                         if (trimLine.StartsWith("#")) // служебные конструкции
                         {
-                            if (trimLine.StartsWith("#define"))
+                            if (trimLine.StartsWith("#definescript"))
+                            {
+                                string preparedLine = line.Replace("#definescript", "").Trim();
+                                definedScriptsList.Add(preparedLine);
+                            }
+                            else if (trimLine.StartsWith("#define"))
                             {
                                 string preparedLine = line.Replace("#define", "").Trim();
-                                defineList.Add(preparedLine);
+                                definedAssemblyList.Add(preparedLine);
                             }
+
                             else if (trimLine.StartsWith("#using"))
                             {
                                 string preparedLine = line.Replace("#", "").Trim() + ";";
@@ -454,28 +441,144 @@ namespace CSScript
                         }
                     }
                 }
-                if (i < opLines.Length - 1)
+                if (i < operatorBlocks.Length - 1)
                 {
                     currentBlock.Append(';');
                 }
             }
-            return new ScriptParsingInfo()
+
+            // преобразование из относительных в абсолютные пути для подключаемых сборок
+            string scriptWorkDirectory = GetWorkDirectoryPath(scriptPath);
+            for (int i = 0; i < definedAssemblyList.Count; i++)
             {
-                DefineList = defineList.ToArray(),
-                UsingBlock = string.Join("\r\n", usingList.ToArray()),
-                FunctionBlock = functionBlock.ToString(),
-                ClassBlock = classBlock.ToString(),
-                NamespaceBlock = namespaceBlock.ToString(),
+                definedAssemblyList[i] = GetCorrectAssemblyPath(definedAssemblyList[i], scriptWorkDirectory);
+            }
+
+            ScriptParsingInfo scriptParsingInfo = new ScriptParsingInfo()
+            {
+                ScriptPath = scriptPath,
+                DefinedAssemblyList = definedAssemblyList,
+                UsingList = usingList,
+                ProcedureBlock = functionBlock,
+                ClassBlock = classBlock,
+                NamespaceBlock = namespaceBlock,
             };
+
+            foreach (string definedScript in definedScriptsList)
+            {
+                MergeScripts(scriptParsingInfo, definedScript);
+            }
+
+            // удаление дублирующихся позиций в списке
+
+            DeleteDuplicates(scriptParsingInfo.DefinedAssemblyList,
+                (x, y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase));
+
+            DeleteDuplicates(scriptParsingInfo.UsingList,
+                (x, y) => string.Equals(x, y));
+
+            return scriptParsingInfo;
+        }
+
+        private static void MergeScripts(ScriptParsingInfo scriptParsingInfo, string definedScriptPath)
+        {
+            string scriptPath = GetFullPath(definedScriptPath, GetWorkDirectoryPath(scriptParsingInfo.ScriptPath));
+            string scriptText = GetScriptText(scriptPath);
+
+            ScriptParsingInfo definedScriptParsingInfo = ParseScriptInfo(scriptText, scriptPath);
+
+            foreach (string definedAssembly in definedScriptParsingInfo.DefinedAssemblyList)
+            {
+                scriptParsingInfo.DefinedAssemblyList.Add(definedAssembly);
+            }
+            foreach (string usingLine in definedScriptParsingInfo.UsingList)
+            {
+                scriptParsingInfo.UsingList.Add(usingLine);
+            }
+
+            if (definedScriptParsingInfo.ClassBlock.Length > 0)
+            {
+                scriptParsingInfo.ClassBlock.AppendLine();
+                scriptParsingInfo.ClassBlock.AppendLine("// <<< " + scriptPath);
+                scriptParsingInfo.ClassBlock.AppendLine(definedScriptParsingInfo.ClassBlock.ToString());
+                scriptParsingInfo.ClassBlock.AppendLine("// >>> " + scriptPath);
+            }
+            if (definedScriptParsingInfo.NamespaceBlock.Length > 0)
+            {
+                scriptParsingInfo.NamespaceBlock.AppendLine();
+                scriptParsingInfo.NamespaceBlock.AppendLine("// <<< " + scriptPath);
+                scriptParsingInfo.NamespaceBlock.AppendLine(definedScriptParsingInfo.NamespaceBlock.ToString());
+                scriptParsingInfo.NamespaceBlock.AppendLine("// >>> " + scriptPath);
+            }
+        }
+
+        private static string GetScriptText(string scriptPath)
+        {
+            return File.ReadAllText(scriptPath, Encoding.UTF8);
+        }
+
+        private static string GetFullPath(string path, string workDirectory)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new Exception("Отсутствует путь к файлу.");
+            }
+
+            if (!Path.IsPathRooted(path))
+            {
+                path = Path.Combine(workDirectory, path);
+            }
+
+            if (!File.Exists(path))
+            {
+                throw new Exception($"Файл '{path}' не найден.");
+            }
+
+            return path;
+        }
+
+        private static string GetWorkDirectoryPath(string path)
+        {
+            return Path.GetDirectoryName(path);
+        }
+
+        private static string GetCorrectAssemblyPath(string assemblyPath, string workDirectory)
+        {
+            if (!Path.IsPathRooted(assemblyPath))
+            {
+                // библиотека, указанная по относительному пути, находится либо в рабочей папке, либо в GAC
+                string fullPath = Path.Combine(workDirectory, assemblyPath);
+                if (File.Exists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
+            return assemblyPath;
+        }
+
+        private static void DeleteDuplicates<T>(List<T> list, Func<T, T, bool> comparison)
+        {
+            for (int i = 0; i < list.Count - 1; i++)
+            {
+                T value1 = list[i];
+                for (int j = i + 1; j < list.Count; j++)
+                {
+                    T value2 = list[j];
+                    if (comparison(value1, value2))
+                    {
+                        list.RemoveAt(j--);
+                    }
+                }
+            }
         }
 
         private static string GetSourceCode(ScriptParsingInfo scriptParsingInfo)
         {
             string source = Resources.SourceCodeTemplate;
-            source = source.Replace("##using##", scriptParsingInfo.UsingBlock);
-            source = source.Replace("##function##", scriptParsingInfo.FunctionBlock);
-            source = source.Replace("##class##", scriptParsingInfo.ClassBlock);
-            source = source.Replace("##namespace##", scriptParsingInfo.NamespaceBlock);
+            source = source.Replace("##using##", string.Join("\r\n", scriptParsingInfo.UsingList.ToArray()));
+            source = source.Replace("##procedure##", scriptParsingInfo.ProcedureBlock.ToString());
+            source = source.Replace("##class##", scriptParsingInfo.ClassBlock.ToString());
+            source = source.Replace("##namespace##", scriptParsingInfo.NamespaceBlock.ToString());
             return source;
         }
 
@@ -509,7 +612,7 @@ namespace CSScript
             definedAssemblies.Add("System.dll"); // библиотека для работы множества основных функций
             definedAssemblies.Add("System.Drawing.dll"); // для работы команд вывода в лог
             definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой
-            foreach (string defineAssembly in scriptParsingInfo.DefineList) // дополнительные библиотеки, указанные в #define
+            foreach (string defineAssembly in scriptParsingInfo.DefinedAssemblyList) // дополнительные библиотеки, указанные в #define
             {
                 definedAssemblies.Add(defineAssembly);
             }

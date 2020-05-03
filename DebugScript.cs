@@ -12,13 +12,11 @@ namespace CSScript
 {
     internal class DebugScript : ScriptRuntime
     {
-        public override int StartScript(string arg)
+        public override void StartScript(string arg)
         {
-            string projectFolder = @"D:\Develop\VisualStudio\Projects";
+            string projectFolder = Environment.CurrentDirectory;
             string backupFolder = @"D:\Хранилище\Разработка\Проекты";
             BackupProjectDirectory(projectFolder, backupFolder);
-
-            return 0;
         }
 
         private void BackupProjectDirectory(string projectDirectory, string backupDirectory)
@@ -35,10 +33,13 @@ namespace CSScript
                 File.Delete(archivePath);
 
                 WriteLog("Упаковка '" + archiveName + "'...");
-                int errorCode = StartManaged(@"C:\Program Files\7-Zip\7z.exe", Get7ZipArgs(directory + "\\*", archivePath), false);
-                if (errorCode == 0)
+
+                int archiveError = StartManaged(@"C:\Program Files\7-Zip\7z.exe",
+                    new SevenZipArgs(directory + "\\*", archivePath).ToString(), false);
+
+                if (archiveError == 0)
                 {
-                    WriteLog(" - успешно.");
+                    WriteLog(" - успешно.", Settings.InfoColor);
                     string archiveHash = CalculateMD5Hash(archivePath);
 
                     string backupArchiveHash = null;
@@ -50,7 +51,7 @@ namespace CSScript
                     if (string.Equals(archiveHash, backupArchiveHash))
                     {
                         File.Delete(archivePath);
-                        WriteLog(" Без изменений.", Color.Gray);
+                        WriteLog(" Без изменений.", Settings.InfoColor);
                     }
                     else
                     {
@@ -61,7 +62,7 @@ namespace CSScript
                 }
                 else
                 {
-                    WriteLog(" - с ошибками (код " + errorCode + ").");
+                    WriteLog(" - с ошибками (код " + archiveError + ").", Settings.ErrorColor);
                     File.Delete(archivePath);
                 }
                 WriteLineLog();
@@ -77,7 +78,7 @@ namespace CSScript
 
 
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.07) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.09) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, int padCount = 0)
@@ -91,23 +92,6 @@ namespace CSScript
         {
             Process process = CreateManagedProcess();
             return __StartProcess(process, program, args, printOutput, outputColor, padCount);
-        }
-
-        // Упаковка в архив 7-Zip
-        private string Get7ZipArgs(string input, string output, int compressLevel = 9, string password = null)
-        {
-            StringBuilder args = new StringBuilder();
-            args.Append("a"); // Добавление файлов в архив. Если архивного файла не существует, создает его
-            args.Append(" \"" + output + "\"");
-            args.Append(" -ssw"); // Включить файл в архив, даже если он в данный момент используется. Для резервного копирования очень полезный ключ
-            args.Append(" -mx" + compressLevel); // Уровень компрессии. 0 - без компрессии (быстро), 9 - самая большая компрессия (медленно)
-            if (!string.IsNullOrEmpty(password))
-            {
-                args.Append(" -p" + password); // Пароль для архива
-                args.Append(" -mhe"); // Шифровать имена файлов
-            }
-            args.Append(" \"" + input + "\"");
-            return args.ToString();
         }
 
         // Создание папки
@@ -238,6 +222,45 @@ namespace CSScript
             return hashString.ToString();
         }
 
+        // Аргументы для командной строки 7-Zip
+        private class SevenZipArgs
+        {
+            public SevenZipArgs()
+            {
+
+            }
+            public SevenZipArgs(string input, string output)
+            {
+                Input = input;
+                Output = output;
+            }
+
+            public string Input;
+            public string Output;
+            public int CompressionLevel = 9;
+            public string Password;
+            public bool EncryptFileStructure = true;
+
+            public override string ToString()
+            {
+                StringBuilder stringArgs = new StringBuilder();
+                stringArgs.Append("a"); // Добавление файлов в архив. Если архивного файла не существует, создает его
+                stringArgs.Append(" \"" + Output + "\"");
+                stringArgs.Append(" -ssw"); // Включить файл в архив, даже если он в данный момент используется. Для резервного копирования очень полезный ключ
+                stringArgs.Append(" -mx" + CompressionLevel); // Уровень компрессии. 0 - без компрессии (быстро), 9 - самая большая компрессия (медленно)
+                if (!string.IsNullOrEmpty(Password))
+                {
+                    stringArgs.Append(" -p" + Password); // Пароль для архива
+                    if (EncryptFileStructure)
+                    {
+                        stringArgs.Append(" -mhe"); // Шифровать имена файлов
+                    }
+                }
+                stringArgs.Append(" \"" + Input + "\"");
+                return stringArgs.ToString();
+            }
+        }
+
         private int __StartProcess(Process process, string program, string args, bool printOutput, Color? outputColor, int padCount)
         {
             __CheckFileExists(program);
@@ -273,6 +296,7 @@ namespace CSScript
                 throw new Exception("Не удаётся найти '" + filePath + "'.");
             }
         }
+
 
 
 

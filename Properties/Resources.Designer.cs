@@ -80,8 +80,9 @@ namespace CSScript.Properties {
         /// - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
         ///
         ///&lt;c&gt;Служебный синтаксис скрипта:
-        /// #define {...}  - подключение другой сборки. Указывается путь к сборке;
-        /// #using {...}   - конструкция C# using. Используется # в начале с [остаток строки не уместился]&quot;;.
+        /// #define {...}       - подключение другой сборки (.exe, .dll);
+        /// #definescript {...} - подключение другого скрипта;
+        /// #using {...}   - кон [остаток строки не уместился]&quot;;.
         /// </summary>
         internal static string HelpText {
             get {
@@ -95,10 +96,9 @@ namespace CSScript.Properties {
         ///{
         ///internal class CompiledScript : ScriptRuntime
         ///{
-        ///public override int StartScript(string arg)
+        ///public override void StartScript(string arg)
         ///{
-        ///##function##
-        ///return 0;
+        ///##procedure##
         ///}
         ///##class##
         ///}
