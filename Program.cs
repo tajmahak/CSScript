@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define DEBUGSCRIPT
+
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Forms;
@@ -10,12 +12,11 @@ namespace CSScript
         [STAThread]
         private static int Main(string[] args)
         {
-            bool startDebugScript = false;
-#if DEBUG
-            startDebugScript = false;
+#if DEBUGSCRIPT
+            ProgramModel = new ProgramModel()
+#else
+            ProgramModel = new ProgramModel(args);
 #endif
-
-            ProgramModel = startDebugScript ? new ProgramModel() : new ProgramModel(args);
             ProgramModel.AddLogEvent += ProgramModel_AddLogEvent;
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
 

@@ -1,4 +1,6 @@
-﻿namespace CSScript
+﻿using System.Collections.Generic;
+
+namespace CSScript
 {
     /// <summary>
     /// Структурированные аргументы командной строки
@@ -9,6 +11,6 @@
         public bool HideMode { get; set; }
         public string LogPath { get; set; }
         public string ScriptPath { get; set; }
-        public string ScriptArgument { get; set; }
+        public List<string> ScriptArguments { get; set; } = new List<string>();
     }
 }

@@ -9,10 +9,10 @@ namespace CSScript
     internal class ScriptParsingInfo
     {
         public string ScriptPath { get; set; }
-        public List<string> DefinedAssemblyList { get; set; }
-        public List<string> UsingList { get; set; }
-        public StringBuilder ProcedureBlock { get; set; }
-        public StringBuilder ClassBlock { get; set; }
-        public StringBuilder NamespaceBlock { get; set; }
+        public List<string> DefinedAssemblyList { get; set; } = new List<string>();
+        public List<string> UsingList { get; set; } = new List<string>();
+        public StringBuilder ProcedureBlock { get; set; } = new StringBuilder();
+        public StringBuilder ClassBlock { get; set; } = new StringBuilder();
+        public StringBuilder NamespaceBlock { get; set; } = new StringBuilder();
     }
 }

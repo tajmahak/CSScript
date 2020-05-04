@@ -76,13 +76,13 @@ namespace CSScript.Properties {
         ///&lt;c&gt;Аргументы командной строки:
         /// - {...}          - путь к файлу скрипта;
         /// - [/h[ide]]      - выполнение скрипта в скрытом режиме;
-        /// - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);
         /// - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
+        /// - [/a[rgs] {...} [{...} ...]] - входящий аргумент для использования в скрипте (string[] args);
         ///
         ///&lt;c&gt;Служебный синтаксис скрипта:
         /// #define {...}       - подключение другой сборки (.exe, .dll);
         /// #definescript {...} - подключение другого скрипта;
-        /// #using {...}   - кон [остаток строки не уместился]&quot;;.
+        /// #usi [остаток строки не уместился]&quot;;.
         /// </summary>
         internal static string HelpText {
             get {
@@ -94,9 +94,9 @@ namespace CSScript.Properties {
         ///   Ищет локализованную строку, похожую на ##using##
         ///namespace CSScript
         ///{
-        ///internal class CompiledScript : ScriptRuntime
+        ///internal class CompiledScript : ScriptContainer
         ///{
-        ///public override void StartScript(string arg)
+        ///public override void StartScript(string[] args)
         ///{
         ///##procedure##
         ///}

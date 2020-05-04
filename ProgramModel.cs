@@ -99,7 +99,10 @@ namespace CSScript
             if (!string.IsNullOrEmpty(text))
             {
                 LogItem item = new LogItem(text, DateTime.Now, foreColor);
-                logItems.Add(item);
+                lock (logItems)
+                {
+                    logItems.Add(item);
+                }
                 AddLogEvent?.Invoke(this, item);
             }
         }
@@ -139,7 +142,7 @@ namespace CSScript
                     WriteLogStartInfo(scriptPath);
 
                     // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-                    // (для возможности указания коротких путей к файлам)
+                    // (для возможности указания относительных путей к файлам)
                     Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
 
                     ScriptParsingInfo scriptParsingInfo = ParseScriptInfo(scriptText, scriptPath);
@@ -148,10 +151,10 @@ namespace CSScript
 
                     if (compilerResults.Errors.Count == 0)
                     {
-                        ScriptRuntime scriptRuntime = GetCompiledScript(compilerResults);
-                        scriptRuntime.StartScript(inputArguments.ScriptArgument);
-                        ExitCode = scriptRuntime.ExitCode;
-                        scriptGUIForceExit = scriptRuntime.GUIForceExit;
+                        ScriptContainer scriptContainer = GetCompiledScript(compilerResults);
+                        scriptContainer.StartScript(inputArguments.ScriptArguments.ToArray());
+                        ExitCode = scriptContainer.ExitCode;
+                        scriptGUIForceExit = scriptContainer.GUIForceExit;
                     }
                     else
                     {
@@ -197,7 +200,7 @@ namespace CSScript
             try
             {
                 DebugScript debugScript = new DebugScript();
-                debugScript.StartScript(inputArguments.ScriptArgument);
+                debugScript.StartScript(inputArguments.ScriptArguments.ToArray());
                 ExitCode = debugScript.ExitCode;
             }
             catch (Exception ex)
@@ -222,6 +225,7 @@ namespace CSScript
             }
             else
             {
+                string currentArgument = null;
                 for (int i = 0; i < args.Length; i++)
                 {
                     string arg = args[i];
@@ -229,20 +233,26 @@ namespace CSScript
                     if (preparedArg == "/h" || preparedArg == "/hide")
                     {
                         inputArguments.HideMode = true;
-                    }
-                    else if (preparedArg == "/a" || preparedArg == "/arg")
-                    {
-                        inputArguments.ScriptArgument = args[++i];
+                        currentArgument = null;
                     }
                     else if (preparedArg == "/l" || preparedArg == "/log")
                     {
                         inputArguments.LogPath = args[++i];
+                        currentArgument = null;
+                    }
+                    else if (preparedArg == "/a" || preparedArg == "/arg")
+                    {
+                        currentArgument = "a";
                     }
                     else
                     {
-                        if (inputArguments.ScriptPath == null)
+                        if (currentArgument == null && inputArguments.ScriptPath == null)
                         {
                             inputArguments.ScriptPath = arg;
+                        }
+                        else if (currentArgument == "a")
+                        {
+                            inputArguments.ScriptArguments.Add(arg);
                         }
                     }
                 }
@@ -251,10 +261,12 @@ namespace CSScript
 
         private void LoadAssembliesForResolve(ScriptParsingInfo scriptParsingInfo)
         {
+            string currentAssembly = Assembly.GetExecutingAssembly().Location;
+
             string[] assemblies = GetReferencedAssemblies(scriptParsingInfo);
             foreach (string assembly in assemblies)
             {
-                if (File.Exists(assembly))
+                if (File.Exists(assembly) && !string.Equals(assembly, currentAssembly, StringComparison.OrdinalIgnoreCase))
                 {
                     // загружаются только те сборки, которые рантайм не может подгрузить автоматически
                     Assembly loadedAssembly = Assembly.LoadFrom(assembly);
@@ -394,15 +406,10 @@ namespace CSScript
 
         private static ScriptParsingInfo ParseScriptInfo(string scriptText, string scriptPath)
         {
+            ScriptParsingInfo scriptParsingInfo = new ScriptParsingInfo();
+
             List<string> definedScriptsList = new List<string>();
-            List<string> definedAssemblyList = new List<string>();
-            List<string> usingList = new List<string>();
-
-            StringBuilder functionBlock = new StringBuilder();
-            StringBuilder classBlock = new StringBuilder();
-            StringBuilder namespaceBlock = new StringBuilder();
-
-            StringBuilder currentBlock = functionBlock;
+            StringBuilder currentBlock = scriptParsingInfo.ProcedureBlock;
 
             string[] operatorBlocks = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
             for (int i = 0; i < operatorBlocks.Length; i++)
@@ -425,22 +432,22 @@ namespace CSScript
                             else if (trimLine.StartsWith("#define"))
                             {
                                 string preparedLine = line.Replace("#define", "").Trim();
-                                definedAssemblyList.Add(preparedLine);
+                                scriptParsingInfo.DefinedAssemblyList.Add(preparedLine);
                             }
 
                             else if (trimLine.StartsWith("#using"))
                             {
                                 string preparedLine = line.Replace("#", "").Trim() + ";";
-                                usingList.Add(preparedLine);
+                                scriptParsingInfo.UsingList.Add(preparedLine);
                             }
                             else if (trimLine.StartsWith("#class"))
                             {
-                                currentBlock = classBlock;
+                                currentBlock = scriptParsingInfo.ClassBlock;
                                 continue;
                             }
                             else if (trimLine.StartsWith("#ns") || trimLine.StartsWith("#namespace"))
                             {
-                                currentBlock = namespaceBlock;
+                                currentBlock = scriptParsingInfo.NamespaceBlock;
                                 continue;
                             }
                         }
@@ -462,21 +469,13 @@ namespace CSScript
 
             // преобразование из относительных в абсолютные пути для подключаемых сборок
             string scriptWorkDirectory = GetWorkDirectoryPath(scriptPath);
-            for (int i = 0; i < definedAssemblyList.Count; i++)
+            for (int i = 0; i < scriptParsingInfo.DefinedAssemblyList.Count; i++)
             {
-                definedAssemblyList[i] = GetCorrectAssemblyPath(definedAssemblyList[i], scriptWorkDirectory);
+                scriptParsingInfo.DefinedAssemblyList[i]
+                    = GetCorrectAssemblyPath(scriptParsingInfo.DefinedAssemblyList[i], scriptWorkDirectory);
             }
 
-            ScriptParsingInfo scriptParsingInfo = new ScriptParsingInfo()
-            {
-                ScriptPath = scriptPath,
-                DefinedAssemblyList = definedAssemblyList,
-                UsingList = usingList,
-                ProcedureBlock = functionBlock,
-                ClassBlock = classBlock,
-                NamespaceBlock = namespaceBlock,
-            };
-
+            // слияние с другими скриптами, включённые в текущий скрипт
             foreach (string definedScript in definedScriptsList)
             {
                 MergeScripts(scriptParsingInfo, definedScript);
@@ -612,19 +611,19 @@ namespace CSScript
             }
         }
 
-        private static ScriptRuntime GetCompiledScript(CompilerResults compilerResults)
+        private static ScriptContainer GetCompiledScript(CompilerResults compilerResults)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
             object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript");
-            return (ScriptRuntime)instance;
+            return (ScriptContainer)instance;
         }
 
         private static string[] GetReferencedAssemblies(ScriptParsingInfo scriptParsingInfo)
         {
             List<string> definedAssemblies = new List<string>();
             definedAssemblies.Add("System.dll"); // библиотека для работы множества основных функций
-            definedAssemblies.Add("System.Drawing.dll"); // для работы команд вывода в лог
-            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой
+            definedAssemblies.Add("System.Drawing.dll"); // для работы команд вывода информации в лог
+            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
             foreach (string defineAssembly in scriptParsingInfo.DefinedAssemblyList) // дополнительные библиотеки, указанные в #define
             {
                 definedAssemblies.Add(defineAssembly);

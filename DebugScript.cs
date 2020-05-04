@@ -10,63 +10,11 @@ using System.Text;
 
 namespace CSScript
 {
-    internal class DebugScript : ScriptRuntime
+    internal class DebugScript : ScriptContainer
     {
-        public override void StartScript(string arg)
+        public override void StartScript(string[] args)
         {
-            string projectFolder = Environment.CurrentDirectory;
-            string backupFolder = @"D:\Хранилище\Разработка\Проекты";
-            BackupProjectDirectory(projectFolder, backupFolder);
-        }
-
-        private void BackupProjectDirectory(string projectDirectory, string backupDirectory)
-        {
-            CreateDirectory(backupDirectory);
-
-            string[] directories = Directory.GetDirectories(projectDirectory);
-            foreach (string directory in directories)
-            {
-                string archivePath = directory + ".7z";
-                string archiveName = Path.GetFileName(archivePath);
-                string backupArchivePath = Path.Combine(backupDirectory, archiveName);
-
-                File.Delete(archivePath);
-
-                WriteLog("Упаковка '" + archiveName + "'...");
-
-                int archiveError = StartManaged(@"C:\Program Files\7-Zip\7z.exe",
-                    new SevenZipArgs(directory + "\\*", archivePath).ToString(), false);
-
-                if (archiveError == 0)
-                {
-                    WriteLog(" - успешно.", Settings.InfoColor);
-                    string archiveHash = CalculateMD5Hash(archivePath);
-
-                    string backupArchiveHash = null;
-                    if (File.Exists(backupArchivePath))
-                    {
-                        backupArchiveHash = CalculateMD5Hash(backupArchivePath);
-                    }
-
-                    if (string.Equals(archiveHash, backupArchiveHash))
-                    {
-                        File.Delete(archivePath);
-                        WriteLog(" Без изменений.", Settings.InfoColor);
-                    }
-                    else
-                    {
-                        File.Delete(backupArchivePath);
-                        File.Move(archivePath, backupArchivePath);
-                        WriteLog(" Выполнена замена.", Color.Green);
-                    }
-                }
-                else
-                {
-                    WriteLog(" - с ошибками (код " + archiveError + ").", Settings.ErrorColor);
-                    File.Delete(archivePath);
-                }
-                WriteLineLog();
-            }
+           
         }
 
 
@@ -78,20 +26,21 @@ namespace CSScript
 
 
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.09) ---
+
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.11) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
-        private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, int padCount = 0)
+        private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
         {
             Process process = new Process();
-            return __StartProcess(process, program, args, printOutput, outputColor, padCount);
+            return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
         // Запуск контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится) 
-        private int StartManaged(string program, string args = null, bool printOutput = true, Color? outputColor = null, int padCount = 0)
+        private int StartManaged(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
         {
             Process process = CreateManagedProcess();
-            return __StartProcess(process, program, args, printOutput, outputColor, padCount);
+            return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
         // Создание папки
@@ -177,7 +126,7 @@ namespace CSScript
                 catch
                 {
                     string fileName = Path.GetFileName(file);
-                    WriteLineLog("Не удалось удалить файл '" + fileName + "'", ScriptRuntime.Settings.ErrorColor);
+                    WriteLineLog("Не удалось удалить файл '" + fileName + "'", ScriptContainer.Settings.ErrorColor);
                 }
             }
         }
@@ -205,6 +154,7 @@ namespace CSScript
         // Вычисление MD5 хэша для файла
         private string CalculateMD5Hash(string filePath)
         {
+            filePath = Path.GetFullPath(filePath);
             __CheckFileExists(filePath);
             byte[] hash;
             using (MD5 md5 = MD5.Create())
@@ -261,8 +211,13 @@ namespace CSScript
             }
         }
 
-        private int __StartProcess(Process process, string program, string args, bool printOutput, Color? outputColor, int padCount)
+        private int __StartProcess(Process process, string program, string args, bool printOutput, Color? outputColor, Encoding encoding)
         {
+            if (encoding == null)
+            {
+                encoding = Encoding.Default;
+            }
+
             __CheckFileExists(program);
             using (process)
             {
@@ -275,15 +230,18 @@ namespace CSScript
                     WindowStyle = ProcessWindowStyle.Hidden,
                     CreateNoWindow = true,
                 };
-                process.OutputDataReceived += (sender, e) =>
-                {
-                    if (printOutput)
-                    {
-                        WriteLineLog(new string(' ', padCount) + e.Data, outputColor);
-                    }
-                };
+
                 process.Start();
-                process.BeginOutputReadLine();
+                if (printOutput)
+                {
+                    __AsyncStreamReader asyncReader = new __AsyncStreamReader(process.StandardOutput.BaseStream, 1024);
+                    asyncReader.DataReceived += (byte[] buffer, int count) =>
+                    {
+                        string text = encoding.GetString(buffer, 0, count);
+                        WriteLog(text, outputColor);
+                    };
+                    asyncReader.BeginRead();
+                }
                 process.WaitForExit();
                 return process.ExitCode;
             }
@@ -291,11 +249,45 @@ namespace CSScript
 
         private void __CheckFileExists(string filePath)
         {
-            if (!File.Exists(filePath))
+            if (Path.IsPathRooted(filePath) && !File.Exists(filePath))
             {
                 throw new Exception("Не удаётся найти '" + filePath + "'.");
             }
         }
+
+        private class __AsyncStreamReader
+        {
+            private readonly Stream stream;
+            private readonly byte[] buffer;
+            public __AsyncStreamReader(Stream stream, int bufferSize)
+            {
+                this.stream = stream;
+                buffer = new byte[bufferSize];
+            }
+
+            public delegate void DataReceivedHandler(byte[] buffer, int count);
+            public event DataReceivedHandler DataReceived;
+
+            public void BeginRead()
+            {
+                stream.BeginRead(buffer, 0, buffer.Length, AsyncCallback, null);
+            }
+
+            private void AsyncCallback(IAsyncResult ar)
+            {
+                int count = stream.EndRead(ar);
+                if (count > 0)
+                {
+                    if (DataReceived != null)
+                    {
+                        DataReceived.Invoke(buffer, count);
+                    }
+                    stream.BeginRead(buffer, 0, buffer.Length, AsyncCallback, null);
+                }
+            }
+        }
+
+
 
 
 

@@ -69,7 +69,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ScriptRuntime.cs" />
+    <Compile Include="ScriptContainer.cs" />
     <Compile Include="InputArgumentsInfo.cs" />
     <Compile Include="LogItem.cs" />
     <Compile Include="Program.cs" />

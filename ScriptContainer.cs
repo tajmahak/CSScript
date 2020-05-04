@@ -7,14 +7,14 @@ namespace CSScript
     /// <summary>
     /// Представляет оболочку для выполнения скомпилированного скрипта в программе 
     /// </summary>
-    public abstract class ScriptRuntime
+    public abstract class ScriptContainer
     {
         /// <summary>
         /// Запуск выполнения скрипта
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
-        public abstract void StartScript(string arg);
+        public abstract void StartScript(string[] args);
 
         // Сущности, используемые в скрипте (public):
 

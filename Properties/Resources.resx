@@ -127,8 +127,8 @@
 &lt;c&gt;Аргументы командной строки:
  - {...}          - путь к файлу скрипта;
  - [/h[ide]]      - выполнение скрипта в скрытом режиме;
- - [/a[rg] {...}] - входящий аргумент для использования в скрипте (string arg);
  - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
+ - [/a[rgs] {...} [{...} ...]] - входящий аргумент для использования в скрипте (string[] args);
 
 &lt;c&gt;Служебный синтаксис скрипта:
  #define {...}       - подключение другой сборки (.exe, .dll);
@@ -138,8 +138,8 @@
  #ns/#namespace - указывает начало области внутри пространства имён;
 
 &lt;c&gt;Взаимодействие с окружением:
- arg : string  - входящий аргумент командной строки;
- ScriptRuntime - класс, в котором выполняется скрипт:
+ args : string[]  - входящий аргумент командной строки;
+ ScriptContainer - класс-оболочка, в котором выполняется скрипт:
   .ExitCode : int     - код возврата скрипта;
   .GUIForceExit: bool - принудительный выход из GUI после завершения скрипта, без ожидания действий пользователя;
   .WriteLog(object value, [Color color]) : static void       - вывод информации в лог;
@@ -160,9 +160,9 @@
     <value>##using##
 namespace CSScript
 {
-internal class CompiledScript : ScriptRuntime
+internal class CompiledScript : ScriptContainer
 {
-public override void StartScript(string arg)
+public override void StartScript(string[] args)
 {
 ##procedure##
 }
