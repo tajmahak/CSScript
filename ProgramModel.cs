@@ -96,10 +96,12 @@ namespace CSScript
 
         public void WriteLog(string text, Color? foreColor = null)
         {
-            text = text ?? string.Empty;
-            LogItem item = new LogItem(text, DateTime.Now, foreColor);
-            logItems.Add(item);
-            AddLogEvent?.Invoke(this, item);
+            if (!string.IsNullOrEmpty(text))
+            {
+                LogItem item = new LogItem(text, DateTime.Now, foreColor);
+                logItems.Add(item);
+                AddLogEvent?.Invoke(this, item);
+            }
         }
 
         public void WriteLineLog(string text, Color? foreColor = null)

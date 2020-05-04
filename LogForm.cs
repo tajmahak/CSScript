@@ -30,6 +30,7 @@ namespace CSScript
         private void Form_FormClosed(object sender, FormClosedEventArgs e)
         {
             stopLogOutput = true;
+            timer.Dispose();
         }
 
         private void Form_KeyDown(object sender, KeyEventArgs e)
