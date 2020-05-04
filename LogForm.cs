@@ -56,7 +56,7 @@ namespace CSScript
                     break;
                 }
                 LogItem log = logs[currentLogPosition];
-                InvokeEx(() => Print(log));
+                Print(log);
                 currentLogPosition++;
             }
 
@@ -75,19 +75,7 @@ namespace CSScript
             {
                 richTextBox.Select(richTextBox.TextLength - text.Length, text.Length);
                 richTextBox.SelectionColor = log.ForeColor.Value;
-            }
-            richTextBox.Select(richTextBox.TextLength, 0);
-        }
-
-        private void InvokeEx(Action action)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(action);
-            }
-            else
-            {
-                action();
+                richTextBox.Select(richTextBox.TextLength, 0);
             }
         }
     }
