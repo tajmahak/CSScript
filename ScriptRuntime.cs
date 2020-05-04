@@ -20,6 +20,8 @@ namespace CSScript
 
         public int ExitCode { get; set; }
 
+        public bool GUIForceExit { get; set; }
+
         public static void WriteLog(object value, Color? color = null)
         {
             Program.ProgramModel.WriteLog(value.ToString(), color);
@@ -41,6 +43,6 @@ namespace CSScript
             return Program.ProgramModel.CreateManagedProcess();
         }
 
-        public static readonly Settings Settings = Settings.Default;
+        public static Settings Settings { get; private set; } = Settings.Default;
     }
 }

@@ -11,6 +11,7 @@ namespace CSScript
     {
         private readonly Timer timer;
         private int currentLogPosition;
+        private bool stopLogOutput;
 
         public LogForm()
         {
@@ -28,7 +29,7 @@ namespace CSScript
 
         private void Form_FormClosed(object sender, FormClosedEventArgs e)
         {
-            timer.Stop();
+            stopLogOutput = true;
         }
 
         private void Form_KeyDown(object sender, KeyEventArgs e)
@@ -50,12 +51,16 @@ namespace CSScript
             System.Collections.ObjectModel.ReadOnlyCollection<LogItem> logs = Program.ProgramModel.LogItems;
             while (currentLogPosition < logs.Count)
             {
+                if (stopLogOutput)
+                {
+                    break;
+                }
                 LogItem log = logs[currentLogPosition];
                 InvokeEx(() => Print(log));
                 currentLogPosition++;
             }
 
-            if (!Program.ProgramModel.Finished)
+            if (!Program.ProgramModel.Finished && !stopLogOutput)
             {
                 timer.Start();
             }
@@ -72,7 +77,6 @@ namespace CSScript
                 richTextBox.SelectionColor = log.ForeColor.Value;
             }
             richTextBox.Select(richTextBox.TextLength, 0);
-            Application.DoEvents(); // для того, чтобы нажатия клавиш не уходили в очередь сообщений
         }
 
         private void InvokeEx(Action action)

@@ -138,19 +138,14 @@
  #ns/#namespace - указывает начало области внутри пространства имён;
 
 &lt;c&gt;Взаимодействие с окружением:
- arg : string - входящий аргумент командной строки;
+ arg : string  - входящий аргумент командной строки;
  ScriptRuntime - класс, в котором выполняется скрипт:
-  .ExitCode : int - код возврата скрипта;
-  .WriteLog(object value, [Color color])       : void - вывод информации в лог;
-  .WriteLineLog([object value], [Color color]) : void - вывод информации в лог;
-  .CreateManagedProcess() : Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
-  .Settings - настройки программы:
-&lt;i&gt;   .BackColor       - цвет фона консоли;
-&lt;i&gt;   .CaptionColor    - цвет текста заголовков;
-&lt;i&gt;   .ErrorColor      - цвет текста ошибок;
-&lt;i&gt;   .ForeColor       - цвет текста основного текста;
-&lt;i&gt;   .InfoColor       - цвет дополнительного информационного текста;
-&lt;i&gt;   .SourceCodeColor - цвет исходного кода;
+  .ExitCode : int     - код возврата скрипта;
+  .GUIForceExit: bool - принудительный выход из GUI после завершения скрипта, без ожидания действий пользователя;
+  .WriteLog(object value, [Color color]) : static void       - вывод информации в лог;
+  .WriteLineLog([object value], [Color color]) : static void - вывод информации в лог;
+  .CreateManagedProcess() : static Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
+  .Settings : static Settings - настройки программы;
 
 &lt;c&gt;Пример скрипта:
  #using System.Drawing

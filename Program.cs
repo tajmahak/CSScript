@@ -17,6 +17,7 @@ namespace CSScript
 
             ProgramModel = startDebugScript ? new ProgramModel() : new ProgramModel(args);
             ProgramModel.AddLogEvent += ProgramModel_AddLogEvent;
+            ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
 
             // для подгрузки библиотек рантаймом, которые не подгружаются самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolveEvent;
@@ -42,7 +43,7 @@ namespace CSScript
 
         private static void Application_ApplicationExit(object sender, EventArgs e)
         {
-            ProgramModel.KillManagedProcesses();
+            ProgramModel.Dispose();
         }
 
         private static Assembly CurrentDomain_AssemblyResolveEvent(object sender, ResolveEventArgs args)
@@ -50,9 +51,17 @@ namespace CSScript
             return ProgramModel.ResolveAssembly(args.Name);
         }
 
-        private static void ProgramModel_AddLogEvent(LogItem logItem)
+        private static void ProgramModel_AddLogEvent(object sender, LogItem logItem)
         {
             Debug.Write(logItem.Text);
+        }
+
+        private static void ProgramModel_FinishedEvent(object sender, bool guiForceExit)
+        {
+            if (guiForceExit)
+            {
+                Application.Exit();
+            }
         }
 
 

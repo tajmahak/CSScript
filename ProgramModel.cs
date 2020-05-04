@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace CSScript
 {
-    internal class ProgramModel
+    internal class ProgramModel : IDisposable
     {
         public bool GUIMode { get; private set; }
 
@@ -31,7 +31,7 @@ namespace CSScript
 
         private readonly Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
 
-        private readonly Queue<Process> managedProcesses = new Queue<Process>();
+        private readonly List<Process> managedProcesses = new List<Process>();
 
         private Thread executingThread;
 
@@ -39,9 +39,13 @@ namespace CSScript
 
 
 
-        public event Action<LogItem> AddLogEvent;
+        public delegate void AddLogEventHandler(object sender, LogItem logItem);
 
-        public event Action FinishedEvent;
+        public event AddLogEventHandler AddLogEvent;
+
+        public delegate void FinishedEventHandler(object sender, bool guiForceExit);
+
+        public event FinishedEventHandler FinishedEvent;
 
 
 
@@ -85,27 +89,9 @@ namespace CSScript
             Process process = new Process();
             lock (managedProcesses)
             {
-                managedProcesses.Enqueue(process);
+                managedProcesses.Add(process);
             }
             return process;
-        }
-
-        public void KillManagedProcesses()
-        {
-            lock (managedProcesses)
-            {
-                while (managedProcesses.Count > 0)
-                {
-                    Process process = managedProcesses.Dequeue();
-                    try
-                    {
-                        process.Kill();
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
         }
 
         public void WriteLog(string text, Color? foreColor = null)
@@ -113,7 +99,7 @@ namespace CSScript
             text = text ?? string.Empty;
             LogItem item = new LogItem(text, DateTime.Now, foreColor);
             logItems.Add(item);
-            AddLogEvent?.Invoke(item);
+            AddLogEvent?.Invoke(this, item);
         }
 
         public void WriteLineLog(string text, Color? foreColor = null)
@@ -126,10 +112,16 @@ namespace CSScript
             WriteLog(Environment.NewLine);
         }
 
+        public void Dispose()
+        {
+            KillManagedProcesses();
+        }
+
 
 
         private void StartScript()
         {
+            bool scriptGUIForceExit = false;
             try
             {
                 if (inputArguments.IsEmpty)
@@ -157,6 +149,7 @@ namespace CSScript
                         ScriptRuntime scriptRuntime = GetCompiledScript(compilerResults);
                         scriptRuntime.StartScript(inputArguments.ScriptArgument);
                         ExitCode = scriptRuntime.ExitCode;
+                        scriptGUIForceExit = scriptRuntime.GUIForceExit;
                     }
                     else
                     {
@@ -192,7 +185,8 @@ namespace CSScript
             }
 
             Finished = true;
-            FinishedEvent?.Invoke();
+            bool guiForceExit = GUIMode && scriptGUIForceExit;
+            FinishedEvent?.Invoke(this, guiForceExit);
         }
 
         private void StartDebugScript()
@@ -214,7 +208,7 @@ namespace CSScript
             WriteLineLog($"# Выполнено с кодом возврата: {ExitCode}", Settings.Default.InfoColor);
 
             Finished = true;
-            FinishedEvent?.Invoke();
+            FinishedEvent?.Invoke(this, false);
 #endif
         }
 
@@ -377,6 +371,23 @@ namespace CSScript
             }
         }
 
+        private void KillManagedProcesses()
+        {
+            lock (managedProcesses)
+            {
+                for (int i = 0; i < managedProcesses.Count; i++)
+                {
+                    try
+                    {
+                        managedProcesses[i].Kill();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
 
 
         private static ScriptParsingInfo ParseScriptInfo(string scriptText, string scriptPath)
@@ -469,11 +480,11 @@ namespace CSScript
                 MergeScripts(scriptParsingInfo, definedScript);
             }
 
-            // удаление дублирующихся позиций в списке
-
+            // удаление дублирующихся позиций сборок
             DeleteDuplicates(scriptParsingInfo.DefinedAssemblyList,
                 (x, y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase));
 
+            // удаление дублирующихся конструкций using
             DeleteDuplicates(scriptParsingInfo.UsingList,
                 (x, y) => string.Equals(x, y));
 
