@@ -9,6 +9,12 @@ namespace CSScript
     /// </summary>
     public abstract class ScriptContainer
     {
+        public ScriptContainer(string scriptPath, Settings settings)
+        {
+            ScriptPath = scriptPath;
+            Settings = settings;
+        }
+
         /// <summary>
         /// Запуск выполнения скрипта
         /// </summary>
@@ -17,6 +23,10 @@ namespace CSScript
         public abstract void StartScript(string[] args);
 
         // Сущности, используемые в скрипте (public):
+
+        public readonly string ScriptPath;
+
+        public readonly Settings Settings;
 
         public int ExitCode { get; set; }
 
@@ -42,7 +52,5 @@ namespace CSScript
         {
             return Program.ProgramModel.CreateManagedProcess();
         }
-
-        public static Settings Settings { get; private set; } = Settings.Default;
     }
 }

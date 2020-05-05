@@ -71,18 +71,18 @@ namespace CSScript.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на &lt;i&gt;Утилита для выполнения C# скриптов.
+        ///   Ищет локализованную строку, похожую на `i`Утилита для выполнения C# скриптов.
         ///
-        ///&lt;c&gt;Аргументы командной строки:
+        ///`c`Аргументы командной строки:
         /// - {...}          - путь к файлу скрипта;
         /// - [/h[ide]]      - выполнение скрипта в скрытом режиме;
         /// - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
-        /// - [/a[rgs] {...} [{...} ...]] - входящий аргумент для использования в скрипте (string[] args);
+        /// - [/a[rgs] {...} [{...} ...]] - входящие аргументы для использования в скрипте (string[] args);
         ///
-        ///&lt;c&gt;Служебный синтаксис скрипта:
+        ///`c`Служебный синтаксис скрипта:
         /// #define {...}       - подключение другой сборки (.exe, .dll);
         /// #definescript {...} - подключение другого скрипта;
-        /// #usi [остаток строки не уместился]&quot;;.
+        /// #us [остаток строки не уместился]&quot;;.
         /// </summary>
         internal static string HelpText {
             get {
@@ -96,6 +96,7 @@ namespace CSScript.Properties {
         ///{
         ///internal class CompiledScript : ScriptContainer
         ///{
+        ///public CompiledScript(string scriptPath, Properties.Settings settings) : base(scriptPath, settings) { }
         ///public override void StartScript(string[] args)
         ///{
         ///##procedure##

@@ -1,4 +1,4 @@
-﻿//#define DEBUGSCRIPT
+﻿#define RUN_DEBUG_SCRIPT
 
 using System;
 using System.Diagnostics;
@@ -12,8 +12,8 @@ namespace CSScript
         [STAThread]
         private static int Main(string[] args)
         {
-#if DEBUGSCRIPT
-            ProgramModel = new ProgramModel()
+#if RUN_DEBUG_SCRIPT
+            ProgramModel = new ProgramModel();
 #else
             ProgramModel = new ProgramModel(args);
 #endif

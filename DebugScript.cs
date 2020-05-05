@@ -12,9 +12,11 @@ namespace CSScript
 {
     internal class DebugScript : ScriptContainer
     {
+        public DebugScript() : base(null, Properties.Settings.Default) { }
+
         public override void StartScript(string[] args)
         {
-           
+
         }
 
 
@@ -26,8 +28,7 @@ namespace CSScript
 
 
 
-
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.11) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.13) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
@@ -126,7 +127,7 @@ namespace CSScript
                 catch
                 {
                     string fileName = Path.GetFileName(file);
-                    WriteLineLog("Не удалось удалить файл '" + fileName + "'", ScriptContainer.Settings.ErrorColor);
+                    WriteLineLog("Не удалось удалить файл '" + fileName + "'", Settings.ErrorColor);
                 }
             }
         }
@@ -152,10 +153,9 @@ namespace CSScript
         }
 
         // Вычисление MD5 хэша для файла
-        private string CalculateMD5Hash(string filePath)
+        private string GetMD5Hash(string filePath)
         {
-            filePath = Path.GetFullPath(filePath);
-            __CheckFileExists(filePath);
+            CheckFileExists(filePath, true);
             byte[] hash;
             using (MD5 md5 = MD5.Create())
             {
@@ -170,6 +170,44 @@ namespace CSScript
                 hashString.Append(hash[i].ToString("x2"));
             }
             return hashString.ToString();
+        }
+
+        // Сравнение содержимого файлов
+        private bool CompareFiles(string file1Path, string file2Path)
+        {
+            CheckFileExists(file1Path, true);
+            CheckFileExists(file2Path, true);
+
+            long file1Length = new FileInfo(file1Path).Length;
+            long file2Length = new FileInfo(file2Path).Length;
+            if (file1Length != file2Length)
+            {
+                return false;
+            }
+
+            string file1Hash = GetMD5Hash(file1Path);
+            string file2Hash = GetMD5Hash(file2Path);
+            if (file1Hash != file2Hash)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        // Вывод исключения в случае, если файла не существует
+        private void CheckFileExists(string filePath, bool checkRelativePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                // игнорирование коротких путей файлов используется в случае,
+                // если операционной системе известен путь к файлу, в отличие от программы
+                // (например программы из папки WINDOWS\system32)
+                if (checkRelativePath && !Path.IsPathRooted(filePath))
+                {
+                    throw new Exception("Не удаётся найти '" + filePath + "'.");
+                }
+            }
         }
 
         // Аргументы для командной строки 7-Zip
@@ -218,7 +256,7 @@ namespace CSScript
                 encoding = Encoding.Default;
             }
 
-            __CheckFileExists(program);
+            CheckFileExists(program, false);
             using (process)
             {
                 process.StartInfo = new ProcessStartInfo()
@@ -247,13 +285,6 @@ namespace CSScript
             }
         }
 
-        private void __CheckFileExists(string filePath)
-        {
-            if (Path.IsPathRooted(filePath) && !File.Exists(filePath))
-            {
-                throw new Exception("Не удаётся найти '" + filePath + "'.");
-            }
-        }
 
         private class __AsyncStreamReader
         {
@@ -286,6 +317,10 @@ namespace CSScript
                 }
             }
         }
+
+
+
+
 
 
 

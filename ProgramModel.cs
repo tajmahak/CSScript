@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -151,7 +152,7 @@ namespace CSScript
 
                     if (compilerResults.Errors.Count == 0)
                     {
-                        ScriptContainer scriptContainer = GetCompiledScript(compilerResults);
+                        ScriptContainer scriptContainer = GetCompiledScript(compilerResults, scriptParsingInfo);
                         scriptContainer.StartScript(inputArguments.ScriptArguments.ToArray());
                         ExitCode = scriptContainer.ExitCode;
                         scriptGUIForceExit = scriptContainer.GUIForceExit;
@@ -280,23 +281,15 @@ namespace CSScript
             string[] lines = Resources.HelpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++)
             {
-                string line = lines[i];
-                if (line.StartsWith("<c>"))
+                Color? color = null;
+                string[] line = ParseHelpLine(lines[i]);
+                switch (line[0])
                 {
-                    line = line.Substring(3); //<c>
-                    WriteLineLog(line, Settings.Default.CaptionColor);
+                    case "c": color = Settings.Default.CaptionColor; break;
+                    case "i": color = Settings.Default.InfoColor; break;
                 }
-                else if (line.StartsWith("<i>"))
-                {
-                    line = line.Substring(3); //<i>
-                    WriteLineLog(line, Settings.Default.InfoColor);
-                }
-                else
-                {
-                    WriteLineLog(line);
-                }
+                WriteLineLog(line[1], color);
             }
-
         }
 
         private void WriteLogStartInfo(string scriptPath)
@@ -406,7 +399,10 @@ namespace CSScript
 
         private static ScriptParsingInfo ParseScriptInfo(string scriptText, string scriptPath)
         {
-            ScriptParsingInfo scriptParsingInfo = new ScriptParsingInfo();
+            ScriptParsingInfo scriptParsingInfo = new ScriptParsingInfo
+            {
+                ScriptPath = scriptPath
+            };
 
             List<string> definedScriptsList = new List<string>();
             StringBuilder currentBlock = scriptParsingInfo.ProcedureBlock;
@@ -611,10 +607,16 @@ namespace CSScript
             }
         }
 
-        private static ScriptContainer GetCompiledScript(CompilerResults compilerResults)
+        private static ScriptContainer GetCompiledScript(CompilerResults compilerResults, ScriptParsingInfo scriptParsingInfo)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript");
+            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript",
+                false,
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[] { scriptParsingInfo.ScriptPath, Settings.Default },
+                CultureInfo.CurrentCulture,
+                null);
             return (ScriptContainer)instance;
         }
 
@@ -629,6 +631,23 @@ namespace CSScript
                 definedAssemblies.Add(defineAssembly);
             }
             return definedAssemblies.ToArray();
+        }
+
+        private static string[] ParseHelpLine(string line)
+        {
+            if (line.StartsWith("`"))
+            {
+                int index = line.IndexOf("`", 1);
+                return new string[]
+                {
+                    line.Substring(1, index - 1),
+                    line.Substring(index + 1),
+                };
+            }
+            else
+            {
+                return new string[] { null, line };
+            }
         }
     }
 }

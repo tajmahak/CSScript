@@ -122,38 +122,39 @@
     <value>..\Resources\favicon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="HelpText" xml:space="preserve">
-    <value>&lt;i&gt;Утилита для выполнения C# скриптов.
+    <value>`i`Утилита для выполнения C# скриптов.
 
-&lt;c&gt;Аргументы командной строки:
+`c`Аргументы командной строки:
  - {...}          - путь к файлу скрипта;
  - [/h[ide]]      - выполнение скрипта в скрытом режиме;
  - [/l[og] {...}] - путь для сохранения лога работы программы (режим добавления);
- - [/a[rgs] {...} [{...} ...]] - входящий аргумент для использования в скрипте (string[] args);
+ - [/a[rgs] {...} [{...} ...]] - входящие аргументы для использования в скрипте (string[] args);
 
-&lt;c&gt;Служебный синтаксис скрипта:
+`c`Служебный синтаксис скрипта:
  #define {...}       - подключение другой сборки (.exe, .dll);
  #definescript {...} - подключение другого скрипта;
  #using {...}   - конструкция C# using. Используется # в начале строки;
  #class         - указывает начало области внутри класса;
  #ns/#namespace - указывает начало области внутри пространства имён;
 
-&lt;c&gt;Взаимодействие с окружением:
- args : string[]  - входящий аргумент командной строки;
- ScriptContainer - класс-оболочка, в котором выполняется скрипт:
-  .ExitCode : int     - код возврата скрипта;
+`c`Взаимодействие с окружением:
+ args: string[]  - входящие аргументы командной строки;
+ ScriptContainer - класс-оболочка, в котором выполняется функция скрипта (StartScript(args: string[]): void):
+  .ExitCode: int - код возврата скрипта;
   .GUIForceExit: bool - принудительный выход из GUI после завершения скрипта, без ожидания действий пользователя;
-  .WriteLog(object value, [Color color]) : static void       - вывод информации в лог;
-  .WriteLineLog([object value], [Color color]) : static void - вывод информации в лог;
-  .CreateManagedProcess() : static Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
-  .Settings : static Settings - настройки программы;
+  .ScriptPath: readonly string - абсолютный путь к исполняемому скрипту;
+  .Settings: readonly Settings - настройки программы;
+  .WriteLog(value: object, [color: Color]): static void       - вывод информации в лог;
+  .WriteLineLog([value: object], [color: Color]): static void - вывод информации в лог;
+  .CreateManagedProcess(): static Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
 
-&lt;c&gt;Пример скрипта:
+`c`Пример скрипта:
  #using System.Drawing
  PrintHelloWorld();
  #class
  void PrintHelloWorld()
  {
-     ScriptRuntime.WriteLineLog("Привет Мир!", ScriptRuntime.Settings.CaptionColor);
+     WriteLineLog("Привет Мир!", Settings.CaptionColor);
  }</value>
   </data>
   <data name="SourceCodeTemplate" xml:space="preserve">
@@ -162,6 +163,7 @@ namespace CSScript
 {
 internal class CompiledScript : ScriptContainer
 {
+public CompiledScript(string scriptPath, Properties.Settings settings) : base(scriptPath, settings) { }
 public override void StartScript(string[] args)
 {
 ##procedure##
