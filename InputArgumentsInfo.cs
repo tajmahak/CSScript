@@ -11,6 +11,7 @@ namespace CSScript
         public bool HideMode { get; set; }
         public string LogPath { get; set; }
         public string ScriptPath { get; set; }
+        public bool StartDebugScript { get; set; }
         public List<string> ScriptArguments { get; set; } = new List<string>();
     }
 }

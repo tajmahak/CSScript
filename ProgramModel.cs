@@ -34,9 +34,9 @@ namespace CSScript
 
         private readonly List<Process> managedProcesses = new List<Process>();
 
-        private Thread executingThread;
+        private readonly Settings settings;
 
-        private readonly bool startDebugScript;
+        private Thread executingThread;
 
 
 
@@ -50,14 +50,9 @@ namespace CSScript
 
 
 
-        public ProgramModel()
+        public ProgramModel(Settings settings, string[] args)
         {
-            startDebugScript = true;
-            GUIMode = true;
-        }
-
-        public ProgramModel(string[] args)
-        {
+            this.settings = settings;
             ParseInputArguments(args);
             GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
         }
@@ -66,7 +61,7 @@ namespace CSScript
 
         public void ExecuteScriptAsync()
         {
-            executingThread = startDebugScript ? new Thread(StartDebugScript) : new Thread(StartScript);
+            executingThread = inputArguments.StartDebugScript ? new Thread(StartDebugScript) : new Thread(StartScript);
             executingThread.IsBackground = true;
             executingThread.Start();
         }
@@ -176,7 +171,7 @@ namespace CSScript
             }
 
             WriteLineLog();
-            WriteLineLog($"# Выполнено с кодом возврата: {ExitCode}", Settings.Default.InfoColor);
+            WriteLineLog($"# Выполнено с кодом возврата: {ExitCode}", settings.InfoColor);
 
             if (inputArguments != null && !string.IsNullOrEmpty(inputArguments.LogPath))
             {
@@ -186,7 +181,7 @@ namespace CSScript
                 }
                 catch (Exception ex)
                 {
-                    WriteLineLog($"# Не удалось сохранить лог: {ex.Message}", Settings.Default.ErrorColor);
+                    WriteLineLog($"# Не удалось сохранить лог: {ex.Message}", settings.ErrorColor);
                 }
             }
 
@@ -211,7 +206,7 @@ namespace CSScript
             }
 
             WriteLineLog();
-            WriteLineLog($"# Выполнено с кодом возврата: {ExitCode}", Settings.Default.InfoColor);
+            WriteLineLog($"# Выполнено с кодом возврата: {ExitCode}", settings.InfoColor);
 
             Finished = true;
             FinishedEvent?.Invoke(this, false);
@@ -245,6 +240,11 @@ namespace CSScript
                     {
                         currentArgument = "a";
                     }
+                    else if (preparedArg == "/debug")
+                    {
+                        inputArguments.StartDebugScript = true;
+                        currentArgument = null;
+                    }
                     else
                     {
                         if (currentArgument == null && inputArguments.ScriptPath == null)
@@ -276,6 +276,19 @@ namespace CSScript
             }
         }
 
+        private ScriptContainer GetCompiledScript(CompilerResults compilerResults, ScriptParsingInfo scriptParsingInfo)
+        {
+            Assembly compiledAssembly = compilerResults.CompiledAssembly;
+            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript",
+                false,
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[] { scriptParsingInfo.ScriptPath, settings },
+                CultureInfo.CurrentCulture,
+                null);
+            return (ScriptContainer)instance;
+        }
+
         private void WriteLogHelpInfo()
         {
             string[] lines = Resources.HelpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
@@ -285,8 +298,8 @@ namespace CSScript
                 string[] line = ParseHelpLine(lines[i]);
                 switch (line[0])
                 {
-                    case "c": color = Settings.Default.CaptionColor; break;
-                    case "i": color = Settings.Default.InfoColor; break;
+                    case "c": color = settings.CaptionColor; break;
+                    case "i": color = settings.InfoColor; break;
                 }
                 WriteLineLog(line[1], color);
             }
@@ -294,29 +307,33 @@ namespace CSScript
 
         private void WriteLogStartInfo(string scriptPath)
         {
-            WriteLineLog($"## {scriptPath}", Settings.Default.InfoColor);
-            WriteLineLog($"## {DateTime.Now}", Settings.Default.InfoColor);
+            WriteLineLog($"## {scriptPath}", settings.InfoColor);
+            WriteLineLog($"## {DateTime.Now}", settings.InfoColor);
             WriteLineLog();
         }
 
         private void WriteLogException(Exception ex)
         {
-            WriteLineLog($"# Ошибка: {ex.Message}", Settings.Default.ErrorColor);
+            WriteLineLog($"# Ошибка: {ex.Message}", settings.ErrorColor);
+            foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
+            {
+                WriteLineLog("#" + stackTraceLine, settings.StackTraceColor);
+            }
         }
 
         private void WriteLogCompileErrors(CompilerResults compilerResults)
         {
-            WriteLineLog($"# Ошибок компиляции: {compilerResults.Errors.Count}", Settings.Default.ErrorColor);
+            WriteLineLog($"# Ошибок компиляции: {compilerResults.Errors.Count}", settings.ErrorColor);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors)
             {
                 if (error.Line > 0)
                 {
-                    WriteLineLog($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Settings.Default.ErrorColor);
+                    WriteLineLog($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", settings.ErrorColor);
                 }
                 else
                 {
-                    WriteLineLog($"# {errorNumber++}: {error.ErrorText}", Settings.Default.ErrorColor);
+                    WriteLineLog($"# {errorNumber++}: {error.ErrorText}", settings.ErrorColor);
                 }
             }
         }
@@ -341,17 +358,17 @@ namespace CSScript
                 WriteLog(lineNumber.ToString().PadLeft(4) + ": ");
                 if (errorLines.Contains(lineNumber))
                 {
-                    WriteLineLog(line, Settings.Default.ErrorColor);
+                    WriteLineLog(line, settings.ErrorColor);
                 }
                 else
                 {
                     if (line.TrimStart().StartsWith("//"))
                     {
-                        WriteLineLog(line, Settings.Default.CommentColor);
+                        WriteLineLog(line, settings.CommentColor);
                     }
                     else
                     {
-                        WriteLineLog(line, Settings.Default.SourceCodeColor);
+                        WriteLineLog(line, settings.SourceCodeColor);
                     }
                 }
             }
@@ -605,19 +622,6 @@ namespace CSScript
                 CompilerResults compilerResults = provider.CompileAssemblyFromSource(compileParameters, sourceCode);
                 return compilerResults;
             }
-        }
-
-        private static ScriptContainer GetCompiledScript(CompilerResults compilerResults, ScriptParsingInfo scriptParsingInfo)
-        {
-            Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript",
-                false,
-                BindingFlags.Public | BindingFlags.Instance,
-                null,
-                new object[] { scriptParsingInfo.ScriptPath, Settings.Default },
-                CultureInfo.CurrentCulture,
-                null);
-            return (ScriptContainer)instance;
         }
 
         private static string[] GetReferencedAssemblies(ScriptParsingInfo scriptParsingInfo)

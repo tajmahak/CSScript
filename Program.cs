@@ -13,10 +13,9 @@ namespace CSScript
         private static int Main(string[] args)
         {
 #if DEBUG && RUN_DEBUG_SCRIPT
-            ProgramModel = new ProgramModel();
-#else
-            ProgramModel = new ProgramModel(args);
+            args = new string[] { "/debug" };
 #endif
+            ProgramModel = new ProgramModel(Properties.Settings.Default, args);
             ProgramModel.AddLogEvent += ProgramModel_AddLogEvent;
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
 

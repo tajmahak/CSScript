@@ -94,5 +94,14 @@ namespace CSScript.Properties {
                 return ((global::System.Drawing.Color)(this["CommentColor"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("64, 64, 64")]
+        public global::System.Drawing.Color StackTraceColor {
+            get {
+                return ((global::System.Drawing.Color)(this["StackTraceColor"]));
+            }
+        }
     }
 }

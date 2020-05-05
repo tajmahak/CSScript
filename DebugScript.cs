@@ -19,7 +19,7 @@ namespace CSScript
 
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.13) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.14) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
@@ -250,15 +250,16 @@ namespace CSScript
             CheckFileExists(program, false);
             using (process)
             {
-                process.StartInfo = new ProcessStartInfo()
+                ProcessStartInfo startInfo = process.StartInfo;
+                startInfo.FileName = program;
+                startInfo.Arguments = args;
+                startInfo.CreateNoWindow = true;
+                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                if (printOutput)
                 {
-                    FileName = program,
-                    Arguments = args,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true,
-                };
+                    startInfo.UseShellExecute = false; // в некоторых случаях выполнение при значении 'true' невозможно (например команда 'mode')
+                    startInfo.RedirectStandardOutput = true; // перенаправление ввода/вывода невозможно без включенной опции 'UseShellExecute'
+                }
 
                 process.Start();
                 if (printOutput)
