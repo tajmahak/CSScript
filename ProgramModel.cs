@@ -64,7 +64,7 @@ namespace CSScript
 
 
 
-        public void ExecuteScriptAsync()
+        public void StartScriptAsync()
         {
             executingThread = inputArguments.StartDebugScript ? new Thread(StartDebugScript) : new Thread(StartScript);
             executingThread.IsBackground = true;
@@ -130,7 +130,6 @@ namespace CSScript
 
         private void StartScript()
         {
-            bool scriptGUIForceExit = false;
             try
             {
                 if (inputArguments.IsEmpty)
@@ -195,7 +194,7 @@ namespace CSScript
             }
 
             Finished = true;
-            GUIForceExit = GUIMode && scriptGUIForceExit;
+            GUIForceExit = GUIMode && GUIForceExit;
             FinishedEvent?.Invoke(this);
         }
 

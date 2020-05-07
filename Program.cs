@@ -41,12 +41,12 @@ namespace CSScript
                     Application.SetCompatibleTextRenderingDefault(false);
                     logForm = new LogForm(programModel);
 
-                    programModel.ExecuteScriptAsync(); // чтобы форма успевала прогрузиться до того, как будет уничтожена при завершении поточной операции
+                    programModel.StartScriptAsync(); // чтобы форма успевала прогрузиться до того, как будет уничтожена при завершении поточной операции
                     Application.Run(logForm);
                 }
                 else
                 {
-                    programModel.ExecuteScriptAsync();
+                    programModel.StartScriptAsync();
                     programModel.JoinExecutingThread();
                 }
             }
