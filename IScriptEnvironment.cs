@@ -13,9 +13,9 @@ namespace CSScript
 
         Settings Settings { get; }
 
-        void WriteMessage(object value, Color? color);
+        void WriteMessage(object value, Color? foreColor);
 
-        void WriteMessageLine(object value, Color? color);
+        void WriteMessageLine(object value, Color? foreColor);
 
         void WriteMessageLine();
 

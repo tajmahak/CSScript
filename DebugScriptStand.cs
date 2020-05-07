@@ -15,7 +15,7 @@ namespace CSScript
     /// </summary>
     internal class DebugScriptStand : ScriptContainer
     {
-        public override void StartScript(string[] args)
+        public override void Execute(string[] args)
         {
 
         }

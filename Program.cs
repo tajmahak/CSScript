@@ -1,4 +1,4 @@
-﻿#define USE_DEBUG_SCRIPT_STAND // использовать стенд для отладки скриптов
+﻿//#define USE_DEBUG_SCRIPT_STAND // использовать стенд для отладки скриптов
 
 using System;
 using System.Diagnostics;
@@ -75,9 +75,9 @@ namespace CSScript
             Debug.Write(logItem.Text);
         }
 
-        private void ProgramModel_FinishedEvent(object sender, bool guiForceExit)
+        private void ProgramModel_FinishedEvent(object sender)
         {
-            if (guiForceExit)
+            if (programModel.GUIForceExit)
             {
                 Application.Exit();
             }

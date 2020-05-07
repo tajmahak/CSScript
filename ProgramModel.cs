@@ -17,17 +17,21 @@ namespace CSScript
     /// <summary>
     /// Представляет модель программы.
     /// </summary>
-    internal class ProgramModel : IDisposable
+    internal class ProgramModel : IScriptEnvironment, IDisposable
     {
         public bool GUIMode { get; private set; }
+
+        public bool GUIForceExit { get; private set; }
 
         public bool Finished { get; private set; }
 
         public int ExitCode { get; private set; }
 
-        public ReadOnlyCollection<Message> MessageList => messageList.AsReadOnly();
+        public Settings Settings { get; private set; }
 
-        internal Settings Settings { get; private set; }
+        public string ScriptPath { get; private set; }
+
+        public ReadOnlyCollection<Message> MessageList => messageList.AsReadOnly();
 
         private Thread executingThread;
 
@@ -45,7 +49,7 @@ namespace CSScript
 
         public event AddMessageEventHandler AddMessageEvent;
 
-        public delegate void FinishedEventHandler(object sender, bool guiForceExit);
+        public delegate void FinishedEventHandler(object sender);
 
         public event FinishedEventHandler FinishedEvent;
 
@@ -91,22 +95,26 @@ namespace CSScript
             return process;
         }
 
-        public void WriteMessage(string text, Color? foreColor = null)
+        public void WriteMessage(object value, Color? foreColor = null)
         {
-            if (!string.IsNullOrEmpty(text))
+            if (value != null)
             {
-                Message item = new Message(text, DateTime.Now, foreColor);
-                lock (messageList)
+                string text = value.ToString();
+                if (!string.IsNullOrEmpty(text))
                 {
-                    messageList.Add(item);
+                    Message message = new Message(text, DateTime.Now, foreColor);
+                    lock (messageList)
+                    {
+                        messageList.Add(message);
+                    }
+                    AddMessageEvent?.Invoke(this, message);
                 }
-                AddMessageEvent?.Invoke(this, item);
             }
         }
 
-        public void WriteMessageLine(string text, Color? foreColor = null)
+        public void WriteMessageLine(object value, Color? foreColor = null)
         {
-            WriteMessage(text + Environment.NewLine, foreColor);
+            WriteMessage(value + Environment.NewLine, foreColor);
         }
 
         public void WriteMessageLine()
@@ -133,24 +141,24 @@ namespace CSScript
                 }
                 else
                 {
-                    string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
-                    string scriptText = GetScriptText(scriptPath);
+                    ScriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+                    string scriptText = GetScriptText(ScriptPath);
 
-                    WriteStartInfoMessage(scriptPath);
+                    WriteStartInfoMessage(ScriptPath);
 
                     // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
                     // (для возможности указания относительных путей к файлам)
-                    Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
+                    Environment.CurrentDirectory = GetWorkDirectoryPath(ScriptPath);
 
-                    ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
+                    ScriptInfo scriptInfo = ParseScriptInfo(scriptText, ScriptPath);
                     LoadAssembliesForResolve(scriptInfo);
                     CompilerResults compilerResults = Compile(scriptInfo);
 
                     if (compilerResults.Errors.Count == 0)
                     {
-                        IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(scriptPath);
+                        IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(ScriptPath);
                         ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
-                        scriptContainer.StartScript(inputArguments.ScriptArguments.ToArray());
+                        scriptContainer.Execute(inputArguments.ScriptArguments.ToArray());
                         ExitCode = scriptContainer.ExitCode;
                         scriptGUIForceExit = scriptContainer.GUIForceExit;
                     }
@@ -188,8 +196,8 @@ namespace CSScript
             }
 
             Finished = true;
-            bool guiForceExit = GUIMode && scriptGUIForceExit;
-            FinishedEvent?.Invoke(this, guiForceExit);
+            GUIForceExit = GUIMode && scriptGUIForceExit;
+            FinishedEvent?.Invoke(this);
         }
 
         private void StartDebugScript()
@@ -199,7 +207,7 @@ namespace CSScript
             {
                 IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(null);
                 ScriptContainer debugScript = CreateDebugScriptContainer(scriptEnvironment);
-                debugScript.StartScript(inputArguments.ScriptArguments.ToArray());
+                debugScript.Execute(inputArguments.ScriptArguments.ToArray());
                 ExitCode = debugScript.ExitCode;
             }
             catch (Exception ex)
@@ -212,7 +220,7 @@ namespace CSScript
             WriteMessageLine($"# Выполнено с кодом возврата: {ExitCode}", Settings.InfoColor);
 
             Finished = true;
-            FinishedEvent?.Invoke(this, false);
+            FinishedEvent?.Invoke(this);
 #endif
         }
 
@@ -245,7 +253,7 @@ namespace CSScript
                 CompilerParameters compileParameters = new CompilerParameters(referencedAssemblies)
                 {
                     GenerateInMemory = true,
-                    GenerateExecutable = false
+                    GenerateExecutable = false,
                 };
                 CompilerResults compilerResults = provider.CompileAssemblyFromSource(compileParameters, sourceCode);
                 return compilerResults;
@@ -340,9 +348,9 @@ namespace CSScript
 
         private ScriptInfo MergeScripts(ScriptInfo scriptInfo, string definedScriptPath)
         {
-            string scriptPath = GetAndCheckFullPath(definedScriptPath, GetWorkDirectoryPath(scriptInfo.ScriptPath));
-            string scriptText = GetScriptText(scriptPath);
-            ScriptInfo definedScriptInfo = ParseScriptInfo(scriptText, scriptPath);
+            string definedScriptFullPath = GetAndCheckFullPath(definedScriptPath, GetWorkDirectoryPath(scriptInfo.ScriptPath));
+            string definedScriptText = GetScriptText(definedScriptFullPath);
+            ScriptInfo definedScriptInfo = ParseScriptInfo(definedScriptText, definedScriptFullPath);
 
             return MergeScripts(scriptInfo, definedScriptInfo);
         }
@@ -390,7 +398,7 @@ namespace CSScript
 
         private IScriptEnvironment CreateScriptEnvironment(string scriptPath)
         {
-            return new ProgramScriptEnvironment(this, scriptPath);
+            return this;
         }
 
         private void LoadAssembliesForResolve(ScriptInfo scriptInfo)
@@ -598,20 +606,20 @@ namespace CSScript
 
         private string GetMessageLog()
         {
-            StringBuilder str = new StringBuilder();
-            foreach (Message logItem in messageList)
+            StringBuilder messageLog = new StringBuilder();
+            foreach (Message message in messageList)
             {
-                str.Append(logItem.Text);
+                messageLog.Append(message.Text);
             }
-            return str.ToString();
+            return messageLog.ToString();
         }
 
         private void SaveMessageLog(string logPath)
         {
-            string logText = GetMessageLog();
+            string messageLog = GetMessageLog();
             using (StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8))
             {
-                writer.WriteLine(logText);
+                writer.WriteLine(messageLog);
                 writer.WriteLine();
                 writer.WriteLine();
             }

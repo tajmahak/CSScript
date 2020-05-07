@@ -9,22 +9,18 @@ namespace CSScript
     /// </summary>
     public abstract class ScriptContainer
     {
+        private readonly IScriptEnvironment environment;
+       
         public ScriptContainer(IScriptEnvironment environment)
         {
             this.environment = environment;
         }
 
-      
-        /// <summary>
-        /// Запуск выполнения скрипта
-        /// </summary>
-        /// <param name="arg"></param>
-        /// <returns></returns>
-        public abstract void StartScript(string[] args);
-
-        
+        public abstract void Execute(string[] args);
+       
+       
         // Сущности для использовании в коде скрипта:
-
+       
         public int ExitCode { get; protected set; }
 
         public bool GUIForceExit { get; protected set; }
@@ -33,15 +29,12 @@ namespace CSScript
 
         protected Settings Settings => environment.Settings;
 
-        protected void WriteMessage(object value, Color? color = null) => environment.WriteMessage(value, color);
+        protected void WriteMessage(object value, Color? foreColor = null) => environment.WriteMessage(value, foreColor);
 
-        protected void WriteMessageLine(object value, Color? color = null) => environment.WriteMessageLine(value, color);
+        protected void WriteMessageLine(object value, Color? foreColor = null) => environment.WriteMessageLine(value, foreColor);
 
         protected void WriteMessageLine() => environment.WriteMessageLine();
 
         protected Process CreateManagedProcess() => environment.CreateManagedProcess();
-
-        
-        private readonly IScriptEnvironment environment;
     }
 }
