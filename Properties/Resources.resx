@@ -142,11 +142,11 @@
  ScriptContainer - класс-оболочка, в котором выполняется функция скрипта (StartScript(args: string[]): void):
   .ExitCode: int - код возврата скрипта;
   .GUIForceExit: bool - принудительный выход из GUI после завершения скрипта, без ожидания действий пользователя;
-  .ScriptPath: readonly string - абсолютный путь к исполняемому скрипту;
-  .Settings: readonly Settings - настройки программы;
-  .WriteLog(value: object, [color: Color]): static void       - вывод информации в лог;
-  .WriteLineLog([value: object], [color: Color]): static void - вывод информации в лог;
-  .CreateManagedProcess(): static Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
+  .ScriptPath: string - абсолютный путь к исполняемому скрипту;
+  .Settings: Settings - настройки программы;
+  .WriteMessage(value: object, [color: Color]): void       - вывод сообщения в лог;
+  .WriteMessageLine([value: object], [color: Color]): void - вывод сообщения в лог с переносом на следующую строку;
+  .CreateManagedProcess(): Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
 
 `c`Пример скрипта:
  #using System.Drawing
@@ -154,7 +154,7 @@
  #class
  void PrintHelloWorld()
  {
-     WriteLineLog("Привет Мир!", Settings.CaptionColor);
+     WriteMessageLine("Привет Мир!", Settings.CaptionColor);
  }</value>
   </data>
   <data name="SourceCodeTemplate" xml:space="preserve">
@@ -163,7 +163,7 @@ namespace CSScript
 {
 internal class CompiledScript : ScriptContainer
 {
-public CompiledScript(string scriptPath, Properties.Settings settings) : base(scriptPath, settings) { }
+public CompiledScript(IScriptEnvironment environment) : base(environment) { }
 public override void StartScript(string[] args)
 {
 ##procedure##

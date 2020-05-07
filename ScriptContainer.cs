@@ -5,16 +5,16 @@ using System.Drawing;
 namespace CSScript
 {
     /// <summary>
-    /// Представляет оболочку для выполнения скомпилированного скрипта в программе 
+    /// Представляет оболочку для выполнения скомпилированного скрипта в программе. 
     /// </summary>
     public abstract class ScriptContainer
     {
-        public ScriptContainer(string scriptPath, Settings settings)
+        public ScriptContainer(IScriptEnvironment environment)
         {
-            ScriptPath = scriptPath;
-            Settings = settings;
+            this.environment = environment;
         }
 
+      
         /// <summary>
         /// Запуск выполнения скрипта
         /// </summary>
@@ -22,35 +22,26 @@ namespace CSScript
         /// <returns></returns>
         public abstract void StartScript(string[] args);
 
-        // Сущности, используемые в скрипте (public):
+        
+        // Сущности для использовании в коде скрипта:
 
-        public readonly string ScriptPath;
+        public int ExitCode { get; protected set; }
 
-        public readonly Settings Settings;
+        public bool GUIForceExit { get; protected set; }
 
-        public int ExitCode { get; set; }
+        protected string ScriptPath => environment.ScriptPath;
 
-        public bool GUIForceExit { get; set; }
+        protected Settings Settings => environment.Settings;
 
-        public static void WriteLog(object value, Color? color = null)
-        {
-            Program.ProgramModel.WriteLog(value.ToString(), color);
-        }
+        protected void WriteMessage(object value, Color? color = null) => environment.WriteMessage(value, color);
 
-        public static void WriteLineLog(object value, Color? color = null)
-        {
-            value = value ?? string.Empty;
-            Program.ProgramModel.WriteLineLog(value.ToString(), color);
-        }
+        protected void WriteMessageLine(object value, Color? color = null) => environment.WriteMessageLine(value, color);
 
-        public static void WriteLineLog()
-        {
-            Program.ProgramModel.WriteLineLog();
-        }
+        protected void WriteMessageLine() => environment.WriteMessageLine();
 
-        public static Process CreateManagedProcess()
-        {
-            return Program.ProgramModel.CreateManagedProcess();
-        }
+        protected Process CreateManagedProcess() => environment.CreateManagedProcess();
+
+        
+        private readonly IScriptEnvironment environment;
     }
 }

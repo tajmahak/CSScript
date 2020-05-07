@@ -3,15 +3,68 @@
 namespace CSScript
 {
     /// <summary>
-    /// Структурированные аргументы командной строки
+    /// Структурированные аргументы командной строки.
     /// </summary>
     internal class InputArgumentsInfo
     {
-        public bool IsEmpty { get; set; }
-        public bool HideMode { get; set; }
-        public string LogPath { get; set; }
-        public string ScriptPath { get; set; }
-        public bool StartDebugScript { get; set; }
-        public List<string> ScriptArguments { get; set; } = new List<string>();
+        private InputArgumentsInfo() { }
+
+        public bool IsEmpty { get; private set; }
+        public bool HideMode { get; private set; }
+        public string LogPath { get; private set; }
+        public string ScriptPath { get; private set; }
+        public bool StartDebugScript { get; private set; }
+        public List<string> ScriptArguments { get; private set; } = new List<string>();
+
+        public static InputArgumentsInfo Parse(string[] args)
+        {
+            InputArgumentsInfo inputArguments = new InputArgumentsInfo();
+
+            if (args.Length == 0)
+            {
+                inputArguments.IsEmpty = true;
+            }
+            else
+            {
+                string currentArgument = null;
+                for (int i = 0; i < args.Length; i++)
+                {
+                    string arg = args[i];
+                    string preparedArg = arg.Trim().ToLower();
+                    if (preparedArg == "/h" || preparedArg == "/hide")
+                    {
+                        inputArguments.HideMode = true;
+                        currentArgument = null;
+                    }
+                    else if (preparedArg == "/l" || preparedArg == "/log")
+                    {
+                        inputArguments.LogPath = args[++i];
+                        currentArgument = null;
+                    }
+                    else if (preparedArg == "/a" || preparedArg == "/arg")
+                    {
+                        currentArgument = "a";
+                    }
+                    else if (preparedArg == "/debug")
+                    {
+                        inputArguments.StartDebugScript = true;
+                        currentArgument = null;
+                    }
+                    else
+                    {
+                        if (currentArgument == null && inputArguments.ScriptPath == null)
+                        {
+                            inputArguments.ScriptPath = arg;
+                        }
+                        else if (currentArgument == "a")
+                        {
+                            inputArguments.ScriptArguments.Add(arg);
+                        }
+                    }
+                }
+            }
+
+            return inputArguments;
+        }
     }
 }

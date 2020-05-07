@@ -10,16 +10,19 @@ using System.Text;
 
 namespace CSScript
 {
-    internal class DebugScript : ScriptContainer
+    /// <summary>
+    /// Представляет стенд для отладки скриптов.
+    /// </summary>
+    internal class DebugScriptStand : ScriptContainer
     {
-        public DebugScript() : base(null, Properties.Settings.Default) { }
-
         public override void StartScript(string[] args)
         {
 
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.14) ---
+
+
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.15) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
@@ -118,7 +121,7 @@ namespace CSScript
                 catch
                 {
                     string fileName = Path.GetFileName(file);
-                    WriteLineLog("Не удалось удалить файл '" + fileName + "'", Settings.ErrorColor);
+                    WriteMessageLine("Не удалось удалить файл '" + fileName + "'", Settings.ErrorColor);
                 }
             }
         }
@@ -268,7 +271,7 @@ namespace CSScript
                     asyncReader.DataReceived += (byte[] buffer, int count) =>
                     {
                         string text = encoding.GetString(buffer, 0, count);
-                        WriteLog(text, outputColor);
+                        WriteMessage(text, outputColor);
                     };
                     asyncReader.BeginRead();
                 }
@@ -310,17 +313,9 @@ namespace CSScript
             }
         }
 
+        // ---------------------------------------- 
 
-
-
-
-
-
-
-
-
-
-
+        public DebugScriptStand(IScriptEnvironment scriptEnvironment) : base(scriptEnvironment) { }
     }
 }
 

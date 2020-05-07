@@ -3,7 +3,10 @@ using System.Drawing;
 
 namespace CSScript
 {
-    internal class LogItem
+    /// <summary>
+    /// Представляет информационное сообщение.
+    /// </summary>
+    internal class Message
     {
         public string Text { get; private set; }
 
@@ -11,8 +14,7 @@ namespace CSScript
 
         public Color? ForeColor { get; private set; }
 
-
-        public LogItem(string text, DateTime dateTime, Color? foreColor)
+        public Message(string text, DateTime dateTime, Color? foreColor)
         {
             Text = text;
             DateTime = dateTime;

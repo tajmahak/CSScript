@@ -96,7 +96,7 @@ namespace CSScript.Properties {
         ///{
         ///internal class CompiledScript : ScriptContainer
         ///{
-        ///public CompiledScript(string scriptPath, Properties.Settings settings) : base(scriptPath, settings) { }
+        ///public CompiledScript(IScriptEnvironment environment) : base(environment) { }
         ///public override void StartScript(string[] args)
         ///{
         ///##procedure##

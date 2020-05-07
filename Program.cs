@@ -1,4 +1,4 @@
-﻿//#define RUN_DEBUG_SCRIPT
+﻿#define USE_DEBUG_SCRIPT_STAND // использовать стенд для отладки скриптов
 
 using System;
 using System.Diagnostics;
@@ -7,66 +7,80 @@ using System.Windows.Forms;
 
 namespace CSScript
 {
-    internal static class Program
+    internal class Program
     {
         [STAThread]
         private static int Main(string[] args)
         {
-#if DEBUG && RUN_DEBUG_SCRIPT
+            Program program = new Program();
+            return program.ExecuteProgram(args);
+        }
+
+
+
+        private ProgramModel programModel;
+
+        private LogForm logForm;
+
+        private int ExecuteProgram(string[] args)
+        {
+#if DEBUG && USE_DEBUG_SCRIPT_STAND
             args = new string[] { "/debug" };
 #endif
-            ProgramModel = new ProgramModel(Properties.Settings.Default, args);
-            ProgramModel.AddLogEvent += ProgramModel_AddLogEvent;
-            ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
+            programModel = new ProgramModel(Properties.Settings.Default, args);
+            programModel.AddMessageEvent += ProgramModel_AddMessageEvent;
+            programModel.FinishedEvent += ProgramModel_FinishedEvent;
 
             // для подгрузки библиотек рантаймом, которые не подгружаются самостоятельно
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolveEvent;
 
             Application.ApplicationExit += Application_ApplicationExit;
 
-            if (ProgramModel.GUIMode)
+            if (programModel.GUIMode)
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                logForm = new LogForm();
+                logForm = new LogForm(programModel);
 
-                ProgramModel.ExecuteScriptAsync(); // чтобы форма успевала прогрузиться до того, как будет уничтожена при завершении поточной операции
+                programModel.ExecuteScriptAsync(); // чтобы форма успевала прогрузиться до того, как будет уничтожена при завершении поточной операции
                 Application.Run(logForm);
             }
             else
             {
-                ProgramModel.ExecuteScriptAsync();
-                ProgramModel.JoinExecutingThread();
+                programModel.ExecuteScriptAsync();
+                programModel.JoinExecutingThread();
             }
-            return ProgramModel.ExitCode;
+            return programModel.ExitCode;
         }
 
-        private static void Application_ApplicationExit(object sender, EventArgs e)
+        private void Application_ApplicationExit(object sender, EventArgs e)
         {
-            ProgramModel.Dispose();
+            if (programModel != null)
+            {
+                programModel.Dispose();
+            }
+            if (logForm != null)
+            {
+                logForm.Dispose();
+            }
         }
 
-        private static Assembly CurrentDomain_AssemblyResolveEvent(object sender, ResolveEventArgs args)
+        private Assembly CurrentDomain_AssemblyResolveEvent(object sender, ResolveEventArgs args)
         {
-            return ProgramModel.ResolveAssembly(args.Name);
+            return programModel.ResolveAssembly(args.Name);
         }
 
-        private static void ProgramModel_AddLogEvent(object sender, LogItem logItem)
+        private void ProgramModel_AddMessageEvent(object sender, Message logItem)
         {
             Debug.Write(logItem.Text);
         }
 
-        private static void ProgramModel_FinishedEvent(object sender, bool guiForceExit)
+        private void ProgramModel_FinishedEvent(object sender, bool guiForceExit)
         {
             if (guiForceExit)
             {
                 Application.Exit();
             }
         }
-
-
-        internal static ProgramModel ProgramModel { get; private set; }
-
-        private static LogForm logForm;
     }
 }

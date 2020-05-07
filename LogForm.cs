@@ -9,11 +9,12 @@ namespace CSScript
     /// </summary>
     internal partial class LogForm : Form
     {
+        private readonly ProgramModel programModel;
         private readonly Timer timer;
         private int currentLogPosition;
         private bool stopLogOutput;
 
-        public LogForm()
+        public LogForm(ProgramModel programModel)
         {
             InitializeComponent();
             Icon = Resources.favicon;
@@ -21,6 +22,7 @@ namespace CSScript
             richTextBox.ForeColor = Settings.Default.ForeColor;
             richTextBox.WordWrap = Settings.Default.WordWrap;
 
+            this.programModel = programModel;
             timer = new Timer();
             timer.Interval = 100;
             timer.Tick += Timer_Tick;
@@ -37,7 +39,7 @@ namespace CSScript
         {
             if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.Enter)
             {
-                if (Program.ProgramModel.Finished)
+                if (programModel.Finished)
                 {
                     e.Handled = e.SuppressKeyPress = true;
                     Close();
@@ -49,25 +51,25 @@ namespace CSScript
         {
             timer.Stop();
 
-            System.Collections.ObjectModel.ReadOnlyCollection<LogItem> logs = Program.ProgramModel.LogItems;
+            System.Collections.ObjectModel.ReadOnlyCollection<Message> logs = programModel.MessageList;
             while (currentLogPosition < logs.Count)
             {
                 if (stopLogOutput)
                 {
                     break;
                 }
-                LogItem log = logs[currentLogPosition];
+                Message log = logs[currentLogPosition];
                 Print(log);
                 currentLogPosition++;
             }
 
-            if (!Program.ProgramModel.Finished && !stopLogOutput)
+            if (!programModel.Finished && !stopLogOutput)
             {
                 timer.Start();
             }
         }
 
-        private void Print(LogItem log)
+        private void Print(Message log)
         {
             string text = log.Text.Replace("\r", ""); // RichTextBox автоматически отсекает '\r'
 
