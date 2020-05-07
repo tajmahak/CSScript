@@ -20,9 +20,7 @@ namespace CSScript
 
         }
 
-
-
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.15) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.16) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
@@ -34,7 +32,7 @@ namespace CSScript
         // Запуск контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится) 
         private int StartManaged(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
         {
-            Process process = CreateManagedProcess();
+            Process process = env.CreateManagedProcess();
             return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
@@ -121,7 +119,7 @@ namespace CSScript
                 catch
                 {
                     string fileName = Path.GetFileName(file);
-                    WriteMessageLine("Не удалось удалить файл '" + fileName + "'", Settings.ErrorColor);
+                    env.WriteMessageLine("Не удалось удалить файл '" + fileName + "'", env.Settings.ErrorColor);
                 }
             }
         }
@@ -271,7 +269,7 @@ namespace CSScript
                     asyncReader.DataReceived += (byte[] buffer, int count) =>
                     {
                         string text = encoding.GetString(buffer, 0, count);
-                        WriteMessage(text, outputColor);
+                        env.WriteMessage(text, outputColor);
                     };
                     asyncReader.BeginRead();
                 }

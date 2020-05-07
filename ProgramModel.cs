@@ -19,13 +19,13 @@ namespace CSScript
     /// </summary>
     internal class ProgramModel : IScriptEnvironment, IDisposable
     {
+        public int ExitCode { get; set; }
+
+        public bool GUIForceExit { get; set; }
+
         public bool GUIMode { get; private set; }
 
-        public bool GUIForceExit { get; private set; }
-
         public bool Finished { get; private set; }
-
-        public int ExitCode { get; private set; }
 
         public Settings Settings { get; private set; }
 
@@ -45,6 +45,15 @@ namespace CSScript
 
 
 
+        public ProgramModel(Settings settings, string[] args)
+        {
+            Settings = settings;
+            inputArguments = InputArgumentsInfo.Parse(args);
+            GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
+        }
+
+
+
         public delegate void AddMessageEventHandler(object sender, Message message);
 
         public event AddMessageEventHandler AddMessageEvent;
@@ -52,15 +61,6 @@ namespace CSScript
         public delegate void FinishedEventHandler(object sender);
 
         public event FinishedEventHandler FinishedEvent;
-
-
-
-        public ProgramModel(Settings settings, string[] args)
-        {
-            Settings = settings;
-            inputArguments = InputArgumentsInfo.Parse(args);
-            GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
-        }
 
 
 
@@ -128,7 +128,6 @@ namespace CSScript
         }
 
 
-
         private void StartScript()
         {
             bool scriptGUIForceExit = false;
@@ -159,8 +158,8 @@ namespace CSScript
                         IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(ScriptPath);
                         ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
                         scriptContainer.Execute(inputArguments.ScriptArguments.ToArray());
-                        ExitCode = scriptContainer.ExitCode;
-                        scriptGUIForceExit = scriptContainer.GUIForceExit;
+                        ExitCode = scriptEnvironment.ExitCode;
+                        GUIForceExit = scriptEnvironment.GUIForceExit;
                     }
                     else
                     {
@@ -206,9 +205,8 @@ namespace CSScript
             try
             {
                 IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(null);
-                ScriptContainer debugScript = CreateDebugScriptContainer(scriptEnvironment);
+                ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
                 debugScript.Execute(inputArguments.ScriptArguments.ToArray());
-                ExitCode = debugScript.ExitCode;
             }
             catch (Exception ex)
             {
@@ -227,7 +225,7 @@ namespace CSScript
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScript",
+            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScriptContainer",
                 false,
                 BindingFlags.Public | BindingFlags.Instance,
                 null,
@@ -235,12 +233,6 @@ namespace CSScript
                 CultureInfo.CurrentCulture,
                 null);
             return (ScriptContainer)instance;
-        }
-
-        private ScriptContainer CreateDebugScriptContainer(IScriptEnvironment scriptEnvironment)
-        {
-            DebugScriptStand debugScript = new DebugScriptStand(scriptEnvironment);
-            return debugScript;
         }
 
         private CompilerResults Compile(ScriptInfo scriptInfo)

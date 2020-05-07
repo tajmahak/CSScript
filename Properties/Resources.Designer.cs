@@ -94,9 +94,9 @@ namespace CSScript.Properties {
         ///   Ищет локализованную строку, похожую на ##using##
         ///namespace CSScript
         ///{
-        ///internal class CompiledScript : ScriptContainer
+        ///internal class CompiledScriptContainer : ScriptContainer
         ///{
-        ///public CompiledScript(IScriptEnvironment environment) : base(environment) { }
+        ///public CompiledScriptContainer(IScriptEnvironment environment) : base(environment) { }
         ///public override void Execute(string[] args)
         ///{
         ///##procedure##

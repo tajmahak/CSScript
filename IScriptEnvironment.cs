@@ -9,6 +9,10 @@ namespace CSScript
     /// </summary>
     public interface IScriptEnvironment
     {
+        int ExitCode { get; set; }
+
+        bool GUIForceExit { get; set; }
+
         string ScriptPath { get; }
 
         Settings Settings { get; }
