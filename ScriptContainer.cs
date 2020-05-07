@@ -1,8 +1,4 @@
-﻿using CSScript.Properties;
-using System.Diagnostics;
-using System.Drawing;
-
-namespace CSScript
+﻿namespace CSScript
 {
     /// <summary>
     /// Представляет оболочку для выполнения скомпилированного скрипта в программе. 
@@ -13,7 +9,7 @@ namespace CSScript
 
         public ScriptContainer(IScriptEnvironment environment)
         {
-            this.env = environment;
+            env = environment;
         }
 
         public abstract void Execute(string[] args);
