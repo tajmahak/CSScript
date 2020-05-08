@@ -96,10 +96,10 @@ namespace CSScript
                     IScriptEnvironment scriptEnvironment;
                     if (inputArguments.UseDebugStand)
                     {
-                        scriptEnvironment = CreateScriptEnvironment(null);
+                        scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
 #if DEBUG
                         ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
-                        debugScript.Execute(inputArguments.ScriptArguments.ToArray());
+                        debugScript.Execute();
 #endif
                     }
                     else
@@ -111,7 +111,7 @@ namespace CSScript
                         // (для возможности указания относительных путей к файлам)
                         Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
 
-                        scriptEnvironment = CreateScriptEnvironment(scriptPath);
+                        scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
                         StartCSScript(scriptPath, scriptEnvironment);
                     }
                     guiForceExit = scriptEnvironment.GUIForceExit;
@@ -145,7 +145,7 @@ namespace CSScript
             if (compilerResults.Errors.Count == 0)
             {
                 ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
-                scriptContainer.Execute(inputArguments.ScriptArguments.ToArray());
+                scriptContainer.Execute();
             }
             else
             {
@@ -325,9 +325,9 @@ namespace CSScript
             return mergedScriptInfo;
         }
 
-        private IScriptEnvironment CreateScriptEnvironment(string scriptPath)
+        private IScriptEnvironment CreateScriptEnvironment(string scriptPath, string[] scriptArgs)
         {
-            return new ProgramScriptEnvironment(this, scriptPath);
+            return new ProgramScriptEnvironment(this, scriptPath, scriptArgs);
         }
 
         private string GetSourceCode(ScriptInfo scriptInfo)

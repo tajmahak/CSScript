@@ -11,11 +11,14 @@ namespace CSScript
     {
         private readonly ProgramModel programModel;
 
-        public ProgramScriptEnvironment(ProgramModel programModel, string scriptPath)
+        public ProgramScriptEnvironment(ProgramModel programModel, string scriptPath, string[] scriptArgs)
         {
             this.programModel = programModel;
             ScriptPath = scriptPath;
+            Args = scriptArgs;
         }
+
+        public string[] Args { get; }
 
         public int ExitCode { get; set; }
 

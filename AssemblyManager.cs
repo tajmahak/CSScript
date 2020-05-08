@@ -11,6 +11,20 @@ namespace CSScript
     {
         private readonly Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
 
+        public void LoadAssembliesForResolve(ScriptInfo scriptInfo)
+        {
+            string[] assemblies = GetReferencedAssemblies(scriptInfo, false);
+            foreach (string assembly in assemblies)
+            {
+                if (File.Exists(assembly))
+                {
+                    // загружаются только те сборки, которые рантайм не может подгрузить автоматически
+                    Assembly loadedAssembly = Assembly.LoadFrom(assembly);
+                    resolvedAssemblies.Add(loadedAssembly.FullName, loadedAssembly);
+                }
+            }
+        }
+
         public Assembly ResolveAssembly(string assemblyName)
         {
             resolvedAssemblies.TryGetValue(assemblyName, out Assembly assembly);
@@ -31,20 +45,6 @@ namespace CSScript
                 definedAssemblies.Add(definedAssemblyPath);
             }
             return definedAssemblies.ToArray();
-        }
-
-        public void LoadAssembliesForResolve(ScriptInfo scriptInfo)
-        {
-            string[] assemblies = GetReferencedAssemblies(scriptInfo, false);
-            foreach (string assembly in assemblies)
-            {
-                if (File.Exists(assembly))
-                {
-                    // загружаются только те сборки, которые рантайм не может подгрузить автоматически
-                    Assembly loadedAssembly = Assembly.LoadFrom(assembly);
-                    resolvedAssemblies.Add(loadedAssembly.FullName, loadedAssembly);
-                }
-            }
         }
 
         public string GetCorrectAssemblyPath(string assemblyPath, string workDirectory)
