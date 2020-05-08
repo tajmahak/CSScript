@@ -27,7 +27,9 @@ namespace CSScript
             try
             {
 #if DEBUG && USE_DEBUG_SCRIPT_STAND
-                args = new string[] { "/debugstand" };
+                // добавление дополнительной команды в аргументы
+                Array.Resize(ref args, args.Length + 1);
+                args[args.Length - 1] = "/debugstand";
 #endif
                 programModel = new ProgramModel(Settings.Default, args);
                 programModel.MessageManager.MessageAdded += ProgramModel_MessageAdded;
@@ -67,9 +69,9 @@ namespace CSScript
             return programModel.ResolveAssembly(args.Name);
         }
 
-        private void ProgramModel_MessageAdded(object sender, Message logItem)
+        private void ProgramModel_MessageAdded(object sender, Message message)
         {
-            Debug.Write(logItem.Text);
+            Debug.Write(message.Text);
         }
 
         private void ProgramModel_FinishedEvent(object sender, bool guiForceExit)
