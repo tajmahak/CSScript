@@ -31,8 +31,6 @@ namespace CSScript
 
         private readonly InputArgumentsInfo inputArguments;
 
-        private Thread executingThread;
-
 
 
         public ProgramModel(Settings settings, string[] args)
@@ -54,19 +52,12 @@ namespace CSScript
 
 
 
-        public void StartAsync()
+        public Thread StartAsync()
         {
-            executingThread = new Thread(Start);
+            var executingThread = new Thread(Start);
             executingThread.IsBackground = true;
             executingThread.Start();
-        }
-
-        public void JoinExecutingThread()
-        {
-            if (executingThread != null)
-            {
-                executingThread.Join();
-            }
+            return executingThread;
         }
 
         public Assembly ResolveAssembly(string assemblyName)
@@ -194,7 +185,7 @@ namespace CSScript
             ScriptInfo scriptInfo = new ScriptInfo(scriptPath);
 
             StringBuilder currentBlock = scriptInfo.ProcedureBlock;
-
+            
             string[] operatorBlocks = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
             for (int i = 0; i < operatorBlocks.Length; i++)
             {

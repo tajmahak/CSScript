@@ -4,6 +4,7 @@ using CSScript.Properties;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace CSScript
@@ -49,8 +50,8 @@ namespace CSScript
                 }
                 else
                 {
-                    programModel.StartAsync();
-                    programModel.JoinExecutingThread();
+                    Thread thread = programModel.StartAsync();
+                    thread.Join();
                 }
             }
             finally

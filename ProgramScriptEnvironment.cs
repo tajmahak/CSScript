@@ -5,7 +5,7 @@ using System.Drawing;
 namespace CSScript
 {
     /// <summary>
-    /// Представляет среду взаимодействия скрипта с программой.
+    /// Представляет реализацию взаимодействия скрипта с программой.
     /// </summary>
     internal class ProgramScriptEnvironment : IScriptEnvironment
     {
