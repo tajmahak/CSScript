@@ -57,6 +57,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyManager.cs" />
     <Compile Include="IScriptEnvironment.cs" />
     <Compile Include="LogForm.cs">
       <SubType>Form</SubType>
@@ -64,7 +65,10 @@
     <Compile Include="LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="MessageManager.cs" />
+    <Compile Include="ProcessManager.cs" />
     <Compile Include="ProgramModel.cs" />
+    <Compile Include="ProgramScriptEnvironment.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

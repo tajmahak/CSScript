@@ -17,11 +17,11 @@ namespace CSScript
 
         Settings Settings { get; }
 
-        void WriteMessage(object value, Color? foreColor = null);
+        void Write(object value, Color? foreColor = null);
 
-        void WriteMessageLine(object value, Color? foreColor = null);
+        void WriteLine(object value, Color? foreColor = null);
 
-        void WriteMessageLine();
+        void WriteLine();
 
         Process CreateManagedProcess();
     }

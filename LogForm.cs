@@ -11,16 +11,16 @@ namespace CSScript
     {
         private readonly ProgramModel programModel;
         private readonly Timer timer;
-        private int currentLogPosition;
+        private int currentMessageIndex;
         private bool stopLogOutput;
 
         public LogForm(ProgramModel programModel)
         {
             InitializeComponent();
             Icon = Resources.favicon;
-            richTextBox.BackColor = Settings.Default.BackColor;
-            richTextBox.ForeColor = Settings.Default.ForeColor;
-            richTextBox.WordWrap = Settings.Default.WordWrap;
+            richTextBox.BackColor = programModel.Settings.BackColor;
+            richTextBox.ForeColor = programModel.Settings.ForeColor;
+            richTextBox.WordWrap = programModel.Settings.WordWrap;
 
             this.programModel = programModel;
             timer = new Timer();
@@ -51,16 +51,15 @@ namespace CSScript
         {
             timer.Stop();
 
-            System.Collections.ObjectModel.ReadOnlyCollection<Message> logs = programModel.MessageList;
-            while (currentLogPosition < logs.Count)
+            System.Collections.ObjectModel.ReadOnlyCollection<Message> messageList = programModel.MessageManager.MessageList;
+            while (currentMessageIndex < messageList.Count)
             {
                 if (stopLogOutput)
                 {
                     break;
                 }
-                Message log = logs[currentLogPosition];
-                Print(log);
-                currentLogPosition++;
+                Message message = messageList[currentMessageIndex++];
+                PrintMessage(message);
             }
 
             if (!programModel.Finished && !stopLogOutput)
@@ -69,15 +68,15 @@ namespace CSScript
             }
         }
 
-        private void Print(Message log)
+        private void PrintMessage(Message message)
         {
-            string text = log.Text.Replace("\r", ""); // RichTextBox автоматически отсекает '\r'
+            string text = message.Text.Replace("\r", ""); // RichTextBox автоматически отсекает '\r'
 
             richTextBox.AppendText(text);
-            if (log.ForeColor.HasValue)
+            if (message.ForeColor.HasValue)
             {
                 richTextBox.Select(richTextBox.TextLength - text.Length, text.Length);
-                richTextBox.SelectionColor = log.ForeColor.Value;
+                richTextBox.SelectionColor = message.ForeColor.Value;
                 richTextBox.Select(richTextBox.TextLength, 0);
             }
         }

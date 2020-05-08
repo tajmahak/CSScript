@@ -20,7 +20,7 @@ namespace CSScript
 
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.16) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.17) ---
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
@@ -119,7 +119,7 @@ namespace CSScript
                 catch
                 {
                     string fileName = Path.GetFileName(file);
-                    env.WriteMessageLine("Не удалось удалить файл '" + fileName + "'", env.Settings.ErrorColor);
+                    env.WriteLine("Не удалось удалить файл '" + fileName + "'", env.Settings.ErrorColor);
                 }
             }
         }
@@ -269,7 +269,7 @@ namespace CSScript
                     asyncReader.DataReceived += (byte[] buffer, int count) =>
                     {
                         string text = encoding.GetString(buffer, 0, count);
-                        env.WriteMessage(text, outputColor);
+                        env.Write(text, outputColor);
                     };
                     asyncReader.BeginRead();
                 }

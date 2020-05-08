@@ -1,5 +1,6 @@
 ﻿//#define USE_DEBUG_SCRIPT_STAND // использовать стенд для отладки скриптов
 
+using CSScript.Properties;
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -26,10 +27,10 @@ namespace CSScript
             try
             {
 #if DEBUG && USE_DEBUG_SCRIPT_STAND
-                args = new string[] { "/debug" };
+                args = new string[] { "/debugstand" };
 #endif
-                programModel = new ProgramModel(Properties.Settings.Default, args);
-                programModel.AddMessageEvent += ProgramModel_AddMessageEvent;
+                programModel = new ProgramModel(Settings.Default, args);
+                programModel.MessageManager.MessageAdded += ProgramModel_MessageAdded;
                 programModel.FinishedEvent += ProgramModel_FinishedEvent;
 
                 // для подгрузки библиотек рантаймом, которые не подгружаются самостоятельно
@@ -41,12 +42,12 @@ namespace CSScript
                     Application.SetCompatibleTextRenderingDefault(false);
                     logForm = new LogForm(programModel);
 
-                    programModel.StartScriptAsync(); // чтобы форма успевала прогрузиться до того, как будет уничтожена при завершении поточной операции
+                    programModel.StartAsync(); // чтобы форма успевала прогрузиться до того, как будет уничтожена при завершении поточной операции
                     Application.Run(logForm);
                 }
                 else
                 {
-                    programModel.StartScriptAsync();
+                    programModel.StartAsync();
                     programModel.JoinExecutingThread();
                 }
             }
@@ -66,14 +67,14 @@ namespace CSScript
             return programModel.ResolveAssembly(args.Name);
         }
 
-        private void ProgramModel_AddMessageEvent(object sender, Message logItem)
+        private void ProgramModel_MessageAdded(object sender, Message logItem)
         {
             Debug.Write(logItem.Text);
         }
 
-        private void ProgramModel_FinishedEvent(object sender)
+        private void ProgramModel_FinishedEvent(object sender, bool guiForceExit)
         {
-            if (programModel.GUIForceExit)
+            if (guiForceExit)
             {
                 Application.Exit();
             }

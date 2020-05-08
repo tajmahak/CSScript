@@ -2,10 +2,6 @@
 using Microsoft.CSharp;
 using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -17,11 +13,9 @@ namespace CSScript
     /// <summary>
     /// Представляет модель программы.
     /// </summary>
-    internal class ProgramModel : IScriptEnvironment, IDisposable
+    internal class ProgramModel : IDisposable
     {
-        public int ExitCode { get; set; }
-
-        public bool GUIForceExit { get; set; }
+        public int ExitCode { get; private set; }
 
         public bool GUIMode { get; private set; }
 
@@ -29,24 +23,24 @@ namespace CSScript
 
         public Settings Settings { get; private set; }
 
-        public string ScriptPath { get; private set; }
+        public MessageManager MessageManager { get; private set; }
 
-        public ReadOnlyCollection<Message> MessageList => messageList.AsReadOnly();
+        public ProcessManager ProcessManager { get; private set; }
 
-        private Thread executingThread;
-
-        private readonly List<Message> messageList = new List<Message>();
+        private readonly AssemblyManager assemblyManager;
 
         private readonly InputArgumentsInfo inputArguments;
 
-        private readonly Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
-
-        private readonly List<Process> managedProcesses = new List<Process>();
+        private Thread executingThread;
 
 
 
         public ProgramModel(Settings settings, string[] args)
         {
+            MessageManager = new MessageManager(this);
+            ProcessManager = new ProcessManager();
+            assemblyManager = new AssemblyManager();
+
             Settings = settings;
             inputArguments = InputArgumentsInfo.Parse(args);
             GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
@@ -54,19 +48,15 @@ namespace CSScript
 
 
 
-        public delegate void AddMessageEventHandler(object sender, Message message);
-
-        public event AddMessageEventHandler AddMessageEvent;
-
-        public delegate void FinishedEventHandler(object sender);
+        public delegate void FinishedEventHandler(object sender, bool guiForceExit);
 
         public event FinishedEventHandler FinishedEvent;
 
 
 
-        public void StartScriptAsync()
+        public void StartAsync()
         {
-            executingThread = inputArguments.StartDebugScript ? new Thread(StartDebugScript) : new Thread(StartScript);
+            executingThread = new Thread(Start);
             executingThread.IsBackground = true;
             executingThread.Start();
         }
@@ -81,144 +71,92 @@ namespace CSScript
 
         public Assembly ResolveAssembly(string assemblyName)
         {
-            resolvedAssemblies.TryGetValue(assemblyName, out Assembly assembly);
-            return assembly;
-        }
-
-        public Process CreateManagedProcess()
-        {
-            Process process = new Process();
-            lock (managedProcesses)
-            {
-                managedProcesses.Add(process);
-            }
-            return process;
-        }
-
-        public void WriteMessage(object value, Color? foreColor = null)
-        {
-            if (value != null)
-            {
-                string text = value.ToString();
-                if (!string.IsNullOrEmpty(text))
-                {
-                    Message message = new Message(text, DateTime.Now, foreColor);
-                    lock (messageList)
-                    {
-                        messageList.Add(message);
-                    }
-                    AddMessageEvent?.Invoke(this, message);
-                }
-            }
-        }
-
-        public void WriteMessageLine(object value, Color? foreColor = null)
-        {
-            WriteMessage(value + Environment.NewLine, foreColor);
-        }
-
-        public void WriteMessageLine()
-        {
-            WriteMessage(Environment.NewLine);
+            return assemblyManager.ResolveAssembly(assemblyName);
         }
 
         public void Dispose()
         {
-            KillManagedProcesses();
+            ProcessManager.KillManagedProcesses();
         }
 
 
-        private void StartScript()
+
+        private void Start()
         {
+            bool guiForceExit = false;
             try
             {
                 if (inputArguments.IsEmpty)
                 {
-                    WriteHelpInfoMessage();
+                    MessageManager.WriteHelpInfo();
                     ExitCode = 0;
                 }
                 else
                 {
-                    ScriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
-                    string scriptText = GetScriptText(ScriptPath);
-
-                    WriteStartInfoMessage(ScriptPath);
-
-                    // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-                    // (для возможности указания относительных путей к файлам)
-                    Environment.CurrentDirectory = GetWorkDirectoryPath(ScriptPath);
-
-                    ScriptInfo scriptInfo = ParseScriptInfo(scriptText, ScriptPath);
-                    LoadAssembliesForResolve(scriptInfo);
-                    CompilerResults compilerResults = Compile(scriptInfo);
-
-                    if (compilerResults.Errors.Count == 0)
+                    IScriptEnvironment scriptEnvironment;
+                    if (inputArguments.UseDebugStand)
                     {
-                        IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(ScriptPath);
-                        ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
-                        scriptContainer.Execute(inputArguments.ScriptArguments.ToArray());
-                        ExitCode = scriptEnvironment.ExitCode;
-                        GUIForceExit = scriptEnvironment.GUIForceExit;
+                        scriptEnvironment = CreateScriptEnvironment(null);
+#if DEBUG
+                        ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
+                        debugScript.Execute(inputArguments.ScriptArguments.ToArray());
+#endif
                     }
                     else
                     {
-                        WriteCompileErrorsMessage(compilerResults);
-                        string sourceCode = GetSourceCode(scriptInfo);
+                        string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+                        MessageManager.WriteStartInfo(scriptPath);
 
-                        WriteMessageLine();
+                        // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
+                        // (для возможности указания относительных путей к файлам)
+                        Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
 
-                        WriteSourceCodeMessage(sourceCode, compilerResults);
-                        ExitCode = 1;
+                        scriptEnvironment = CreateScriptEnvironment(scriptPath);
+                        StartCSScript(scriptPath, scriptEnvironment);
                     }
+                    guiForceExit = scriptEnvironment.GUIForceExit;
+                    ExitCode = scriptEnvironment.ExitCode;
                 }
             }
             catch (Exception ex)
             {
-                WriteExceptionMessage(ex);
+                MessageManager.WriteException(ex);
                 ExitCode = 1;
             }
-
-            WriteMessageLine();
-            WriteMessageLine($"# Выполнено с кодом возврата: {ExitCode}", Settings.InfoColor);
-
-            if (inputArguments != null && !string.IsNullOrEmpty(inputArguments.LogPath))
+            finally
             {
-                try
-                {
-                    SaveMessageLog(inputArguments.LogPath);
-                }
-                catch (Exception ex)
-                {
-                    WriteMessageLine($"# Не удалось сохранить лог: {ex.Message}", Settings.ErrorColor);
-                }
-            }
+                MessageManager.WriteExitCode(ExitCode);
 
-            Finished = true;
-            GUIForceExit = GUIMode && GUIForceExit;
-            FinishedEvent?.Invoke(this);
+                MessageManager.SaveLog(inputArguments?.LogPath);
+
+                Finished = true;
+                FinishedEvent?.Invoke(this, GUIMode && guiForceExit);
+            }
         }
 
-        private void StartDebugScript()
+        private void StartCSScript(string scriptPath, IScriptEnvironment scriptEnvironment)
         {
-#if DEBUG
-            try
-            {
-                IScriptEnvironment scriptEnvironment = CreateScriptEnvironment(null);
-                ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
-                debugScript.Execute(inputArguments.ScriptArguments.ToArray());
-            }
-            catch (Exception ex)
-            {
-                WriteExceptionMessage(ex);
-                ExitCode = 1;
-            }
+            string scriptText = GetScriptText(scriptPath);
 
-            WriteMessageLine();
-            WriteMessageLine($"# Выполнено с кодом возврата: {ExitCode}", Settings.InfoColor);
+            ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
+            assemblyManager.LoadAssembliesForResolve(scriptInfo);
+            CompilerResults compilerResults = Compile(scriptInfo);
 
-            Finished = true;
-            FinishedEvent?.Invoke(this);
-#endif
+            if (compilerResults.Errors.Count == 0)
+            {
+                ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
+                scriptContainer.Execute(inputArguments.ScriptArguments.ToArray());
+            }
+            else
+            {
+                MessageManager.WriteCompileErrors(compilerResults);
+                string sourceCode = GetSourceCode(scriptInfo);
+
+                MessageManager.WriteLine();
+
+                MessageManager.WriteSourceCode(sourceCode, compilerResults);
+                scriptEnvironment.ExitCode = 1;
+            }
         }
 
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
@@ -236,7 +174,7 @@ namespace CSScript
 
         private CompilerResults Compile(ScriptInfo scriptInfo)
         {
-            string[] referencedAssemblies = GetReferencedAssemblies(scriptInfo, true);
+            string[] referencedAssemblies = assemblyManager.GetReferencedAssemblies(scriptInfo, true);
             string sourceCode = GetSourceCode(scriptInfo);
 
             using (CSharpCodeProvider provider = new CSharpCodeProvider())
@@ -318,7 +256,7 @@ namespace CSScript
             for (int i = 0; i < scriptInfo.DefinedAssemblyList.Count; i++)
             {
                 scriptInfo.DefinedAssemblyList[i]
-                    = GetCorrectAssemblyPath(scriptInfo.DefinedAssemblyList[i], scriptWorkDirectory);
+                    = assemblyManager.GetCorrectAssemblyPath(scriptInfo.DefinedAssemblyList[i], scriptWorkDirectory);
             }
 
             if (scriptInfo.DefinedScriptList.Count == 0)
@@ -389,51 +327,7 @@ namespace CSScript
 
         private IScriptEnvironment CreateScriptEnvironment(string scriptPath)
         {
-            return this;
-        }
-
-        private void LoadAssembliesForResolve(ScriptInfo scriptInfo)
-        {
-            string[] assemblies = GetReferencedAssemblies(scriptInfo, false);
-            foreach (string assembly in assemblies)
-            {
-                if (File.Exists(assembly))
-                {
-                    // загружаются только те сборки, которые рантайм не может подгрузить автоматически
-                    Assembly loadedAssembly = Assembly.LoadFrom(assembly);
-                    resolvedAssemblies.Add(loadedAssembly.FullName, loadedAssembly);
-                }
-            }
-        }
-
-        private string[] GetReferencedAssemblies(ScriptInfo scriptInfo, bool includeCurrentAssembly)
-        {
-            List<string> definedAssemblies = new List<string>();
-            definedAssemblies.Add("System.dll"); // библиотека для работы множества основных функций
-            definedAssemblies.Add("System.Drawing.dll"); // для работы команд вывода информации в лог
-            if (includeCurrentAssembly)
-            {
-                definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
-            }
-            foreach (string definedAssemblyPath in scriptInfo.DefinedAssemblyList) // дополнительные библиотеки, указанные в #define
-            {
-                definedAssemblies.Add(definedAssemblyPath);
-            }
-            return definedAssemblies.ToArray();
-        }
-
-        private string GetCorrectAssemblyPath(string assemblyPath, string workDirectory)
-        {
-            if (!Path.IsPathRooted(assemblyPath))
-            {
-                // библиотека, указанная по относительному пути, находится либо в рабочей папке, либо в GAC
-                string fullPath = Path.Combine(workDirectory, assemblyPath);
-                if (File.Exists(fullPath))
-                {
-                    return fullPath;
-                }
-            }
-            return assemblyPath;
+            return new ProgramScriptEnvironment(this, scriptPath);
         }
 
         private string GetSourceCode(ScriptInfo scriptInfo)
@@ -474,146 +368,6 @@ namespace CSScript
         private string GetWorkDirectoryPath(string path)
         {
             return Path.GetDirectoryName(path);
-        }
-
-        private string[] ParseHelpInfoMessageLine(string line)
-        {
-            if (line.StartsWith("`"))
-            {
-                int index = line.IndexOf("`", 1);
-                return new string[]
-                {
-                    line.Substring(1, index - 1),
-                    line.Substring(index + 1),
-                };
-            }
-            else
-            {
-                return new string[] { null, line };
-            }
-        }
-
-        private void KillManagedProcesses()
-        {
-            lock (managedProcesses)
-            {
-                for (int i = 0; i < managedProcesses.Count; i++)
-                {
-                    try
-                    {
-                        managedProcesses[i].Kill();
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
-        }
-
-        private void WriteHelpInfoMessage()
-        {
-            string[] lines = Resources.HelpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++)
-            {
-                Color? color = null;
-                string[] line = ParseHelpInfoMessageLine(lines[i]);
-                switch (line[0])
-                {
-                    case "c": color = Settings.CaptionColor; break;
-                    case "i": color = Settings.InfoColor; break;
-                }
-                WriteMessageLine(line[1], color);
-            }
-        }
-
-        private void WriteStartInfoMessage(string scriptPath)
-        {
-            WriteMessageLine($"## {scriptPath}", Settings.InfoColor);
-            WriteMessageLine($"## {DateTime.Now}", Settings.InfoColor);
-            WriteMessageLine();
-        }
-
-        private void WriteExceptionMessage(Exception ex)
-        {
-            WriteMessageLine($"# Ошибка: {ex.Message}", Settings.ErrorColor);
-            foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
-            {
-                WriteMessageLine("#" + stackTraceLine, Settings.StackTraceColor);
-            }
-        }
-
-        private void WriteCompileErrorsMessage(CompilerResults compilerResults)
-        {
-            WriteMessageLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", Settings.ErrorColor);
-            int errorNumber = 1;
-            foreach (CompilerError error in compilerResults.Errors)
-            {
-                if (error.Line > 0)
-                {
-                    WriteMessageLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", Settings.ErrorColor);
-                }
-                else
-                {
-                    WriteMessageLine($"# {errorNumber++}: {error.ErrorText}", Settings.ErrorColor);
-                }
-            }
-        }
-
-        private void WriteSourceCodeMessage(string sourceCode, CompilerResults compilerResults = null)
-        {
-            HashSet<int> errorLines = new HashSet<int>();
-            if (compilerResults != null)
-            {
-                foreach (CompilerError error in compilerResults.Errors)
-                {
-                    errorLines.Add(error.Line);
-                }
-            }
-
-            string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                int lineNumber = i + 1;
-
-                WriteMessage(lineNumber.ToString().PadLeft(4) + ": ");
-                if (errorLines.Contains(lineNumber))
-                {
-                    WriteMessageLine(line, Settings.ErrorColor);
-                }
-                else
-                {
-                    if (line.TrimStart().StartsWith("//"))
-                    {
-                        WriteMessageLine(line, Settings.CommentColor);
-                    }
-                    else
-                    {
-                        WriteMessageLine(line, Settings.SourceCodeColor);
-                    }
-                }
-            }
-        }
-
-        private string GetMessageLog()
-        {
-            StringBuilder messageLog = new StringBuilder();
-            foreach (Message message in messageList)
-            {
-                messageLog.Append(message.Text);
-            }
-            return messageLog.ToString();
-        }
-
-        private void SaveMessageLog(string logPath)
-        {
-            string messageLog = GetMessageLog();
-            using (StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8))
-            {
-                writer.WriteLine(messageLog);
-                writer.WriteLine();
-                writer.WriteLine();
-            }
         }
     }
 }
