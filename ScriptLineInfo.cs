@@ -1,5 +1,8 @@
 ﻿namespace CSScript
 {
+    /// <summary>
+    /// Представляет строку скрипта.
+    /// </summary>
     internal class ScriptLineInfo
     {
         private ScriptLineInfo(string sourceLine)
