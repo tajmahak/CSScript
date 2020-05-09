@@ -87,7 +87,7 @@ namespace CSScript
 
 #if DEBUG_USE_SCRIPT_STAND && DEBUG
                     scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
-                    ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
+                    ScriptContainer debugScript = new _DebugScriptStand(scriptEnvironment);
                     debugScript.Execute();
 #else
                     string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
