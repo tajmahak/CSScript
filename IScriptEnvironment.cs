@@ -9,6 +9,8 @@ namespace CSScript
     /// </summary>
     public interface IScriptEnvironment
     {
+        string[] Args { get; }
+
         int ExitCode { get; set; }
 
         bool AutoClose { get; set; }
