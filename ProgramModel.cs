@@ -1,4 +1,7 @@
-﻿using CSScript.Properties;
+﻿//#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
+#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
+
+using CSScript.Properties;
 using Microsoft.CSharp;
 using System;
 using System.CodeDom.Compiler;
@@ -54,7 +57,7 @@ namespace CSScript
 
         public Thread StartAsync()
         {
-            var executingThread = new Thread(Start);
+            Thread executingThread = new Thread(Start);
             executingThread.IsBackground = true;
             executingThread.Start();
             return executingThread;
@@ -85,35 +88,33 @@ namespace CSScript
                 else
                 {
                     IScriptEnvironment scriptEnvironment;
-                    if (inputArguments.UseDebugStand)
-                    {
-                        scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
-#if DEBUG
-                        ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
-                        debugScript.Execute();
+
+#if DEBUG_USE_SCRIPT_STAND && DEBUG
+                    scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
+                    ScriptContainer debugScript = new DebugScriptStand(scriptEnvironment);
+                    debugScript.Execute();
+#else
+                    string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+                    MessageManager.WriteStartInfo(scriptPath);
+
+                    // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
+                    // (для возможности указания относительных путей к файлам)
+                    Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
+
+                    scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
+                    StartCSScript(scriptPath, scriptEnvironment);
 #endif
-                    }
-                    else
-                    {
-                        string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
-                        MessageManager.WriteStartInfo(scriptPath);
-
-                        // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-                        // (для возможности указания относительных путей к файлам)
-                        Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
-
-                        scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
-                        StartCSScript(scriptPath, scriptEnvironment);
-                    }
                     guiForceExit = scriptEnvironment.GUIForceExit;
                     ExitCode = scriptEnvironment.ExitCode;
                 }
             }
+#if !DEBUG_SKIP_EXCEPTION_HANDLING || !DEBUG
             catch (Exception ex)
             {
                 MessageManager.WriteException(ex);
                 ExitCode = 1;
             }
+#endif
             finally
             {
                 MessageManager.WriteExitCode(ExitCode);
@@ -185,60 +186,44 @@ namespace CSScript
             ScriptInfo scriptInfo = new ScriptInfo(scriptPath);
 
             StringBuilder currentBlock = scriptInfo.ProcedureBlock;
-            
-            string[] operatorBlocks = scriptText.Split(new string[] { ";" }, StringSplitOptions.None);
-            for (int i = 0; i < operatorBlocks.Length; i++)
-            {
-                string operatorBlock = operatorBlocks[i];
-                string[] lines = operatorBlock.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-                for (int j = 0; j < lines.Length; j++)
-                {
-                    string line = lines[j];
-                    string trimLine = line.TrimStart();
-                    if (trimLine.Length > 0)
-                    {
-                        if (trimLine.StartsWith("#")) // служебные конструкции
-                        {
-                            if (trimLine.StartsWith("#definescript"))
-                            {
-                                string preparedLine = line.Replace("#definescript", "").Trim();
-                                scriptInfo.DefinedScriptList.Add(preparedLine);
-                            }
-                            else if (trimLine.StartsWith("#define"))
-                            {
-                                string preparedLine = line.Replace("#define", "").Trim();
-                                scriptInfo.DefinedAssemblyList.Add(preparedLine);
-                            }
 
-                            else if (trimLine.StartsWith("#using"))
-                            {
-                                string preparedLine = line.Replace("#", "").Trim() + ";";
-                                scriptInfo.UsingList.Add(preparedLine);
-                            }
-                            else if (trimLine.StartsWith("#class"))
-                            {
-                                currentBlock = scriptInfo.ClassBlock;
-                                continue;
-                            }
-                            else if (trimLine.StartsWith("#ns") || trimLine.StartsWith("#namespace"))
-                            {
-                                currentBlock = scriptInfo.NamespaceBlock;
-                                continue;
-                            }
-                        }
-                        else
-                        {
+            string[] textLines = scriptText.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string textLine in textLines)
+            {
+                ScriptLineInfo scriptLine = ScriptLineInfo.Parse(textLine);
+                if (!scriptLine.IsEmpty)
+                {
+                    switch (scriptLine.OperatorName)
+                    {
+                        case "definescript":
+                            scriptInfo.DefinedScriptList.Add(scriptLine.OperatorValue);
+                            break;
+
+                        case "define":
+                            scriptInfo.DefinedAssemblyList.Add(scriptLine.OperatorValue);
+                            break;
+
+                        case "using":
+                            scriptInfo.UsingList.Add($"using {scriptLine.OperatorValue};");
+                            break;
+
+                        case "class":
+                            currentBlock = scriptInfo.ClassBlock;
+                            break;
+
+                        case "ns":
+                        case "namespace":
+                            currentBlock = scriptInfo.NamespaceBlock;
+                            break;
+
+                        default:
                             if (currentBlock.Length > 0)
                             {
                                 currentBlock.AppendLine();
                             }
-                            currentBlock.Append(line);
-                        }
+                            currentBlock.Append(scriptLine.SourceLine);
+                            break;
                     }
-                }
-                if (i < operatorBlocks.Length - 1)
-                {
-                    currentBlock.Append(';');
                 }
             }
 

@@ -17,8 +17,6 @@ namespace CSScript
 
         public string ScriptPath { get; private set; }
 
-        public bool UseDebugStand { get; private set; }
-
         public List<string> ScriptArguments { get; private set; } = new List<string>();
 
         public static InputArgumentsInfo Parse(string[] args)
@@ -49,11 +47,6 @@ namespace CSScript
                     else if (preparedArg == "/a" || preparedArg == "/arg")
                     {
                         currentArgument = "a";
-                    }
-                    else if (preparedArg == "/debugstand")
-                    {
-                        inputArguments.UseDebugStand = true;
-                        currentArgument = null;
                     }
                     else
                     {

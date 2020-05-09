@@ -1,6 +1,4 @@
-﻿//#define USE_DEBUG_SCRIPT_STAND // использовать стенд для отладки скриптов
-
-using CSScript.Properties;
+﻿using CSScript.Properties;
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -27,11 +25,6 @@ namespace CSScript
         {
             try
             {
-#if DEBUG && USE_DEBUG_SCRIPT_STAND
-                // добавление дополнительной команды в аргументы
-                Array.Resize(ref args, args.Length + 1);
-                args[args.Length - 1] = "/debugstand";
-#endif
                 programModel = new ProgramModel(Settings.Default, args);
                 programModel.MessageManager.MessageAdded += ProgramModel_MessageAdded;
                 programModel.FinishedEvent += ProgramModel_FinishedEvent;
