@@ -13,7 +13,7 @@ namespace CSScript
     /// <summary>
     /// Представляет стенд для отладки скриптов.
     /// </summary>
-    internal class DebugScriptStand : ScriptContainer
+    internal class _DebugScriptStand : ScriptContainer
     {
         public override void Execute()
         {
@@ -313,7 +313,7 @@ namespace CSScript
 
         // ---------------------------------------- 
 
-        public DebugScriptStand(IScriptEnvironment scriptEnvironment) : base(scriptEnvironment) { }
+        public _DebugScriptStand(IScriptEnvironment scriptEnvironment) : base(scriptEnvironment) { }
     }
 }
 

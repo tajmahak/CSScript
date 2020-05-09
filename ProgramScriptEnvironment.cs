@@ -22,7 +22,7 @@ namespace CSScript
 
         public int ExitCode { get; set; }
 
-        public bool GUIForceExit { get; set; }
+        public bool AutoClose { get; set; }
 
         public string ScriptPath { get; }
 

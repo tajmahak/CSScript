@@ -1,5 +1,5 @@
-﻿#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
-#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
+﻿//#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
+//#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
 
 using CSScript.Properties;
 using Microsoft.CSharp;
@@ -26,13 +26,13 @@ namespace CSScript
 
             Settings = settings;
             inputArguments = InputArgumentsInfo.Parse(args);
-            GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
+            HideMode = !inputArguments.IsEmpty && inputArguments.HideMode;
         }
 
 
         public int ExitCode { get; private set; }
 
-        public bool GUIMode { get; private set; }
+        public bool HideMode { get; private set; }
 
         public bool Finished { get; private set; }
 
@@ -47,7 +47,7 @@ namespace CSScript
         private readonly InputArgumentsInfo inputArguments;
 
 
-        public delegate void FinishedEventHandler(object sender, bool guiForceExit);
+        public delegate void FinishedEventHandler(object sender, bool autoClose);
 
         public event FinishedEventHandler FinishedEvent;
 
@@ -73,7 +73,7 @@ namespace CSScript
 
         private void Start()
         {
-            bool guiForceExit = false;
+            bool autoClose = false;
             try
             {
                 if (inputArguments.IsEmpty)
@@ -100,7 +100,7 @@ namespace CSScript
                     scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
                     StartCSScript(scriptPath, scriptEnvironment);
 #endif
-                    guiForceExit = scriptEnvironment.GUIForceExit;
+                    autoClose = scriptEnvironment.AutoClose;
                     ExitCode = scriptEnvironment.ExitCode;
                 }
             }
@@ -118,7 +118,7 @@ namespace CSScript
                 MessageManager.SaveLog(inputArguments?.LogPath);
 
                 Finished = true;
-                FinishedEvent?.Invoke(this, GUIMode && guiForceExit);
+                FinishedEvent?.Invoke(this, autoClose && !HideMode);
             }
         }
 

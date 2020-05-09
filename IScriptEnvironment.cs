@@ -11,7 +11,7 @@ namespace CSScript
     {
         int ExitCode { get; set; }
 
-        bool GUIForceExit { get; set; }
+        bool AutoClose { get; set; }
 
         string ScriptPath { get; }
 

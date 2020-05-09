@@ -49,6 +49,9 @@
   <PropertyGroup>
     <ApplicationIcon>Resources\favicon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,6 +61,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyManager.cs" />
+    <Compile Include="ConsoleProgram.cs" />
+    <Compile Include="GUIProgram.cs" />
     <Compile Include="IScriptEnvironment.cs" />
     <Compile Include="LogForm.cs">
       <SubType>Form</SubType>
@@ -80,7 +85,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptInfo.cs" />
-    <Compile Include="DebugScriptStand.cs" />
+    <Compile Include="_DebugScriptStand.cs" />
     <Compile Include="ScriptLineInfo.cs" />
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="LogForm.resx">

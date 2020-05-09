@@ -70,7 +70,7 @@ namespace CSScript.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PowderBlue")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Cyan")]
         public global::System.Drawing.Color SourceCodeColor {
             get {
                 return ((global::System.Drawing.Color)(this["SourceCodeColor"]));
@@ -97,7 +97,7 @@ namespace CSScript.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("64, 64, 64")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Gray")]
         public global::System.Drawing.Color StackTraceColor {
             get {
                 return ((global::System.Drawing.Color)(this["StackTraceColor"]));
