@@ -1,4 +1,4 @@
-﻿//#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
+﻿#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
 #define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
 
 using CSScript.Properties;
@@ -18,6 +18,18 @@ namespace CSScript
     /// </summary>
     internal class ProgramModel : IDisposable
     {
+        public ProgramModel(Settings settings, string[] args)
+        {
+            MessageManager = new MessageManager(this);
+            ProcessManager = new ProcessManager();
+            assemblyManager = new AssemblyManager();
+
+            Settings = settings;
+            inputArguments = InputArgumentsInfo.Parse(args);
+            GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
+        }
+
+
         public int ExitCode { get; private set; }
 
         public bool GUIMode { get; private set; }
@@ -35,24 +47,9 @@ namespace CSScript
         private readonly InputArgumentsInfo inputArguments;
 
 
-
-        public ProgramModel(Settings settings, string[] args)
-        {
-            MessageManager = new MessageManager(this);
-            ProcessManager = new ProcessManager();
-            assemblyManager = new AssemblyManager();
-
-            Settings = settings;
-            inputArguments = InputArgumentsInfo.Parse(args);
-            GUIMode = inputArguments.IsEmpty || !inputArguments.HideMode;
-        }
-
-
-
         public delegate void FinishedEventHandler(object sender, bool guiForceExit);
 
         public event FinishedEventHandler FinishedEvent;
-
 
 
         public Thread StartAsync()
@@ -72,7 +69,6 @@ namespace CSScript
         {
             ProcessManager.KillManagedProcesses();
         }
-
 
 
         private void Start()
