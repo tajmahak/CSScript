@@ -86,19 +86,47 @@ namespace CSScript
                     IScriptEnvironment scriptEnvironment;
 
 #if DEBUG_USE_SCRIPT_STAND && DEBUG
-                    scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
-                    ScriptContainer debugScript = new _DebugScriptStand(scriptEnvironment);
-                    debugScript.Execute();
+                    {
+                        scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
+                        ScriptContainer debugScript = new _DebugScriptStand(scriptEnvironment);
+                        debugScript.Execute();
+                    }
 #else
-                    string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
-                    MessageManager.WriteStartInfo(scriptPath);
+                    {
+                        string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+                        MessageManager.WriteStartInfo(scriptPath);
 
-                    // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-                    // (для возможности указания относительных путей к файлам)
-                    Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
+                        // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
+                        // (для возможности указания относительных путей к файлам)
+                        Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
 
-                    scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
-                    StartCSScript(scriptPath, scriptEnvironment);
+                        scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
+
+                        string scriptText = GetScriptText(scriptPath);
+
+                        ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
+                        assemblyManager.LoadAssembliesForResolve(scriptInfo);
+                        CompilerResults compilerResults = Compile(scriptInfo);
+
+                        if (compilerResults.Errors.Count == 0)
+                        {
+                            MessageManager.WriteScriptInfo(scriptInfo);
+                            MessageManager.WriteLine();
+
+                            ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
+                            scriptContainer.Execute();
+                        }
+                        else
+                        {
+                            MessageManager.WriteLine();
+                            MessageManager.WriteCompileErrors(compilerResults);
+                            MessageManager.WriteLine();
+
+                            string sourceCode = GetSourceCode(scriptInfo);
+                            MessageManager.WriteSourceCode(sourceCode, compilerResults);
+                            scriptEnvironment.ExitCode = 1;
+                        }
+                    }
 #endif
                     autoClose = scriptEnvironment.AutoClose;
                     ExitCode = scriptEnvironment.ExitCode;
@@ -122,30 +150,15 @@ namespace CSScript
             }
         }
 
-        private void StartCSScript(string scriptPath, IScriptEnvironment scriptEnvironment)
-        {
-            string scriptText = GetScriptText(scriptPath);
 
-            ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
-            assemblyManager.LoadAssembliesForResolve(scriptInfo);
-            CompilerResults compilerResults = Compile(scriptInfo);
 
-            if (compilerResults.Errors.Count == 0)
-            {
-                ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
-                scriptContainer.Execute();
-            }
-            else
-            {
-                MessageManager.WriteCompileErrors(compilerResults);
-                string sourceCode = GetSourceCode(scriptInfo);
 
-                MessageManager.WriteLine();
 
-                MessageManager.WriteSourceCode(sourceCode, compilerResults);
-                scriptEnvironment.ExitCode = 1;
-            }
-        }
+
+
+
+
+
 
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
         {
@@ -210,6 +223,14 @@ namespace CSScript
                         case "ns":
                         case "namespace":
                             currentBlock = scriptInfo.NamespaceBlock;
+                            break;
+
+                        case "name":
+                            scriptInfo.ScriptName = scriptLine.OperatorValue;
+                            break;
+
+                        case "version":
+                            scriptInfo.ScriptVersion = scriptLine.OperatorValue;
                             break;
 
                         default:
