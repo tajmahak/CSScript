@@ -150,16 +150,6 @@ namespace CSScript
             }
         }
 
-
-
-
-
-
-
-
-
-
-
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
@@ -280,6 +270,9 @@ namespace CSScript
         private ScriptInfo MergeScripts(ScriptInfo mainScriptInfo, ScriptInfo definedScriptInfo)
         {
             ScriptInfo mergedScriptInfo = new ScriptInfo(mainScriptInfo.ScriptPath);
+
+            mergedScriptInfo.ScriptName = mainScriptInfo.ScriptName;
+            mergedScriptInfo.ScriptVersion = mainScriptInfo.ScriptVersion;
 
             mergedScriptInfo.DefinedAssemblyList.AddRange(mainScriptInfo.DefinedAssemblyList);
             mergedScriptInfo.DefinedAssemblyList.AddRange(definedScriptInfo.DefinedAssemblyList);
