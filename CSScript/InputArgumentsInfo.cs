@@ -13,6 +13,10 @@ namespace CSScript
 
         public bool HideMode { get; private set; }
 
+        public bool RegisterMode { get; private set; }
+
+        public bool UnregisterMode { get; private set; }
+
         public string LogPath { get; private set; }
 
         public string ScriptPath { get; private set; }
@@ -42,6 +46,16 @@ namespace CSScript
                     else if (preparedArg == "/l" || preparedArg == "/log")
                     {
                         inputArguments.LogPath = args[++i];
+                        currentArgument = null;
+                    }
+                    else if (preparedArg == "/reg")
+                    {
+                        inputArguments.RegisterMode = true;
+                        currentArgument = null;
+                    }
+                    else if (preparedArg == "/unreg")
+                    {
+                        inputArguments.UnregisterMode = true;
                         currentArgument = null;
                     }
                     else if (preparedArg == "/a" || preparedArg == "/arg")

@@ -82,6 +82,7 @@ namespace CSScript
         {
             WriteLine($"## {scriptPath}", programModel.Settings.InfoColor);
             WriteLine($"## {DateTime.Now}", programModel.Settings.InfoColor);
+            WriteLine();
         }
 
         public void WriteException(Exception ex)
@@ -90,6 +91,12 @@ namespace CSScript
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
             {
                 WriteLine("#" + stackTraceLine, programModel.Settings.StackTraceColor);
+            }
+
+            if (ex.InnerException != null)
+            {
+                WriteLine();
+                WriteException(ex.InnerException);
             }
         }
 
@@ -143,18 +150,6 @@ namespace CSScript
                         WriteLine(line, programModel.Settings.SourceCodeColor);
                     }
                 }
-            }
-        }
-
-        public void WriteScriptInfo(ScriptInfo scriptInfo)
-        {
-            if (!string.IsNullOrEmpty(scriptInfo.ScriptName))
-            {
-                WriteLine("## " + scriptInfo.ScriptName, programModel.Settings.InfoColor);
-            }
-            if (!string.IsNullOrEmpty(scriptInfo.ScriptVersion))
-            {
-                WriteLine("## Версия: " + scriptInfo.ScriptVersion, programModel.Settings.InfoColor);
             }
         }
 

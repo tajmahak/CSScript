@@ -20,7 +20,7 @@ namespace CSScript
 
         protected ProgramModel ProgramModel { get; private set; }
 
-        public Program(string[] args)
+        protected Program(string[] args)
         {
             ProgramModel = new ProgramModel(Properties.Settings.Default, args);
 

@@ -60,5 +60,13 @@ namespace CSScript
             }
             return assemblyPath;
         }
+
+        public static string GetLocaleAssemblyPath(string fileName)
+        {
+            // Получение пути из папки с исполняемой сборкой
+            string executingPath = Assembly.GetExecutingAssembly().Location;
+            string path = Path.GetDirectoryName(executingPath);
+            return Path.Combine(path, fileName);
+        }
     }
 }

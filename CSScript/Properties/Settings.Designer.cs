@@ -103,5 +103,14 @@ namespace CSScript.Properties {
                 return ((global::System.Drawing.Color)(this["StackTraceColor"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Green")]
+        public global::System.Drawing.Color SuccessColor {
+            get {
+                return ((global::System.Drawing.Color)(this["SuccessColor"]));
+            }
+        }
     }
 }

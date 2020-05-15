@@ -16,10 +16,6 @@ namespace CSScript
 
         public string ScriptPath { get; }
 
-        public string ScriptName { get; set; }
-       
-        public string ScriptVersion { get; set; }
-
         public List<string> DefinedScriptList { get; private set; } = new List<string>();
 
         public List<string> DefinedAssemblyList { get; private set; } = new List<string>();

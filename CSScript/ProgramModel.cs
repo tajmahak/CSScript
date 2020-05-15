@@ -8,6 +8,7 @@ using System.CodeDom.Compiler;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 
@@ -46,6 +47,8 @@ namespace CSScript
 
         private readonly InputArgumentsInfo inputArguments;
 
+        private bool needAutoClose;
+
 
         public delegate void FinishedEventHandler(object sender, bool autoClose);
 
@@ -73,63 +76,23 @@ namespace CSScript
 
         private void Start()
         {
-            bool autoClose = false;
             try
             {
                 if (inputArguments.IsEmpty)
                 {
-                    MessageManager.WriteHelpInfo();
-                    ExitCode = 0;
+                    WriteProgramInformation();
+                }
+                else if (inputArguments.RegisterMode)
+                {
+                    RegistryProgram();
+                }
+                else if (inputArguments.UnregisterMode)
+                {
+                    UnregistryProgram();
                 }
                 else
                 {
-                    IScriptEnvironment scriptEnvironment;
-
-#if DEBUG_USE_SCRIPT_STAND && DEBUG
-                    {
-                        scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
-                        ScriptContainer debugScript = new _DebugScriptStand(scriptEnvironment);
-                        debugScript.Execute();
-                    }
-#else
-                    {
-                        string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
-                        MessageManager.WriteStartInfo(scriptPath);
-
-                        // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-                        // (для возможности указания относительных путей к файлам)
-                        Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
-
-                        scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
-
-                        string scriptText = GetScriptText(scriptPath);
-
-                        ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
-                        assemblyManager.LoadAssembliesForResolve(scriptInfo);
-                        CompilerResults compilerResults = Compile(scriptInfo);
-
-                        if (compilerResults.Errors.Count == 0)
-                        {
-                            MessageManager.WriteScriptInfo(scriptInfo);
-                            MessageManager.WriteLine();
-
-                            ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
-                            scriptContainer.Execute();
-                        }
-                        else
-                        {
-                            MessageManager.WriteLine();
-                            MessageManager.WriteCompileErrors(compilerResults);
-                            MessageManager.WriteLine();
-
-                            string sourceCode = GetSourceCode(scriptInfo);
-                            MessageManager.WriteSourceCode(sourceCode, compilerResults);
-                            scriptEnvironment.ExitCode = 1;
-                        }
-                    }
-#endif
-                    autoClose = scriptEnvironment.AutoClose;
-                    ExitCode = scriptEnvironment.ExitCode;
+                    ExecuteScript();
                 }
             }
 #if !DEBUG_SKIP_EXCEPTION_HANDLING || !DEBUG
@@ -146,8 +109,115 @@ namespace CSScript
                 MessageManager.SaveLog(inputArguments?.LogPath);
 
                 Finished = true;
-                FinishedEvent?.Invoke(this, autoClose && !HideMode);
+                FinishedEvent?.Invoke(this, needAutoClose && !HideMode);
             }
+        }
+
+        private void WriteProgramInformation()
+        {
+            MessageManager.WriteHelpInfo();
+            ExitCode = 0;
+        }
+
+        private void RegistryProgram()
+        {
+            if (HasAdministativePrivilegies())
+            {
+                MessageManager.WriteLine("Регистрация программы в реестре...");
+
+                RegistryManager.RegisterFileAssociation();
+
+                string shellExtensionAssemblyPath = "CSScript.ShellExtension.dll";
+                shellExtensionAssemblyPath = AssemblyManager.GetLocaleAssemblyPath(shellExtensionAssemblyPath);
+
+                if (File.Exists(shellExtensionAssemblyPath))
+                {
+                    MessageManager.WriteLine("Регистрация расширения оболочки...");
+                    Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
+                    RegistryManager.RegisterShellExtension(shellExtensionAssembly);
+                }
+                MessageManager.WriteLine("Перезапуск 'Проводник'...");
+                ProcessManager.RestartWindowsExplorer();
+
+                MessageManager.WriteLine("Успешно", Settings.SuccessColor);
+            }
+            else
+            {
+                throw new Exception("Для работы с реестром необходимы права администратора.");
+            }
+        }
+
+        private void UnregistryProgram()
+        {
+            if (HasAdministativePrivilegies())
+            {
+                MessageManager.WriteLine("Удаление регистрации программы в реестре...");
+
+                RegistryManager.UnregisterFileAssociation();
+
+                string shellExtensionAssemblyPath = "CSScript.ShellExtension.dll";
+                if (File.Exists(shellExtensionAssemblyPath))
+                {
+                    MessageManager.WriteLine("Удаление регистрации расширения оболочки...");
+                    Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
+                    RegistryManager.UnregisterShellExtension(shellExtensionAssembly);
+                }
+                MessageManager.WriteLine("Перезапуск 'Проводник'...");
+                ProcessManager.RestartWindowsExplorer();
+
+                MessageManager.WriteLine("Успешно", Settings.SuccessColor);
+            }
+            else
+            {
+                throw new Exception("Для работы с реестром необходимы права администратора.");
+            }
+        }
+
+        private void ExecuteScript()
+        {
+            IScriptEnvironment scriptEnvironment;
+
+#if DEBUG_USE_SCRIPT_STAND && DEBUG
+
+            scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
+            ScriptContainer debugScript = new _DebugScriptStand(scriptEnvironment);
+            debugScript.Execute();
+
+#else
+
+            string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+            MessageManager.WriteStartInfo(scriptPath);
+
+            // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
+            // (для возможности указания относительных путей к файлам)
+            Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
+
+            scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
+
+            string scriptText = GetScriptText(scriptPath);
+
+            ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
+            assemblyManager.LoadAssembliesForResolve(scriptInfo);
+            CompilerResults compilerResults = Compile(scriptInfo);
+
+            if (compilerResults.Errors.Count == 0)
+            {
+                ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
+                scriptContainer.Execute();
+            }
+            else
+            {
+                MessageManager.WriteCompileErrors(compilerResults);
+                MessageManager.WriteLine();
+
+                string sourceCode = GetSourceCode(scriptInfo);
+                MessageManager.WriteSourceCode(sourceCode, compilerResults);
+                scriptEnvironment.ExitCode = 1;
+            }
+
+#endif
+            needAutoClose = scriptEnvironment.AutoClose;
+            ExitCode = scriptEnvironment.ExitCode;
         }
 
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
@@ -215,14 +285,6 @@ namespace CSScript
                             currentBlock = scriptInfo.NamespaceBlock;
                             break;
 
-                        case "name":
-                            scriptInfo.ScriptName = scriptLine.OperatorValue;
-                            break;
-
-                        case "version":
-                            scriptInfo.ScriptVersion = scriptLine.OperatorValue;
-                            break;
-
                         default:
                             if (currentBlock.Length > 0)
                             {
@@ -270,9 +332,6 @@ namespace CSScript
         private ScriptInfo MergeScripts(ScriptInfo mainScriptInfo, ScriptInfo definedScriptInfo)
         {
             ScriptInfo mergedScriptInfo = new ScriptInfo(mainScriptInfo.ScriptPath);
-
-            mergedScriptInfo.ScriptName = mainScriptInfo.ScriptName;
-            mergedScriptInfo.ScriptVersion = mainScriptInfo.ScriptVersion;
 
             mergedScriptInfo.DefinedAssemblyList.AddRange(mainScriptInfo.DefinedAssemblyList);
             mergedScriptInfo.DefinedAssemblyList.AddRange(definedScriptInfo.DefinedAssemblyList);
@@ -354,6 +413,17 @@ namespace CSScript
         private string GetWorkDirectoryPath(string path)
         {
             return Path.GetDirectoryName(path);
+        }
+
+        private bool HasAdministativePrivilegies()
+        {
+            bool isElevated;
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            {
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                isElevated = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            return isElevated;
         }
     }
 }
