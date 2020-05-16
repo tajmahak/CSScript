@@ -1,6 +1,4 @@
-﻿#define GUI_VERSION // - использование графического интерфейса вместо консольного (+ вручную переключить в свойствах проекта тип выходных данных)
-
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace CSScript
@@ -11,11 +9,10 @@ namespace CSScript
         {
 #if GUI_VERSION
             ProgramBase program = new GUIProgram(programModel);
-            program.StartProgram();
 #else
             ProgramBase program = new ConsoleProgram(programModel);
-            program.StartProgram();
 #endif
+            program.StartProgram();
         }
 
 

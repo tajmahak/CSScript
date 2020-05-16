@@ -1,5 +1,5 @@
 ﻿//#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
-#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
+//#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
 
 using CSScript.Properties;
 using Microsoft.CSharp;
@@ -19,24 +19,16 @@ namespace CSScript
     /// </summary>
     internal class ProgramModel : IDisposable
     {
-        private ProgramModel(Settings settings)
+        public ProgramModel(Settings settings, string[] args)
         {
             MessageManager = new MessageManager(this);
             ProcessManager = new ProcessManager();
             assemblyManager = new AssemblyManager();
 
             Settings = settings;
-        }
 
-        public ProgramModel(Settings settings, string[] args) : this(settings)
-        {
             inputArguments = InputArgumentsInfo.Parse(args);
             HideMode = !inputArguments.IsEmpty && inputArguments.HideMode;
-        }
-
-        public ProgramModel(Settings settings, string scriptPath, string[] scriptArguments) : this(settings)
-        {
-
         }
 
 
