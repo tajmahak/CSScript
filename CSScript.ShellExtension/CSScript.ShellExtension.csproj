@@ -53,11 +53,5 @@
   <ItemGroup>
     <None Include="Key.snk" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CSScript\CSScript.csproj">
-      <Project>{def8c111-c070-4585-9ad5-1b1ff24417c8}</Project>
-      <Name>CSScript</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
