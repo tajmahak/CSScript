@@ -1,7 +1,7 @@
 ﻿using SharpShell.Attributes;
 using SharpShell.SharpDropHandler;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -20,16 +20,24 @@ namespace CSScript.ShellExtension
 
         protected override void Drop(DragEventArgs dragEventArgs)
         {
-            StringBuilder args = new StringBuilder();
-            foreach (string dragItem in DragItems)
+            List<string> args = new List<string>();
+            args.Add(SelectedItemPath);
+            args.Add("/a");
+            args.AddRange(DragItems);
+
+            StringBuilder a = new StringBuilder();
+            for (int i = 0; i < args.Count; i++)
             {
-                if (args.Length > 0)
-                {
-                    args.Append(" ");
-                }
-                args.Append("\"" + dragItem + "\"");
+                a.AppendLine(i + ") " + args[i]);
             }
-            Process.Start(SelectedItemPath, args.ToString());
+            MessageBox.Show(
+                
+                a.ToString()
+                
+                );
+
+            Program.Main(args.ToArray());
+            //Process.Start(SelectedItemPath, args.ToString());
         }
     }
 }

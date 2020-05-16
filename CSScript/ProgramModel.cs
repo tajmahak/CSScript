@@ -19,15 +19,15 @@ namespace CSScript
     /// </summary>
     internal class ProgramModel : IDisposable
     {
-        public ProgramModel(Settings settings, string[] args)
+        public ProgramModel(InputArgumentsInfo inputArguments, Settings settings)
         {
             MessageManager = new MessageManager(this);
             ProcessManager = new ProcessManager();
             assemblyManager = new AssemblyManager();
 
             Settings = settings;
+            this.inputArguments = inputArguments;
 
-            inputArguments = InputArgumentsInfo.Parse(args);
             HideMode = !inputArguments.IsEmpty && inputArguments.HideMode;
         }
 

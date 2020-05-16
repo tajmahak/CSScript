@@ -7,7 +7,8 @@ namespace CSScript
         [STAThread]
         public static void Main(string[] args)
         {
-            ProgramModel programModel = new ProgramModel(Properties.Settings.Default, args);
+            InputArgumentsInfo inputArguments = InputArgumentsInfo.FromProgramArgs(args);
+            ProgramModel programModel = new ProgramModel(inputArguments, Properties.Settings.Default);
             ProgramBase.ExecuteProgram(programModel);
         }
     }

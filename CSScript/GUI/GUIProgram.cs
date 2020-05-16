@@ -49,7 +49,7 @@ namespace CSScript
         private void ProgramModel_MessageAdded(object sender, Message message)
         {
             Debug.Write(message.Text);
-            Console.WriteLine(message.Text);
+            Console.Write(message.Text);
         }
 
         private void ProgramModel_FinishedEvent(object sender, bool autoClose)
