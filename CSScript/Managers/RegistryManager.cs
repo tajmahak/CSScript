@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace CSScript
 {
-    internal class RegistryManager
+    internal static class RegistryManager
     {
         public static void RegisterFileAssociation()
         {

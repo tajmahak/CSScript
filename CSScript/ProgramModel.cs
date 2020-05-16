@@ -1,5 +1,5 @@
 ﻿//#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
-//#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
+#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
 
 using CSScript.Properties;
 using Microsoft.CSharp;
@@ -19,15 +19,24 @@ namespace CSScript
     /// </summary>
     internal class ProgramModel : IDisposable
     {
-        public ProgramModel(Settings settings, string[] args)
+        private ProgramModel(Settings settings)
         {
             MessageManager = new MessageManager(this);
             ProcessManager = new ProcessManager();
             assemblyManager = new AssemblyManager();
 
             Settings = settings;
+        }
+
+        public ProgramModel(Settings settings, string[] args) : this(settings)
+        {
             inputArguments = InputArgumentsInfo.Parse(args);
             HideMode = !inputArguments.IsEmpty && inputArguments.HideMode;
+        }
+
+        public ProgramModel(Settings settings, string scriptPath, string[] scriptArguments) : this(settings)
+        {
+
         }
 
 
@@ -127,9 +136,8 @@ namespace CSScript
 
                 RegistryManager.RegisterFileAssociation();
 
-                string shellExtensionAssemblyPath = "CSScript.ShellExtension.dll";
-                shellExtensionAssemblyPath = AssemblyManager.GetLocaleAssemblyPath(shellExtensionAssemblyPath);
-
+                string shellExtensionAssemblyPath =
+                    PathManager.FromLocalDirectoryPath("CSScript.ShellExtension.dll");
                 if (File.Exists(shellExtensionAssemblyPath))
                 {
                     MessageManager.WriteLine("Регистрация расширения оболочки...");
@@ -185,12 +193,12 @@ namespace CSScript
 
 #else
 
-            string scriptPath = GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+            string scriptPath = PathManager.GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
             MessageManager.WriteStartInfo(scriptPath);
 
             // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
             // (для возможности указания относительных путей к файлам)
-            Environment.CurrentDirectory = GetWorkDirectoryPath(scriptPath);
+            Environment.CurrentDirectory = PathManager.GetWorkDirectoryPath(scriptPath);
 
             scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
 
@@ -297,11 +305,11 @@ namespace CSScript
             }
 
             // преобразование из относительных в абсолютные пути для подключаемых сборок
-            string scriptWorkDirectory = GetWorkDirectoryPath(scriptPath);
+            string scriptWorkDirectory = PathManager.GetWorkDirectoryPath(scriptPath);
             for (int i = 0; i < scriptInfo.DefinedAssemblyList.Count; i++)
             {
                 scriptInfo.DefinedAssemblyList[i]
-                    = assemblyManager.GetCorrectAssemblyPath(scriptInfo.DefinedAssemblyList[i], scriptWorkDirectory);
+                    = PathManager.GetAssemblyPath(scriptInfo.DefinedAssemblyList[i], scriptWorkDirectory);
             }
 
             if (scriptInfo.DefinedScriptList.Count == 0)
@@ -322,7 +330,8 @@ namespace CSScript
 
         private ScriptInfo MergeScripts(ScriptInfo scriptInfo, string definedScriptPath)
         {
-            string definedScriptFullPath = GetAndCheckFullPath(definedScriptPath, GetWorkDirectoryPath(scriptInfo.ScriptPath));
+            string definedScriptFullPath = PathManager.GetAndCheckFullPath(definedScriptPath,
+                PathManager.GetWorkDirectoryPath(scriptInfo.ScriptPath));
             string definedScriptText = GetScriptText(definedScriptFullPath);
             ScriptInfo definedScriptInfo = ParseScriptInfo(definedScriptText, definedScriptFullPath);
 
@@ -388,31 +397,6 @@ namespace CSScript
         private string GetScriptText(string scriptPath)
         {
             return File.ReadAllText(scriptPath, Encoding.UTF8);
-        }
-
-        private string GetAndCheckFullPath(string path, string workDirectory)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                throw new Exception("Отсутствует путь к файлу.");
-            }
-
-            if (!Path.IsPathRooted(path))
-            {
-                path = Path.Combine(workDirectory, path);
-            }
-
-            if (!File.Exists(path))
-            {
-                throw new Exception($"Файл '{path}' не найден.");
-            }
-
-            return path;
-        }
-
-        private string GetWorkDirectoryPath(string path)
-        {
-            return Path.GetDirectoryName(path);
         }
 
         private bool HasAdministativePrivilegies()

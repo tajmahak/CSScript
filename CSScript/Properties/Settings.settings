@@ -21,7 +21,7 @@
       <Value Profile="(Default)">Cyan</Value>
     </Setting>
     <Setting Name="WordWrap" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="CommentColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">Green</Value>

@@ -8,9 +8,9 @@ namespace CSScript
     /// <summary>
     /// Представляет реализацию консольного интерфейса программы.
     /// </summary>
-    internal class ConsoleProgram : Program
+    internal class ConsoleProgram : ProgramBase
     {
-        public ConsoleProgram(string[] args) : base(args)
+        public ConsoleProgram(ProgramModel programModel) : base(programModel)
         {
             ProgramModel.MessageManager.MessageAdded += MessageManager_MessageAdded;
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;

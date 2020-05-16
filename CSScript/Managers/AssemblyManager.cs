@@ -46,27 +46,5 @@ namespace CSScript
             }
             return definedAssemblies.ToArray();
         }
-
-        public string GetCorrectAssemblyPath(string assemblyPath, string workDirectory)
-        {
-            if (!Path.IsPathRooted(assemblyPath))
-            {
-                // библиотека, указанная по относительному пути, находится либо в рабочей папке, либо в GAC
-                string fullPath = Path.Combine(workDirectory, assemblyPath);
-                if (File.Exists(fullPath))
-                {
-                    return fullPath;
-                }
-            }
-            return assemblyPath;
-        }
-
-        public static string GetLocaleAssemblyPath(string fileName)
-        {
-            // Получение пути из папки с исполняемой сборкой
-            string executingPath = Assembly.GetExecutingAssembly().Location;
-            string path = Path.GetDirectoryName(executingPath);
-            return Path.Combine(path, fileName);
-        }
     }
 }

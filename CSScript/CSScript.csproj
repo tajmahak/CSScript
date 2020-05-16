@@ -68,18 +68,20 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyManager.cs" />
-    <Compile Include="ConsoleProgram.cs" />
-    <Compile Include="GUIProgram.cs" />
+    <Compile Include="Managers\AssemblyManager.cs" />
+    <Compile Include="GUI\ConsoleProgram.cs" />
+    <Compile Include="GUI\GUIProgram.cs" />
     <Compile Include="IScriptEnvironment.cs" />
-    <Compile Include="LogForm.cs">
+    <Compile Include="GUI\LogForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="LogForm.Designer.cs">
+    <Compile Include="GUI\LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MessageManager.cs" />
-    <Compile Include="ProcessManager.cs" />
+    <Compile Include="Managers\MessageManager.cs" />
+    <Compile Include="Managers\PathManager.cs" />
+    <Compile Include="Managers\ProcessManager.cs" />
+    <Compile Include="GUI\ProgramBase.cs" />
     <Compile Include="ProgramModel.cs" />
     <Compile Include="ProgramScriptEnvironment.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -87,17 +89,17 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="RegistryManager.cs" />
+    <Compile Include="Managers\RegistryManager.cs" />
     <Compile Include="ScriptContainer.cs" />
     <Compile Include="InputArgumentsInfo.cs" />
-    <Compile Include="Message.cs" />
+    <Compile Include="Managers\Message.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptInfo.cs" />
     <Compile Include="_DebugScriptStand.cs" />
     <Compile Include="ScriptLineInfo.cs" />
-    <Compile Include="Utils.cs" />
-    <EmbeddedResource Include="LogForm.resx">
+    <Compile Include="Managers\Utils.cs" />
+    <EmbeddedResource Include="GUI\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

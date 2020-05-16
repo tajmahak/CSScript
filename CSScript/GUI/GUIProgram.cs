@@ -7,9 +7,9 @@ namespace CSScript
     /// <summary>
     /// Представляет реализацию графического интерфейса программы
     /// </summary>
-    internal class GUIProgram : Program
+    internal class GUIProgram : ProgramBase
     {
-        public GUIProgram(string[] args) : base(args)
+        public GUIProgram(ProgramModel programModel) : base(programModel)
         {
             ProgramModel.MessageManager.MessageAdded += ProgramModel_MessageAdded;
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
