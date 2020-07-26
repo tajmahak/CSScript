@@ -1,5 +1,5 @@
-﻿//#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
-//#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
+﻿#define DEBUG_USE_SCRIPT_STAND // использовать стенд 'DebugScriptStand' для отладки скриптов
+#define DEBUG_SKIP_EXCEPTION_HANDLING // обрабатывать исключения программы в отладчике
 
 using CSScript.Properties;
 using Microsoft.CSharp;
@@ -79,6 +79,9 @@ namespace CSScript
         {
             try
             {
+#if DEBUG_USE_SCRIPT_STAND && DEBUG
+                ExecuteScript();
+#else
                 if (inputArguments.IsEmpty)
                 {
                     WriteProgramInformation();
@@ -95,6 +98,7 @@ namespace CSScript
                 {
                     ExecuteScript();
                 }
+#endif
             }
 #if !DEBUG_SKIP_EXCEPTION_HANDLING || !DEBUG
             catch (Exception ex)

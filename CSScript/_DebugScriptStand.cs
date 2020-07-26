@@ -20,7 +20,17 @@ namespace CSScript
 
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.17) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.18) ---
+
+        // Получение входящего аргумента по индексу
+        private string GetArgument(int index)
+        {
+            if (env.Args.Length > index)
+            {
+                return env.Args[index];
+            }
+            return null;
+        }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
