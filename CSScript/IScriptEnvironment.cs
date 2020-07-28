@@ -25,6 +25,10 @@ namespace CSScript
 
         void WriteLine();
 
+        string GetInputText();
+
+        string GetInputText(string caption);
+
         Process CreateManagedProcess();
     }
 }

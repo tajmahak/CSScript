@@ -53,7 +53,11 @@ namespace CSScript
 
         public delegate void FinishedEventHandler(object sender, bool autoClose);
 
+        public delegate string InputTextEventHandler(object sender, string caption);
+
         public event FinishedEventHandler FinishedEvent;
+
+        public event InputTextEventHandler InputTextEvent;
 
 
         public Thread StartAsync()
@@ -67,6 +71,15 @@ namespace CSScript
         public Assembly ResolveAssembly(string assemblyName)
         {
             return assemblyManager.ResolveAssembly(assemblyName);
+        }
+
+        public string GetInputText(string caption)
+        {
+            if (!HideMode)
+            {
+                return InputTextEvent.Invoke(this, caption);
+            }
+            return null;
         }
 
         public void Dispose()

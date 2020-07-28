@@ -68,6 +68,12 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GUI\InputForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\InputForm.Designer.cs">
+      <DependentUpon>InputForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Managers\AssemblyManager.cs" />
     <Compile Include="GUI\ConsoleProgram.cs" />
     <Compile Include="GUI\GUIProgram.cs" />
@@ -99,6 +105,9 @@
     <Compile Include="_DebugScriptStand.cs" />
     <Compile Include="ScriptLineInfo.cs" />
     <Compile Include="Managers\Utils.cs" />
+    <EmbeddedResource Include="GUI\InputForm.resx">
+      <DependentUpon>InputForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GUI\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>

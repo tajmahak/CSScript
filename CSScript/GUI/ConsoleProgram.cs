@@ -14,15 +14,9 @@ namespace CSScript
         {
             ProgramModel.MessageManager.MessageAdded += MessageManager_MessageAdded;
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
+            ProgramModel.InputTextEvent += ProgramModel_InputTextEvent;
         }
 
-        private void ProgramModel_FinishedEvent(object sender, bool autoClose)
-        {
-            if (!autoClose)
-            {
-                Console.ReadKey();
-            }
-        }
 
         private void MessageManager_MessageAdded(object sender, Message message)
         {
@@ -42,6 +36,24 @@ namespace CSScript
                 Console.Write(message.Text);
             }
         }
+
+        private void ProgramModel_FinishedEvent(object sender, bool autoClose)
+        {
+            if (!autoClose)
+            {
+                Console.ReadKey();
+            }
+        }
+
+        private string ProgramModel_InputTextEvent(object sender, string caption)
+        {
+            if (!string.IsNullOrEmpty(caption))
+            {
+                Console.WriteLine(caption);
+            }
+            return Console.ReadLine();
+        }
+
 
         protected override void StartProgram()
         {

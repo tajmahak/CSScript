@@ -11,8 +11,9 @@ namespace CSScript
     {
         public GUIProgram(ProgramModel programModel) : base(programModel)
         {
-            ProgramModel.MessageManager.MessageAdded += ProgramModel_MessageAdded;
+            ProgramModel.MessageManager.MessageAdded += MessageManager_MessageAdded;
             ProgramModel.FinishedEvent += ProgramModel_FinishedEvent;
+            ProgramModel.InputTextEvent += ProgramModel_InputTextEvent;
         }
 
         private LogForm logForm;
@@ -46,7 +47,7 @@ namespace CSScript
             }
         }
 
-        private void ProgramModel_MessageAdded(object sender, Message message)
+        private void MessageManager_MessageAdded(object sender, Message message)
         {
             Debug.Write(message.Text);
             Console.Write(message.Text);
@@ -57,6 +58,36 @@ namespace CSScript
             if (autoClose)
             {
                 Application.Exit();
+            }
+        }
+
+        private string ProgramModel_InputTextEvent(object sender, string caption)
+        {
+            string inputData = null;
+            InputForm inputForm = new InputForm(ProgramModel);
+            if (!string.IsNullOrEmpty(caption))
+            {
+                inputForm.Text = caption;
+            }
+            InvokeEx(() =>
+            {
+                if (inputForm.ShowDialog(logForm) == DialogResult.OK)
+                {
+                    inputData = inputForm.InputText;
+                }
+            });
+            return inputData;
+        }
+
+        private void InvokeEx(Action action)
+        {
+            if (logForm.InvokeRequired)
+            {
+                logForm.Invoke(action);
+            }
+            else
+            {
+                action();
             }
         }
     }
