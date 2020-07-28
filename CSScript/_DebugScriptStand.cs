@@ -1,5 +1,6 @@
 ﻿#if DEBUG
 
+using CSScript.Properties;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,6 +21,9 @@ namespace CSScript
         }
 
         // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.19) ---
+
+        // Настройки программы
+        private Settings Settings => Settings.Default;
 
         // Вывод текста
         private void Write(object value, Color? foreColor = null)

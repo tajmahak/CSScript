@@ -148,6 +148,7 @@
   .Settings: Settings - получает настройки программы;
   .Write(value: object, [foreColor: Color]): void       - вывод сообщения в лог;
   .WriteLine([value: object], [foreColor: Color]): void - вывод сообщения в лог с переносом на следующую строку;
+  .GetInputText([caption: string]): string - чтение текста из входного потока;
   .CreateManagedProcess(): Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
 
 `c`Пример скрипта:
