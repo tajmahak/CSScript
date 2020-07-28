@@ -17,10 +17,39 @@ namespace CSScript
     {
         public override void Execute()
         {
-
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.18) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.19) ---
+
+        // Вывод текста
+        private void Write(object value, Color? foreColor = null)
+        {
+            env.Write(value, foreColor);
+        }
+
+        // Вывод текста с признаком конца строки
+        private void WriteLine(object value, Color? foreColor = null)
+        {
+            env.WriteLine(value, foreColor);
+        }
+
+        // Вывод признака конца строки
+        private void WriteLine()
+        {
+            env.WriteLine();
+        }
+
+        // Чтение текста из входного потока
+        private string ReadLines()
+        {
+            return env.GetInputText();
+        }
+
+        // Чтение текста из входного потока с указанием заголовка
+        private string ReadLines(string caption)
+        {
+            return env.GetInputText(caption);
+        }
 
         // Получение входящего аргумента по индексу
         private string GetArgument(int index)
