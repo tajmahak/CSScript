@@ -18,12 +18,19 @@ namespace CSScript
     {
         public override void Execute()
         {
+
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.19) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.21) ---
 
         // Настройки программы
-        private Settings Settings => Settings.Default;
+        private Settings Settings
+        {
+            get
+            {
+                return Settings.Default;
+            }
+        }
 
         // Вывод текста
         private void Write(object value, Color? foreColor = null)
