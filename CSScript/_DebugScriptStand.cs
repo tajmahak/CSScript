@@ -18,10 +18,10 @@ namespace CSScript
     {
         public override void Execute()
         {
-
+            
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.21) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.22) ---
 
         // Настройки программы
         private Settings Settings
@@ -65,11 +65,17 @@ namespace CSScript
         // Получение входящего аргумента по индексу
         private string GetArgument(int index)
         {
+            return GetArgument(index, null);
+        }
+
+        // Получение входящего аргумента по индексу
+        private string GetArgument(int index, string defaultValue)
+        {
             if (env.Args.Length > index)
             {
                 return env.Args[index];
             }
-            return null;
+            return defaultValue;
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
