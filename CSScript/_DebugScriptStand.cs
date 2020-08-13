@@ -18,18 +18,23 @@ namespace CSScript
     {
         public override void Execute()
         {
-            
+
         }
 
-        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.22) ---
+        // --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.23) ---
 
-        // Настройки программы
-        private Settings Settings
+        // Получение входящего аргумента по индексу
+        private T GetArgument<T>(int index, T defaultValue)
         {
-            get
+            if (env.Args.Length > index)
             {
-                return Settings.Default;
+                string value = env.Args[index];
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return (T)Convert.ChangeType(value, typeof(T));
+                }
             }
+            return defaultValue;
         }
 
         // Вывод текста
@@ -62,22 +67,6 @@ namespace CSScript
             return env.GetInputText(caption);
         }
 
-        // Получение входящего аргумента по индексу
-        private string GetArgument(int index)
-        {
-            return GetArgument(index, null);
-        }
-
-        // Получение входящего аргумента по индексу
-        private string GetArgument(int index, string defaultValue)
-        {
-            if (env.Args.Length > index)
-            {
-                return env.Args[index];
-            }
-            return defaultValue;
-        }
-
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
         private int Start(string program, string args = null, bool printOutput = true, Color? outputColor = null, Encoding encoding = null)
         {
@@ -90,6 +79,15 @@ namespace CSScript
         {
             Process process = env.CreateManagedProcess();
             return __StartProcess(process, program, args, printOutput, outputColor, encoding);
+        }
+
+        // Настройки программы
+        private Settings Settings
+        {
+            get
+            {
+                return Settings.Default;
+            }
         }
 
         // Создание папки
