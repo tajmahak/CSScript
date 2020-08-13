@@ -82,7 +82,7 @@ namespace CSScript.Properties {
         /// [/unreg]       - удаление расширения .cssc из реестра;
         ///
         ///`c`Служебный синтаксис скрипта:
-        /// #define {.. [остаток строки не уместился]&quot;;.
+        /// #using {... [остаток строки не уместился]&quot;;.
         /// </summary>
         internal static string HelpText {
             get {
