@@ -281,12 +281,8 @@ namespace CSScript
                 {
                     switch (scriptLine.OperatorName)
                     {
-                        case "definescript":
-                            scriptInfo.DefinedScriptList.Add(scriptLine.OperatorValue);
-                            break;
-
                         case "define":
-                            scriptInfo.DefinedAssemblyList.Add(scriptLine.OperatorValue);
+                            AddScriptDependence(scriptInfo, scriptLine.OperatorValue);
                             break;
 
                         case "using":
@@ -334,6 +330,22 @@ namespace CSScript
                     mergedScriptInfo = MergeScripts(mergedScriptInfo, definedScriptPath);
                 }
                 return mergedScriptInfo;
+            }
+        }
+
+        public void AddScriptDependence(ScriptInfo scriptInfo, string dependencePath)
+        {
+            string dependenceFileExtension = Path.GetExtension(dependencePath).ToLower();
+            switch (dependenceFileExtension)
+            {
+                case ".exe":
+                case ".dll":
+                    scriptInfo.DefinedAssemblyList.Add(dependencePath);
+                    break;
+
+                default:
+                    scriptInfo.DefinedScriptList.Add(dependencePath);
+                    break;
             }
         }
 
