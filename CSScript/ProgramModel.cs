@@ -90,6 +90,7 @@ namespace CSScript
 
         private void Start()
         {
+            ExitCode = 0;
             try
             {
 #if DEBUG_USE_SCRIPT_STAND && DEBUG
@@ -97,7 +98,7 @@ namespace CSScript
 #else
                 if (inputArguments.IsEmpty)
                 {
-                    WriteProgramInformation();
+                    MessageManager.WriteHelpInfo();
                 }
                 else if (inputArguments.RegisterMode)
                 {
@@ -129,12 +130,6 @@ namespace CSScript
                 Finished = true;
                 FinishedEvent?.Invoke(this, needAutoClose && !HideMode);
             }
-        }
-
-        private void WriteProgramInformation()
-        {
-            MessageManager.WriteHelpInfo();
-            ExitCode = 0;
         }
 
         private void RegistryProgram()
@@ -240,7 +235,7 @@ namespace CSScript
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
         {
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance("CSScript.CompiledScriptContainer",
+            object instance = compiledAssembly.CreateInstance(Resources.ScriptMainClass,
                 false,
                 BindingFlags.Public | BindingFlags.Instance,
                 null,

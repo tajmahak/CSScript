@@ -91,6 +91,15 @@ namespace CSScript.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на CSScript.CompiledScriptContainer.
+        /// </summary>
+        internal static string ScriptMainClass {
+            get {
+                return ResourceManager.GetString("ScriptMainClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на ##using##
         ///namespace CSScript
         ///{

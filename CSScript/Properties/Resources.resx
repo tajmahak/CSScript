@@ -159,6 +159,9 @@
      env.WriteLine("Привет Мир!", env.Settings.CaptionColor);
  }</value>
   </data>
+  <data name="ScriptMainClass" xml:space="preserve">
+    <value>CSScript.CompiledScriptContainer</value>
+  </data>
   <data name="SourceCodeTemplate" xml:space="preserve">
     <value>##using##
 namespace CSScript
