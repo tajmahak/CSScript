@@ -12,7 +12,7 @@
       <Value Profile="(Default)">Black</Value>
     </Setting>
     <Setting Name="InfoColor" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">DarkGray</Value>
+      <Value Profile="(Default)">Gray</Value>
     </Setting>
     <Setting Name="CaptionColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">Red</Value>

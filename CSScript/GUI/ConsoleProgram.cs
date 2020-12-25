@@ -93,9 +93,9 @@ namespace CSScript
             else if (color == Color.DarkMagenta) {
                 return ConsoleColor.DarkMagenta;
             }
-            //else if (color == Color.DarkYellow ) {
-            //    return ConsoleColor.DarkYellow;
-            //}
+            else if (color == Color.Orange) {
+                return ConsoleColor.DarkYellow;
+            }
             else if (color == Color.Gray) {
                 return ConsoleColor.Gray;
             }
