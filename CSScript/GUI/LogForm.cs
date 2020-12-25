@@ -23,8 +23,9 @@ namespace CSScript
             richTextBox.WordWrap = programModel.Settings.WordWrap;
 
             this.programModel = programModel;
-            timer = new Timer();
-            timer.Interval = 100;
+            timer = new Timer {
+                Interval = 100
+            };
             timer.Tick += Timer_Tick;
             timer.Start();
         }
@@ -37,10 +38,8 @@ namespace CSScript
 
         private void Form_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.Enter)
-            {
-                if (programModel.Finished)
-                {
+            if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.Enter) {
+                if (programModel.Finished) {
                     e.Handled = e.SuppressKeyPress = true;
                     Close();
                 }
@@ -52,18 +51,15 @@ namespace CSScript
             timer.Stop();
 
             System.Collections.ObjectModel.ReadOnlyCollection<Message> messageList = programModel.MessageManager.MessageList;
-            while (currentMessageIndex < messageList.Count)
-            {
-                if (stopLogOutput)
-                {
+            while (currentMessageIndex < messageList.Count) {
+                if (stopLogOutput) {
                     break;
                 }
                 Message message = messageList[currentMessageIndex++];
                 PrintMessage(message);
             }
 
-            if (!programModel.Finished && !stopLogOutput)
-            {
+            if (!programModel.Finished && !stopLogOutput) {
                 timer.Start();
             }
         }
@@ -73,8 +69,7 @@ namespace CSScript
             string text = message.Text.Replace("\r", ""); // RichTextBox автоматически отсекает '\r'
 
             richTextBox.AppendText(text);
-            if (message.ForeColor.HasValue)
-            {
+            if (message.ForeColor.HasValue) {
                 richTextBox.Select(richTextBox.TextLength - text.Length, text.Length);
                 richTextBox.SelectionColor = message.ForeColor.Value;
                 richTextBox.Select(richTextBox.TextLength, 0);

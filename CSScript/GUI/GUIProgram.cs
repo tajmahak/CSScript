@@ -20,14 +20,11 @@ namespace CSScript
 
         protected override void StartProgram()
         {
-            try
-            {
-                if (ProgramModel.HideMode)
-                {
+            try {
+                if (ProgramModel.HideMode) {
                     ProgramModel.StartAsync().Join();
                 }
-                else
-                {
+                else {
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     logForm = new LogForm(ProgramModel);
@@ -36,10 +33,8 @@ namespace CSScript
                     Application.Run(logForm);
                 }
             }
-            finally
-            {
-                if (ProgramModel != null)
-                {
+            finally {
+                if (ProgramModel != null) {
                     Environment.ExitCode = ProgramModel.ExitCode;
                 }
                 ProgramModel?.Dispose();
@@ -54,8 +49,7 @@ namespace CSScript
 
         private void ProgramModel_FinishedEvent(object sender, bool autoClose)
         {
-            if (autoClose)
-            {
+            if (autoClose) {
                 Application.Exit();
             }
         }
@@ -64,14 +58,11 @@ namespace CSScript
         {
             string inputData = null;
             InputForm inputForm = new InputForm(ProgramModel);
-            if (!string.IsNullOrEmpty(caption))
-            {
+            if (!string.IsNullOrEmpty(caption)) {
                 inputForm.Text = caption;
             }
-            InvokeEx(() =>
-            {
-                if (inputForm.ShowDialog(logForm) == DialogResult.OK)
-                {
+            InvokeEx(() => {
+                if (inputForm.ShowDialog(logForm) == DialogResult.OK) {
                     inputData = inputForm.InputText;
                 }
             });
@@ -80,12 +71,10 @@ namespace CSScript
 
         private void InvokeEx(Action action)
         {
-            if (logForm.InvokeRequired)
-            {
+            if (logForm.InvokeRequired) {
                 logForm.Invoke(action);
             }
-            else
-            {
+            else {
                 action();
             }
         }

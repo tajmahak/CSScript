@@ -1,5 +1,4 @@
 ﻿using CSScript.Properties;
-using System;
 using System.Windows.Forms;
 
 namespace CSScript
@@ -26,14 +25,12 @@ namespace CSScript
 
         private void Form_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Escape)
-            {
+            if (e.KeyCode == Keys.Escape) {
                 e.Handled = e.SuppressKeyPress = true;
                 DialogResult = DialogResult.Cancel;
             }
 
-            else if (e.Control && e.KeyCode == Keys.Enter)
-            {
+            else if (e.Control && e.KeyCode == Keys.Enter) {
                 e.Handled = e.SuppressKeyPress = true;
                 DialogResult = DialogResult.OK;
             }

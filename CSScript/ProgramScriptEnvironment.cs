@@ -28,16 +28,34 @@ namespace CSScript
 
         public Settings Settings => programModel.Settings;
 
-        public void Write(object value, Color? foreColor = null) => programModel.MessageManager.Write(value, foreColor);
+        public void Write(object value, Color? foreColor = null)
+        {
+            programModel.MessageManager.Write(value, foreColor);
+        }
 
-        public void WriteLine(object value, Color? foreColor = null) => programModel.MessageManager.WriteLine(value, foreColor);
+        public void WriteLine(object value, Color? foreColor = null)
+        {
+            programModel.MessageManager.WriteLine(value, foreColor);
+        }
 
-        public void WriteLine() => programModel.MessageManager.WriteLine();
+        public void WriteLine()
+        {
+            programModel.MessageManager.WriteLine();
+        }
 
-        public string GetInputText() => programModel.GetInputText(null);
+        public string GetInputText()
+        {
+            return programModel.GetInputText(null);
+        }
 
-        public string GetInputText(string caption) => programModel.GetInputText(caption);
+        public string GetInputText(string caption)
+        {
+            return programModel.GetInputText(caption);
+        }
 
-        public Process CreateManagedProcess() => programModel.ProcessManager.CreateManagedProcess();
+        public Process CreateManagedProcess()
+        {
+            return programModel.ProcessManager.CreateManagedProcess();
+        }
     }
 }

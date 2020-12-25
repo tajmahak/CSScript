@@ -62,8 +62,9 @@ namespace CSScript
 
         public Thread StartAsync()
         {
-            Thread executingThread = new Thread(Start);
-            executingThread.IsBackground = true;
+            Thread executingThread = new Thread(Start) {
+                IsBackground = true
+            };
             executingThread.Start();
             return executingThread;
         }
@@ -75,8 +76,7 @@ namespace CSScript
 
         public string GetInputText(string caption)
         {
-            if (!HideMode)
-            {
+            if (!HideMode) {
                 return InputTextEvent.Invoke(this, caption);
             }
             return null;
@@ -91,38 +91,31 @@ namespace CSScript
         private void Start()
         {
             ExitCode = 0;
-            try
-            {
+            try {
 #if DEBUG_USE_SCRIPT_STAND && DEBUG
                 ExecuteScript();
 #else
-                if (inputArguments.IsEmpty)
-                {
+                if (inputArguments.IsEmpty) {
                     MessageManager.WriteHelpInfo();
                 }
-                else if (inputArguments.RegisterMode)
-                {
+                else if (inputArguments.RegisterMode) {
                     RegistryProgram();
                 }
-                else if (inputArguments.UnregisterMode)
-                {
+                else if (inputArguments.UnregisterMode) {
                     UnregistryProgram();
                 }
-                else
-                {
+                else {
                     ExecuteScript();
                 }
 #endif
             }
 #if !DEBUG_SKIP_EXCEPTION_HANDLING || !DEBUG
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageManager.WriteException(ex);
                 ExitCode = 1;
             }
 #endif
-            finally
-            {
+            finally {
                 MessageManager.WriteExitCode(ExitCode);
 
                 MessageManager.SaveLog(inputArguments?.LogPath);
@@ -134,16 +127,14 @@ namespace CSScript
 
         private void RegistryProgram()
         {
-            if (HasAdministativePrivilegies())
-            {
+            if (HasAdministativePrivilegies()) {
                 MessageManager.WriteLine("Регистрация программы в реестре...");
 
                 RegistryManager.RegisterFileAssociation();
 
                 string shellExtensionAssemblyPath =
                     PathManager.FromLocalDirectoryPath("CSScript.ShellExtension.dll");
-                if (File.Exists(shellExtensionAssemblyPath))
-                {
+                if (File.Exists(shellExtensionAssemblyPath)) {
                     MessageManager.WriteLine("Регистрация расширения оболочки...");
                     Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
                     RegistryManager.RegisterShellExtension(shellExtensionAssembly);
@@ -153,23 +144,20 @@ namespace CSScript
 
                 MessageManager.WriteLine("Успешно", Settings.SuccessColor);
             }
-            else
-            {
+            else {
                 throw new Exception("Для работы с реестром необходимы права администратора.");
             }
         }
 
         private void UnregistryProgram()
         {
-            if (HasAdministativePrivilegies())
-            {
+            if (HasAdministativePrivilegies()) {
                 MessageManager.WriteLine("Удаление регистрации программы в реестре...");
 
                 RegistryManager.UnregisterFileAssociation();
 
                 string shellExtensionAssemblyPath = "CSScript.ShellExtension.dll";
-                if (File.Exists(shellExtensionAssemblyPath))
-                {
+                if (File.Exists(shellExtensionAssemblyPath)) {
                     MessageManager.WriteLine("Удаление регистрации расширения оболочки...");
                     Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
                     RegistryManager.UnregisterShellExtension(shellExtensionAssembly);
@@ -179,8 +167,7 @@ namespace CSScript
 
                 MessageManager.WriteLine("Успешно", Settings.SuccessColor);
             }
-            else
-            {
+            else {
                 throw new Exception("Для работы с реестром необходимы права администратора.");
             }
         }
@@ -212,13 +199,11 @@ namespace CSScript
             assemblyManager.LoadAssembliesForResolve(scriptInfo);
             CompilerResults compilerResults = Compile(scriptInfo);
 
-            if (compilerResults.Errors.Count == 0)
-            {
+            if (compilerResults.Errors.Count == 0) {
                 ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
                 scriptContainer.Execute();
             }
-            else
-            {
+            else {
                 MessageManager.WriteCompileErrors(compilerResults);
                 MessageManager.WriteLine();
 
@@ -250,10 +235,8 @@ namespace CSScript
             string[] referencedAssemblies = assemblyManager.GetReferencedAssemblies(scriptInfo, true);
             string sourceCode = GetSourceCode(scriptInfo);
 
-            using (CSharpCodeProvider provider = new CSharpCodeProvider())
-            {
-                CompilerParameters compileParameters = new CompilerParameters(referencedAssemblies)
-                {
+            using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
+                CompilerParameters compileParameters = new CompilerParameters(referencedAssemblies) {
                     GenerateInMemory = true,
                     GenerateExecutable = false,
                 };
@@ -269,13 +252,10 @@ namespace CSScript
             StringBuilder currentBlock = scriptInfo.ProcedureBlock;
 
             string[] textLines = scriptText.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string textLine in textLines)
-            {
+            foreach (string textLine in textLines) {
                 ScriptLineInfo scriptLine = ScriptLineInfo.Parse(textLine);
-                if (!scriptLine.IsEmpty)
-                {
-                    switch (scriptLine.OperatorName)
-                    {
+                if (!scriptLine.IsEmpty) {
+                    switch (scriptLine.OperatorName) {
                         case "define":
                             AddScriptDependence(scriptInfo, scriptLine.OperatorValue);
                             break;
@@ -294,8 +274,7 @@ namespace CSScript
                             break;
 
                         default:
-                            if (currentBlock.Length > 0)
-                            {
+                            if (currentBlock.Length > 0) {
                                 currentBlock.AppendLine();
                             }
                             currentBlock.Append(scriptLine.SourceLine);
@@ -306,22 +285,18 @@ namespace CSScript
 
             // преобразование из относительных в абсолютные пути для подключаемых сборок
             string scriptWorkDirectory = PathManager.GetWorkDirectoryPath(scriptPath);
-            for (int i = 0; i < scriptInfo.DefinedAssemblyList.Count; i++)
-            {
+            for (int i = 0; i < scriptInfo.DefinedAssemblyList.Count; i++) {
                 scriptInfo.DefinedAssemblyList[i]
                     = PathManager.GetAssemblyPath(scriptInfo.DefinedAssemblyList[i], scriptWorkDirectory);
             }
 
-            if (scriptInfo.DefinedScriptList.Count == 0)
-            {
+            if (scriptInfo.DefinedScriptList.Count == 0) {
                 return scriptInfo;
             }
-            else
-            {
+            else {
                 // слияние с другими скриптами, включённые в текущий скрипт
                 ScriptInfo mergedScriptInfo = scriptInfo;
-                foreach (string definedScriptPath in scriptInfo.DefinedScriptList)
-                {
+                foreach (string definedScriptPath in scriptInfo.DefinedScriptList) {
                     mergedScriptInfo = MergeScripts(mergedScriptInfo, definedScriptPath);
                 }
                 return mergedScriptInfo;
@@ -331,8 +306,7 @@ namespace CSScript
         public void AddScriptDependence(ScriptInfo scriptInfo, string dependencePath)
         {
             string dependenceFileExtension = Path.GetExtension(dependencePath).ToLower();
-            switch (dependenceFileExtension)
-            {
+            switch (dependenceFileExtension) {
                 case ".exe":
                 case ".dll":
                     scriptInfo.DefinedAssemblyList.Add(dependencePath);
@@ -375,8 +349,7 @@ namespace CSScript
             mergedScriptInfo.ProcedureBlock.Append(mainScriptInfo.ProcedureBlock);
 
             mergedScriptInfo.ClassBlock.Append(mainScriptInfo.ClassBlock);
-            if (definedScriptInfo.ClassBlock.Length > 0)
-            {
+            if (definedScriptInfo.ClassBlock.Length > 0) {
                 mergedScriptInfo.ClassBlock.AppendLine();
                 mergedScriptInfo.ClassBlock.AppendLine("// <<< " + definedScriptInfo.ScriptPath);
                 mergedScriptInfo.ClassBlock.AppendLine(definedScriptInfo.ClassBlock.ToString());
@@ -384,8 +357,7 @@ namespace CSScript
             }
 
             mergedScriptInfo.NamespaceBlock.Append(mainScriptInfo.NamespaceBlock);
-            if (definedScriptInfo.NamespaceBlock.Length > 0)
-            {
+            if (definedScriptInfo.NamespaceBlock.Length > 0) {
                 mergedScriptInfo.NamespaceBlock.AppendLine();
                 mergedScriptInfo.NamespaceBlock.AppendLine("// <<< " + definedScriptInfo.ScriptPath);
                 mergedScriptInfo.NamespaceBlock.AppendLine(definedScriptInfo.NamespaceBlock.ToString());
@@ -418,8 +390,7 @@ namespace CSScript
         private bool HasAdministativePrivilegies()
         {
             bool isElevated;
-            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
-            {
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent()) {
                 WindowsPrincipal principal = new WindowsPrincipal(identity);
                 isElevated = principal.IsInRole(WindowsBuiltInRole.Administrator);
             }

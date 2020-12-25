@@ -37,14 +37,11 @@ namespace CSScript
 
         public void Write(object value, Color? foreColor = null)
         {
-            if (value != null)
-            {
+            if (value != null) {
                 string text = value.ToString();
-                if (!string.IsNullOrEmpty(text))
-                {
+                if (!string.IsNullOrEmpty(text)) {
                     Message message = new Message(text, DateTime.Now, foreColor);
-                    lock (messageList)
-                    {
+                    lock (messageList) {
                         messageList.Add(message);
                     }
                     MessageAdded?.Invoke(this, message);
@@ -65,12 +62,10 @@ namespace CSScript
         public void WriteHelpInfo()
         {
             string[] lines = Resources.HelpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++)
-            {
+            for (int i = 0; i < lines.Length; i++) {
                 Color? color = null;
                 string[] line = ParseHelpInfoLine(lines[i]);
-                switch (line[0])
-                {
+                switch (line[0]) {
                     case "c": color = programModel.Settings.CaptionColor; break;
                     case "i": color = programModel.Settings.InfoColor; break;
                 }
@@ -88,13 +83,11 @@ namespace CSScript
         public void WriteException(Exception ex)
         {
             WriteLine($"# Ошибка: {ex.Message}", programModel.Settings.ErrorColor);
-            foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
-            {
+            foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
                 WriteLine("#" + stackTraceLine, programModel.Settings.StackTraceColor);
             }
 
-            if (ex.InnerException != null)
-            {
+            if (ex.InnerException != null) {
                 WriteLine();
                 WriteException(ex.InnerException);
             }
@@ -104,14 +97,11 @@ namespace CSScript
         {
             WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", programModel.Settings.ErrorColor);
             int errorNumber = 1;
-            foreach (CompilerError error in compilerResults.Errors)
-            {
-                if (error.Line > 0)
-                {
+            foreach (CompilerError error in compilerResults.Errors) {
+                if (error.Line > 0) {
                     WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", programModel.Settings.ErrorColor);
                 }
-                else
-                {
+                else {
                     WriteLine($"# {errorNumber++}: {error.ErrorText}", programModel.Settings.ErrorColor);
                 }
             }
@@ -120,33 +110,26 @@ namespace CSScript
         public void WriteSourceCode(string sourceCode, CompilerResults compilerResults = null)
         {
             HashSet<int> errorLines = new HashSet<int>();
-            if (compilerResults != null)
-            {
-                foreach (CompilerError error in compilerResults.Errors)
-                {
+            if (compilerResults != null) {
+                foreach (CompilerError error in compilerResults.Errors) {
                     errorLines.Add(error.Line);
                 }
             }
 
             string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++)
-            {
+            for (int i = 0; i < lines.Length; i++) {
                 string line = lines[i];
                 int lineNumber = i + 1;
 
                 Write(lineNumber.ToString().PadLeft(4) + ": ");
-                if (errorLines.Contains(lineNumber))
-                {
+                if (errorLines.Contains(lineNumber)) {
                     WriteLine(line, programModel.Settings.ErrorColor);
                 }
-                else
-                {
-                    if (line.TrimStart().StartsWith("//"))
-                    {
+                else {
+                    if (line.TrimStart().StartsWith("//")) {
                         WriteLine(line, programModel.Settings.CommentColor);
                     }
-                    else
-                    {
+                    else {
                         WriteLine(line, programModel.Settings.SourceCodeColor);
                     }
                 }
@@ -162,8 +145,7 @@ namespace CSScript
         public string GetLog()
         {
             StringBuilder messageLog = new StringBuilder();
-            foreach (Message message in messageList)
-            {
+            foreach (Message message in messageList) {
                 messageLog.Append(message.Text);
             }
             return messageLog.ToString();
@@ -171,14 +153,11 @@ namespace CSScript
 
         public void SaveLog(string logPath)
         {
-            if (!string.IsNullOrEmpty(logPath))
-            {
-                try
-                {
+            if (!string.IsNullOrEmpty(logPath)) {
+                try {
                     SaveLogInternal(logPath);
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     WriteLine($"# Не удалось сохранить лог: {ex.Message}", programModel.Settings.ErrorColor);
                 }
             }
@@ -187,8 +166,7 @@ namespace CSScript
         private void SaveLogInternal(string logPath)
         {
             string messageLog = GetLog();
-            using (StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8))
-            {
+            using (StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8)) {
                 writer.WriteLine(messageLog);
                 writer.WriteLine();
                 writer.WriteLine();
@@ -197,8 +175,7 @@ namespace CSScript
 
         private string[] ParseHelpInfoLine(string line)
         {
-            if (line.StartsWith("`"))
-            {
+            if (line.StartsWith("`")) {
                 int index = line.IndexOf("`", 1);
                 return new string[]
                 {
@@ -206,8 +183,7 @@ namespace CSScript
                     line.Substring(index + 1),
                 };
             }
-            else
-            {
+            else {
                 return new string[] { null, line };
             }
         }

@@ -21,15 +21,12 @@ namespace CSScript
 
         public static void RegisterShellExtension(Assembly extAssembly)
         {
-            foreach (Type type in extAssembly.GetTypes())
-            {
+            foreach (Type type in extAssembly.GetTypes()) {
                 object[] attributes = type.GetCustomAttributes(typeof(ComVisibleAttribute), false);
-                if (attributes.Length == 0)
-                {
+                if (attributes.Length == 0) {
                     continue;
                 }
-                if (type.Name.Contains("DropHandler"))
-                {
+                if (type.Name.Contains("DropHandler")) {
                     InstallDropHandlerServer(Registry.ClassesRoot.OpenSubKey("CLSID", true), type);
                     InstallDropHandlerServer(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID", true), type);
 
@@ -47,15 +44,12 @@ namespace CSScript
 
         public static void UnregisterShellExtension(Assembly extAssembly)
         {
-            foreach (Type type in extAssembly.GetTypes())
-            {
+            foreach (Type type in extAssembly.GetTypes()) {
                 object[] attributes = type.GetCustomAttributes(typeof(ComVisibleAttribute), false);
-                if (attributes.Length == 0)
-                {
+                if (attributes.Length == 0) {
                     continue;
                 }
-                if (type.Name.Contains("DropHandler"))
-                {
+                if (type.Name.Contains("DropHandler")) {
                     UninstallDropHandlerServer(Registry.ClassesRoot.OpenSubKey("CLSID", true), type);
                     UninstallDropHandlerServer(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID", true), type);
                 }

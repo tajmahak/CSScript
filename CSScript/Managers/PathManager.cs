@@ -21,18 +21,15 @@ namespace CSScript
 
         public static string GetAndCheckFullPath(string filePath, string directoryPath)
         {
-            if (string.IsNullOrEmpty(filePath))
-            {
+            if (string.IsNullOrEmpty(filePath)) {
                 throw new Exception("Отсутствует путь к файлу.");
             }
 
-            if (!Path.IsPathRooted(filePath))
-            {
+            if (!Path.IsPathRooted(filePath)) {
                 filePath = Path.Combine(directoryPath, filePath);
             }
 
-            if (!File.Exists(filePath))
-            {
+            if (!File.Exists(filePath)) {
                 throw new Exception($"Файл '{filePath}' не найден.");
             }
 
@@ -41,12 +38,10 @@ namespace CSScript
 
         public static string GetAssemblyPath(string assemblyPath, string directoryPath)
         {
-            if (!Path.IsPathRooted(assemblyPath))
-            {
+            if (!Path.IsPathRooted(assemblyPath)) {
                 // библиотека, указанная по относительному пути, находится либо в рабочей папке, либо в GAC
                 string fullPath = Path.Combine(directoryPath, assemblyPath);
-                if (File.Exists(fullPath))
-                {
+                if (File.Exists(fullPath)) {
                     return fullPath;
                 }
             }

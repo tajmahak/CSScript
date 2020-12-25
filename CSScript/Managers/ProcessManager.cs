@@ -13,8 +13,7 @@ namespace CSScript
         public Process CreateManagedProcess()
         {
             Process process = new Process();
-            lock (managedProcesses)
-            {
+            lock (managedProcesses) {
                 managedProcesses.Add(process);
             }
             return process;
@@ -22,16 +21,12 @@ namespace CSScript
 
         public void KillManagedProcesses()
         {
-            lock (managedProcesses)
-            {
-                for (int i = 0; i < managedProcesses.Count; i++)
-                {
-                    try
-                    {
+            lock (managedProcesses) {
+                for (int i = 0; i < managedProcesses.Count; i++) {
+                    try {
                         managedProcesses[i].Kill();
                     }
-                    catch
-                    {
+                    catch {
                     }
                 }
             }
@@ -40,8 +35,7 @@ namespace CSScript
         public static void RestartWindowsExplorer()
         {
             Process[] explorer = Process.GetProcessesByName("explorer");
-            foreach (Process process in explorer)
-            {
+            foreach (Process process in explorer) {
                 process.Kill();
             }
             // Запускается автоматически

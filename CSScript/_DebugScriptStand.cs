@@ -21,7 +21,7 @@ namespace CSScript
 
         }
 
-        #region --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.23) ---
+#region --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.23) ---
 
         // Получение входящего аргумента по индексу
         private T GetArgument<T>(int index, T defaultValue)
@@ -365,7 +365,7 @@ namespace CSScript
             }
         }
 
-        #endregion
+#endregion
 
         public _DebugScriptStand(IScriptEnvironment scriptEnvironment) : base(scriptEnvironment) { }
     }

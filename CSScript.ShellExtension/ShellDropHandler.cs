@@ -21,10 +21,8 @@ namespace CSScript.ShellExtension
         protected override void Drop(DragEventArgs dragEventArgs)
         {
             StringBuilder args = new StringBuilder();
-            foreach (string dragItem in DragItems)
-            {
-                if (args.Length > 0)
-                {
+            foreach (string dragItem in DragItems) {
+                if (args.Length > 0) {
                     args.Append(" ");
                 }
                 args.Append($"\"{dragItem}\"");

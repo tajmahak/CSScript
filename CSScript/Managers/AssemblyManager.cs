@@ -14,10 +14,8 @@ namespace CSScript
         public void LoadAssembliesForResolve(ScriptInfo scriptInfo)
         {
             string[] assemblies = GetReferencedAssemblies(scriptInfo, false);
-            foreach (string assembly in assemblies)
-            {
-                if (File.Exists(assembly))
-                {
+            foreach (string assembly in assemblies) {
+                if (File.Exists(assembly)) {
                     // загружаются только те сборки, которые рантайм не может подгрузить автоматически
                     Assembly loadedAssembly = Assembly.LoadFrom(assembly);
                     resolvedAssemblies.Add(loadedAssembly.FullName, loadedAssembly);
@@ -33,11 +31,11 @@ namespace CSScript
 
         public string[] GetReferencedAssemblies(ScriptInfo scriptInfo, bool includeCurrentAssembly)
         {
-            List<string> definedAssemblies = new List<string>();
-            definedAssemblies.Add("System.dll"); // библиотека для работы множества основных функций
-            definedAssemblies.Add("System.Drawing.dll"); // для работы команд вывода информации в лог
-            if (includeCurrentAssembly)
-            {
+            List<string> definedAssemblies = new List<string> {
+                "System.dll", // библиотека для работы множества основных функций
+                "System.Drawing.dll" // для работы команд вывода информации в лог
+            };
+            if (includeCurrentAssembly) {
                 definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
             }
             foreach (string definedAssemblyPath in scriptInfo.DefinedAssemblyList) // дополнительные библиотеки, указанные в #define

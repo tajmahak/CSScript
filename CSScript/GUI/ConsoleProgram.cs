@@ -24,31 +24,27 @@ namespace CSScript
 
             ConsoleColor? foreColor = GetConsoleColor(message.ForeColor);
             foreColor = foreColor ?? GetConsoleColor(Settings.Default.ForeColor);
-            if (foreColor != null)
-            {
+            if (foreColor != null) {
                 ConsoleColor stockColor = Console.ForegroundColor;
                 Console.ForegroundColor = foreColor.Value;
                 Console.Write(message.Text);
                 Console.ForegroundColor = stockColor;
             }
-            else
-            {
+            else {
                 Console.Write(message.Text);
             }
         }
 
         private void ProgramModel_FinishedEvent(object sender, bool autoClose)
         {
-            if (!autoClose)
-            {
+            if (!autoClose) {
                 Console.ReadKey();
             }
         }
 
         private string ProgramModel_InputTextEvent(object sender, string caption)
         {
-            if (!string.IsNullOrEmpty(caption))
-            {
+            if (!string.IsNullOrEmpty(caption)) {
                 Console.WriteLine(caption);
             }
             return Console.ReadLine();
@@ -58,20 +54,16 @@ namespace CSScript
         protected override void StartProgram()
         {
             ConsoleColor? backColor = GetConsoleColor(Settings.Default.BackColor);
-            if (backColor != null)
-            {
+            if (backColor != null) {
                 Console.BackgroundColor = backColor.Value;
                 Console.Clear();
             }
 
-            try
-            {
+            try {
                 ProgramModel.StartAsync().Join();
             }
-            finally
-            {
-                if (ProgramModel != null)
-                {
+            finally {
+                if (ProgramModel != null) {
                     Environment.ExitCode = ProgramModel.ExitCode;
                 }
                 ProgramModel?.Dispose();
@@ -80,68 +72,52 @@ namespace CSScript
 
         private ConsoleColor? GetConsoleColor(Color? color)
         {
-            if (color == null)
-            {
+            if (color == null) {
                 return null;
             }
-            else if (color == Color.Black)
-            {
+            else if (color == Color.Black) {
                 return ConsoleColor.Black;
             }
-            else if (color == Color.DarkBlue)
-            {
+            else if (color == Color.DarkBlue) {
                 return ConsoleColor.DarkBlue;
             }
-            else if (color == Color.DarkGreen)
-            {
+            else if (color == Color.DarkGreen) {
                 return ConsoleColor.DarkGreen;
             }
-            else if (color == Color.DarkCyan)
-            {
+            else if (color == Color.DarkCyan) {
                 return ConsoleColor.DarkCyan;
             }
-            else if (color == Color.DarkRed)
-            {
+            else if (color == Color.DarkRed) {
                 return ConsoleColor.DarkRed;
             }
-            else if (color == Color.DarkMagenta)
-            {
+            else if (color == Color.DarkMagenta) {
                 return ConsoleColor.DarkMagenta;
             }
-            //else if (color == Color.DarkYellow)
-            //{
+            //else if (color == Color.DarkYellow ) {
             //    return ConsoleColor.DarkYellow;
             //}
-            else if (color == Color.Gray)
-            {
+            else if (color == Color.Gray) {
                 return ConsoleColor.Gray;
             }
-            else if (color == Color.Blue)
-            {
+            else if (color == Color.Blue) {
                 return ConsoleColor.Blue;
             }
-            else if (color == Color.Green)
-            {
+            else if (color == Color.Green) {
                 return ConsoleColor.Green;
             }
-            else if (color == Color.Cyan)
-            {
+            else if (color == Color.Cyan) {
                 return ConsoleColor.Cyan;
             }
-            else if (color == Color.Red)
-            {
+            else if (color == Color.Red) {
                 return ConsoleColor.Red;
             }
-            else if (color == Color.Magenta)
-            {
+            else if (color == Color.Magenta) {
                 return ConsoleColor.Magenta;
             }
-            else if (color == Color.Yellow)
-            {
+            else if (color == Color.Yellow) {
                 return ConsoleColor.Yellow;
             }
-            else if (color == Color.White)
-            {
+            else if (color == Color.White) {
                 return ConsoleColor.White;
             }
             return null;
