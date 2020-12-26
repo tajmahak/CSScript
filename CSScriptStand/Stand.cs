@@ -18,7 +18,7 @@ namespace CSScriptStand
         }
 
 
-        #region --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.24) ---
+        #region --- СКРИПТОВЫЕ УТИЛИТЫ (версия 1.24) ---
 
         // Получение входящего аргумента по индексу
         private T GetArgument<T>(int index, T defaultValue)
