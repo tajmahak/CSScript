@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 
-namespace CSScript
+namespace CSScript.Core
 {
     /// <summary>
     /// Представляет структурированные аргументы командной строки.
     /// </summary>
-    public class InputArgumentsInfo
+    public class InputArguments
     {
-        public static InputArgumentsInfo FromProgramArgs(string[] args)
+        public static InputArguments FromProgramArgs(string[] args)
         {
-            InputArgumentsInfo inputArguments = new InputArgumentsInfo();
+            InputArguments inputArguments = new InputArguments();
 
             if (args.Length == 0) {
                 inputArguments.IsEmpty = true;
