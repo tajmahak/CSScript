@@ -3,42 +3,23 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace CSScript.Core
 {
-    public class ScriptHandler
+    public static class ScriptCompiler
     {
-        private readonly ProcessManager processManager;
-        public MessageManager Messages { get; private set; }
+        private const string compiledScriptName = "CompiledScriptContainer";
 
 
-        public ScriptHandler()
-        {
-            processManager = new ProcessManager();
-            Messages = new MessageManager();
-        }
-
-
-        public delegate void ScriptFinishedEventHandler(ScriptContainer scriptContainer, bool success);
-        public event ScriptFinishedEventHandler ScriptFinished;
-
-
-        public IScriptEnvironment CreateScriptEnvironment(string scriptPath, string[] scriptArgs)
-        {
-            return new ScriptEnvironment(this, scriptPath, scriptArgs);
-        }
-
-
-        public CompilerResults CompileScript(string scriptPath)
+        public static CompilerResults CompileScript(string scriptPath)
         {
             ScriptContent scriptContent = LoadScriptContent(scriptPath);
             string sourceCode = CreateSourceCode(scriptContent);
-
-            string[] referencedAssemblies = assemblyManager.GetReferencedAssemblies(scriptInfo, true);
-
+            string[] referencedAssemblies = GetReferencedAssemblies(scriptContent);
             using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
                 CompilerParameters compileParameters = new CompilerParameters(referencedAssemblies) {
                     GenerateInMemory = true,
@@ -48,29 +29,45 @@ namespace CSScript.Core
             }
         }
 
+        public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptEnvironment environment)
+        {
+            if (compilerResults.Errors.Count > 0) {
+                throw new Exception();
+            }
+
+            string typeName = Utils.GetNamespaceName(typeof(ScriptContainer)) + "." + compiledScriptName;
+            Assembly compiledAssembly = compilerResults.CompiledAssembly;
+            object instance = compiledAssembly.CreateInstance(typeName,
+                false,
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[] { environment },
+                CultureInfo.CurrentCulture,
+                null);
+            return (ScriptContainer)instance;
+        }
 
 
-
-        private ScriptContent LoadScriptContent(string scriptPath)
+        private static ScriptContent LoadScriptContent(string scriptPath)
         {
             ScriptContent mainScript = new ScriptContent(scriptPath);
             AppendScript(mainScript, scriptPath, 0);
 
-            Utils.DeleteDuplicates(mainScript.DefinedScriptList, (a, b) => a.Equals(b));
+            Utils.DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
             Utils.DeleteDuplicates(mainScript.UsingList, (a, b) => a.Equals(b));
 
             return mainScript;
         }
 
-        private void AppendScript(ScriptContent mainScript, string scriptPath, int level)
+        private static void AppendScript(ScriptContent mainScript, string scriptPath, int level)
         {
             string workingDirectory = Utils.GetDirectory(scriptPath);
 
             ScriptContent script = Utils.LoadScriptContent(scriptPath);
-            foreach (string defineItem in script.DefinedScriptList) {
+            foreach (string defineItem in script.DefinedList) {
                 string defineFilePath = Utils.GetFilePath(defineItem, workingDirectory);
                 if (Utils.IsWindowsAssembly(defineFilePath)) {
-                    mainScript.DefinedScriptList.Add(defineFilePath);
+                    mainScript.DefinedList.Add(defineFilePath);
                 }
                 else {
                     AppendScript(mainScript, defineFilePath, level + 1);
@@ -85,11 +82,9 @@ namespace CSScript.Core
             mainScript.UsingList.AddRange(script.UsingList);
         }
 
-        private string CreateSourceCode(ScriptContent scriptContent)
+        private static string CreateSourceCode(ScriptContent scriptContent)
         {
-            string compiledScriptName = "CompiledScriptContainer";
             Type scriptContainerType = typeof(ScriptContainer);
-
 
             StringBuilder code = new StringBuilder();
             foreach (string usingItem in scriptContent.UsingList) {
@@ -159,48 +154,18 @@ namespace CSScript.Core
             return code.ToString();
         }
 
-
-
-
-
-
-
-        public void Execute(ScriptContainer scriptContainer, bool throwException)
+        private static string[] GetReferencedAssemblies(ScriptContent scriptContent)
         {
-            try {
-                scriptContainer.Execute();
+            List<string> definedAssemblies = new List<string> {
+                "System.dll", // библиотека для работы множества основных функций
+                "System.Drawing.dll" // для работы команд вывода информации в лог
+            };
+            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
+            foreach (string definedAssemblyPath in scriptContent.DefinedList) // дополнительные библиотеки, указанные в #define
+            {
+                definedAssemblies.Add(definedAssemblyPath);
             }
-
-            catch (Exception ex) {
-                if (throwException) {
-                    throw ex;
-                }
-                else {
-                    scriptContainer.env.ExitCode = 1;
-                    Messages.WriteLine();
-                    Messages.WriteException(ex);
-                    ScriptFinished?.Invoke(scriptContainer, false);
-                }
-            }
-
-            finally {
-                Messages.WriteLine();
-                Messages.WriteExitCode(scriptContainer.env.ExitCode);
-                ScriptFinished?.Invoke(scriptContainer, true);
-            }
+            return definedAssemblies.ToArray();
         }
-
-
-        internal Process CreateManagedProcess()
-        {
-            return processManager.CreateManagedProcess();
-        }
-
-        internal string GetInputText(string caption)
-        {
-            return null;
-        }
-
-
     }
 }

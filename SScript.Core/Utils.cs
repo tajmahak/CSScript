@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -14,8 +15,7 @@ namespace CSScript.Core
                 return filePath;
             }
             else {
-                //!!!
-                throw new NotImplementedException();
+                return Path.Combine(workingDirectory, filePath);
             }
         }
 
@@ -58,6 +58,14 @@ namespace CSScript.Core
             return fullName.Remove(index);
         }
 
-       
+        public static void RestartWindowsExplorer()
+        {
+            Process[] explorer = Process.GetProcessesByName("explorer");
+            foreach (Process process in explorer) {
+                process.Kill();
+            }
+            // Запускается автоматически
+            //Process.Start("explorer.exe");
+        }
     }
 }

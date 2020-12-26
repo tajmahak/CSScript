@@ -1,30 +1,54 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text;
+using System.Diagnostics;
 
 namespace CSScript.Core
 {
     /// <summary>
-    /// Представляет средство для работы с информационными сообщениями.
+    /// Представляет реализацию взаимодействия скрипта с программой.
     /// </summary>
-    public class MessageManager
+    public class ScriptEnvironment : IScriptEnvironment, IDisposable
     {
-        public MessageColorScheme ColorScheme { get; set; } = MessageColorScheme.Default;
-        public ReadOnlyCollection<Message> MessageList => messageList.AsReadOnly();
+        public string[] Args { get; }
+        public int ExitCode { get; set; }
+        public bool AutoClose { get; set; }
+        public string ScriptPath { get; }
+        public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
         private readonly List<Message> messageList = new List<Message>();
+        private readonly List<Process> managedProcesses = new List<Process>();
 
 
-        internal MessageManager()
+        public ScriptEnvironment(string scriptPath, string[] scriptArgs)
         {
+            ScriptPath = scriptPath;
+            Args = scriptArgs;
         }
 
 
         public delegate void MessageAddedHandler(object sender, Message message);
         public event MessageAddedHandler MessageAdded;
 
+
+        public Process CreateManagedProcess()
+        {
+            Process process = new Process();
+            lock (managedProcesses) {
+                managedProcesses.Add(process);
+            }
+            return process;
+        }
+
+        public string GetInputText()
+        {
+            return GetInputText(null);
+        }
+
+        public string GetInputText(string caption)
+        {
+            //!!!
+            return null;
+        }
 
         public void Write(object value, ConsoleColor? foreColor = null)
         {
@@ -134,36 +158,20 @@ namespace CSScript.Core
             WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.Info);
         }
 
-        public string GetLog()
+        public void Dispose()
         {
-            StringBuilder messageLog = new StringBuilder();
-            foreach (Message message in messageList) {
-                messageLog.Append(message.Text);
-            }
-            return messageLog.ToString();
-        }
-
-        public void SaveLog(string logPath)
-        {
-            if (!string.IsNullOrEmpty(logPath)) {
-                try {
-                    SaveLogInternal(logPath);
-                }
-                catch (Exception ex) {
-                    WriteLine($"# Не удалось сохранить лог: {ex.Message}", ColorScheme.Error);
+            // принудительное закрытие выполняющихся контролируемых процессов
+            lock (managedProcesses) {
+                for (int i = 0; i < managedProcesses.Count; i++) {
+                    try {
+                        managedProcesses[i].Kill();
+                    }
+                    catch {
+                    }
                 }
             }
         }
 
-        private void SaveLogInternal(string logPath)
-        {
-            string messageLog = GetLog();
-            using (StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8)) {
-                writer.WriteLine(messageLog);
-                writer.WriteLine();
-                writer.WriteLine();
-            }
-        }
 
         private string[] ParseHelpInfoLine(string line)
         {

@@ -11,7 +11,7 @@ namespace CSScript.Core
     {
         public string ScriptPath { get; }
 
-        public List<string> DefinedScriptList { get; private set; } = new List<string>();
+        public List<string> DefinedList { get; private set; } = new List<string>();
 
         public List<string> UsingList { get; private set; } = new List<string>();
 
@@ -42,7 +42,7 @@ namespace CSScript.Core
                 if (!scriptLine.IsEmpty) {
                     switch (scriptLine.OperatorName) {
                         case "define":
-                            DefinedScriptList.Add(scriptLine.OperatorValue);
+                            DefinedList.Add(scriptLine.OperatorValue);
                             break;
 
                         case "using":

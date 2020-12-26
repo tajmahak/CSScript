@@ -2,7 +2,7 @@
 
 namespace CSScript.Core
 {
-    public class MessageColorScheme
+    public class ColorScheme
     {
         public ConsoleColor Back { get; set; } = ConsoleColor.Black;
         public ConsoleColor Caption { get; set; } = ConsoleColor.Red;
@@ -14,6 +14,6 @@ namespace CSScript.Core
         public ConsoleColor StackTrace { get; set; } = ConsoleColor.Gray;
         public ConsoleColor Success { get; set; } = ConsoleColor.Green;
 
-        public static MessageColorScheme Default => new MessageColorScheme();
+        public static ColorScheme Default => new ColorScheme();
     }
 }

@@ -1,7 +1,7 @@
 ﻿using CSScript.Core;
 using System;
+using System.CodeDom.Compiler;
 using System.Diagnostics;
-using System.IO;
 
 namespace CSScriptStand
 {
@@ -9,26 +9,32 @@ namespace CSScriptStand
     {
         private static void Main(string[] args)
         {
-            ScriptHandler scriptHandler = new ScriptHandler();
-            scriptHandler.Messages.MessageAdded += Messages_MessageAdded;
-            scriptHandler.ScriptFinished += ScriptHandler_ScriptFinished;
+            string scriptPath = @"test.txt";
+
+            ScriptEnvironment scriptEnvironment = new ScriptEnvironment(scriptPath, null);
+            scriptEnvironment.MessageAdded += ScriptEnvironment_MessageAdded;
+
+            CompilerResults compiledScript = ScriptCompiler.CompileScript(scriptPath);
+            ScriptContainer scriptContainer = ScriptCompiler.CreateScriptContainer(compiledScript, scriptEnvironment);
+            scriptContainer.Execute();
+
+            Console.ReadKey();
+
+            { }
 
             //IScriptEnvironment env = scriptHandler.CreateScriptEnvironment(null, null);
             //MessageColorScheme colors = MessageColorScheme.Default;
             //ScriptContainer scriptContainer = new Stand(env, colors);
             //scriptHandler.Execute(scriptContainer, true);
 
-            var a = scriptHandler.CompileScript(@"D:\Хранилище\Разработка\Проекты\Scripts\Резервное копирование проектов.cssc");
+            //System.CodeDom.Compiler.CompilerResults compileScript = scriptHandler.CompileScript(@"test.txt");
+            //IScriptEnvironment env = scriptHandler.CreateScriptEnvironment(@"test.txt", null);
+            //ScriptContainer scriptContainer = scriptHandler.CreateScriptContainer(compileScript, env);
+            //scriptContainer.Execute();
+            //Console.ReadKey();
         }
 
-        private static void ScriptHandler_ScriptFinished(ScriptContainer scriptContainer, bool success)
-        {
-            if (!scriptContainer.env.AutoClose) {
-                Console.Read();
-            }
-        }
-
-        private static void Messages_MessageAdded(object sender, Message message)
+        private static void ScriptEnvironment_MessageAdded(object sender, Message message)
         {
             Debug.Write(message.Text);
 

@@ -1,6 +1,4 @@
-﻿using CSScript.Core;
-
-namespace CSScript.Core
+﻿namespace CSScript.Core
 {
     /// <summary>
     /// Представляет оболочку для выполнения скомпилированного скрипта в программе. 
@@ -8,12 +6,11 @@ namespace CSScript.Core
     public abstract class ScriptContainer
     {
         public IScriptEnvironment env { get; }
-        public MessageColorScheme colors { get; }
+        public ColorScheme colors => env.ColorScheme;
 
-        public ScriptContainer(IScriptEnvironment env, MessageColorScheme colors)
+        public ScriptContainer(IScriptEnvironment env)
         {
             this.env = env;
-            this.colors = colors;
         }
 
         public abstract void Execute();

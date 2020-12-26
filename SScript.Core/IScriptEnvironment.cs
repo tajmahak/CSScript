@@ -10,6 +10,8 @@ namespace CSScript.Core
     {
         string[] Args { get; }
 
+        ColorScheme ColorScheme { get; }
+
         int ExitCode { get; set; }
 
         bool AutoClose { get; set; }

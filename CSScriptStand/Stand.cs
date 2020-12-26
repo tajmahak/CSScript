@@ -8,7 +8,7 @@ namespace CSScriptStand
 {
     class Stand : ScriptContainer
     {
-        public Stand(IScriptEnvironment env, MessageColorScheme colors) : base(env, colors)
+        public Stand(IScriptEnvironment env) : base(env)
         {
         }
 
