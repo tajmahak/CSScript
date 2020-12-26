@@ -26,8 +26,6 @@ namespace CSScript.Core
 
         string GetInputText();
 
-        string GetInputText(string caption);
-
         Process CreateManagedProcess();
     }
 }

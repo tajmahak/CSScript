@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -8,7 +7,6 @@ namespace CSScript.Core
 {
     internal static class Utils
     {
-
         public static string GetFilePath(string filePath, string workingDirectory)
         {
             if (Path.IsPathRooted(filePath)) {
@@ -53,7 +51,7 @@ namespace CSScript.Core
 
         public static string GetNamespaceName(Type type)
         {
-            var fullName = type.FullName;
+            string fullName = type.FullName;
             int index = fullName.LastIndexOf('.');
             return fullName.Remove(index);
         }

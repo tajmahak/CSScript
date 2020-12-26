@@ -29,6 +29,9 @@ namespace CSScript.Core
         public delegate void MessageAddedHandler(object sender, Message message);
         public event MessageAddedHandler MessageAdded;
 
+        public delegate string InputTextHandler(object sender);
+        public event InputTextHandler InputTextRequred;
+
 
         public Process CreateManagedProcess()
         {
@@ -41,13 +44,7 @@ namespace CSScript.Core
 
         public string GetInputText()
         {
-            return GetInputText(null);
-        }
-
-        public string GetInputText(string caption)
-        {
-            //!!!
-            return null;
+            return InputTextRequred.Invoke(this);
         }
 
         public void Write(object value, ConsoleColor? foreColor = null)
@@ -88,7 +85,5 @@ namespace CSScript.Core
                 }
             }
         }
-
-
     }
 }

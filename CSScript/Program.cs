@@ -32,6 +32,7 @@ namespace CSScript
                 else {
                     scriptEnvironment = new ScriptEnvironment(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
                     scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
+                    scriptEnvironment.InputTextRequred += (sender) => Console.ReadLine();
 
                     WriteStartInfo(arguments.ScriptPath);
 
@@ -57,9 +58,12 @@ namespace CSScript
             }
             finally {
                 if (scriptEnvironment != null) {
-                    WriteExitCode(scriptEnvironment.ExitCode);
+                    bool autoClose = scriptEnvironment.AutoClose;
 
-                    if (!scriptEnvironment.AutoClose) {
+                    WriteExitCode(scriptEnvironment.ExitCode);
+                    scriptEnvironment.Dispose();
+
+                    if (!autoClose) {
                         Console.ReadKey();
                     }
                 }

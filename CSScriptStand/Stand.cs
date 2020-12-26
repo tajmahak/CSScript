@@ -14,7 +14,9 @@ namespace CSScriptStand
 
         public override void Execute()
         {
-
+            Write("Введите текст: ");
+            var a = env.GetInputText();
+            WriteLine(a);
         }
 
 
@@ -51,15 +53,9 @@ namespace CSScriptStand
         }
 
         // Чтение текста из входного потока
-        private string ReadLines()
+        private string ReadLine()
         {
             return env.GetInputText();
-        }
-
-        // Чтение текста из входного потока с указанием заголовка
-        private string ReadLines(string caption)
-        {
-            return env.GetInputText(caption);
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
