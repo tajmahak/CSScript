@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace CSScript
 {
-    internal static class PathManager
+    public static class PathManager
     {
         public static string FromLocalDirectoryPath(string fileName)
         {

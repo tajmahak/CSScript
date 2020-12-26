@@ -6,7 +6,7 @@ namespace CSScript
     /// <summary>
     /// Представляет средство для работы с процессами, запускаемыми скриптом.
     /// </summary>
-    internal class ProcessManager
+    public class ProcessManager
     {
         private readonly List<Process> managedProcesses = new List<Process>();
 

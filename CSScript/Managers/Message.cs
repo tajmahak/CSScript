@@ -6,7 +6,7 @@ namespace CSScript
     /// <summary>
     /// Представляет информационное сообщение.
     /// </summary>
-    internal class Message
+    public class Message
     {
         public string Text { get; private set; }
 

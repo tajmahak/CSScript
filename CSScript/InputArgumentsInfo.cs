@@ -5,7 +5,7 @@ namespace CSScript
     /// <summary>
     /// Представляет структурированные аргументы командной строки.
     /// </summary>
-    internal class InputArgumentsInfo
+    public class InputArgumentsInfo
     {
         public static InputArgumentsInfo FromProgramArgs(string[] args)
         {

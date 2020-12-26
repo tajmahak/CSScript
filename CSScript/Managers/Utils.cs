@@ -6,7 +6,7 @@ namespace CSScript
     /// <summary>
     /// Преставляет универсальные средства для работы с данными.
     /// </summary>
-    internal static class Utils
+    public static class Utils
     {
         public static void DeleteDuplicates<T>(List<T> list, Func<T, T, bool> comparison)
         {

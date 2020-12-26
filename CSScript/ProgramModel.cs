@@ -17,7 +17,7 @@ namespace CSScript
     /// <summary>
     /// Представляет модель программы.
     /// </summary>
-    internal class ProgramModel : IDisposable
+    public class ProgramModel : IDisposable
     {
         public ProgramModel(InputArgumentsInfo inputArguments, Settings settings)
         {
@@ -62,7 +62,12 @@ namespace CSScript
 
         public Thread StartAsync()
         {
-            Thread executingThread = new Thread(Start) {
+            return StartAsync(null);
+        }
+
+        public Thread StartAsync(Type scriptContainerType)
+        {
+            Thread executingThread = new Thread(() => Start(scriptContainerType)) {
                 IsBackground = true
             };
             executingThread.Start();
@@ -88,33 +93,41 @@ namespace CSScript
         }
 
 
-        private void Start()
+        private void Start(Type scriptContainerType)
         {
+            bool useTestScript = (scriptContainerType != null);
+
             ExitCode = 0;
             try {
-#if DEBUG_USE_SCRIPT_STAND && DEBUG
-                ExecuteScript();
-#else
-                if (inputArguments.IsEmpty) {
-                    MessageManager.WriteHelpInfo();
-                }
-                else if (inputArguments.RegisterMode) {
-                    RegistryProgram();
-                }
-                else if (inputArguments.UnregisterMode) {
-                    UnregistryProgram();
+                if (!useTestScript) {
+                    if (inputArguments.IsEmpty) {
+                        MessageManager.WriteHelpInfo();
+                    }
+                    else if (inputArguments.RegisterMode) {
+                        RegistryProgram();
+                    }
+                    else if (inputArguments.UnregisterMode) {
+                        UnregistryProgram();
+                    }
+                    else {
+                        ExecuteScript(scriptContainerType);
+                    }
                 }
                 else {
-                    ExecuteScript();
+                    ExecuteScript(scriptContainerType);
                 }
-#endif
             }
-#if !DEBUG_SKIP_EXCEPTION_HANDLING || !DEBUG
+
             catch (Exception ex) {
-                MessageManager.WriteException(ex);
-                ExitCode = 1;
+                if (!useTestScript) {
+                    MessageManager.WriteException(ex);
+                    ExitCode = 1;
+                }
+                else {
+                    throw ex;
+                }
             }
-#endif
+
             finally {
                 MessageManager.WriteExitCode(ExitCode);
 
@@ -172,50 +185,51 @@ namespace CSScript
             }
         }
 
-        private void ExecuteScript()
+        private void ExecuteScript(Type scriptContainerType)
         {
+            bool useTestScript = (scriptContainerType != null);
+           
             IScriptEnvironment scriptEnvironment;
 
-#if DEBUG_USE_SCRIPT_STAND && DEBUG
+            if (!useTestScript) {
+                string scriptPath = PathManager.GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
+                MessageManager.WriteStartInfo(scriptPath);
 
-            scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
-            ScriptContainer debugScript = new _DebugScriptStand(scriptEnvironment);
-            debugScript.Execute();
+                // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
+                // (для возможности указания относительных путей к файлам)
+                Environment.CurrentDirectory = PathManager.GetWorkDirectoryPath(scriptPath);
 
-#else
+                scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
 
-            string scriptPath = PathManager.GetAndCheckFullPath(inputArguments.ScriptPath, Environment.CurrentDirectory);
-            MessageManager.WriteStartInfo(scriptPath);
+                string scriptText = GetScriptText(scriptPath);
 
-            // после загрузки содержимого скрипта переключаемся на его рабочую директорию вместо рабочей директории программы
-            // (для возможности указания относительных путей к файлам)
-            Environment.CurrentDirectory = PathManager.GetWorkDirectoryPath(scriptPath);
+                ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
+                assemblyManager.LoadAssembliesForResolve(scriptInfo);
+                CompilerResults compilerResults = Compile(scriptInfo);
 
-            scriptEnvironment = CreateScriptEnvironment(scriptPath, inputArguments.ScriptArguments.ToArray());
+                if (compilerResults.Errors.Count == 0) {
+                    ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
+                    scriptContainer.Execute();
+                }
+                else {
+                    MessageManager.WriteCompileErrors(compilerResults);
+                    MessageManager.WriteLine();
 
-            string scriptText = GetScriptText(scriptPath);
+                    string sourceCode = GetSourceCode(scriptInfo);
+                    MessageManager.WriteSourceCode(sourceCode, compilerResults);
+                    scriptEnvironment.ExitCode = 1;
+                }
 
-            ScriptInfo scriptInfo = ParseScriptInfo(scriptText, scriptPath);
-            assemblyManager.LoadAssembliesForResolve(scriptInfo);
-            CompilerResults compilerResults = Compile(scriptInfo);
-
-            if (compilerResults.Errors.Count == 0) {
-                ScriptContainer scriptContainer = CreateCompiledScriptContainer(compilerResults, scriptEnvironment);
-                scriptContainer.Execute();
+                needAutoClose = scriptEnvironment.AutoClose;
+                ExitCode = scriptEnvironment.ExitCode;
             }
             else {
-                MessageManager.WriteCompileErrors(compilerResults);
-                MessageManager.WriteLine();
-
-                string sourceCode = GetSourceCode(scriptInfo);
-                MessageManager.WriteSourceCode(sourceCode, compilerResults);
-                scriptEnvironment.ExitCode = 1;
+                scriptEnvironment = CreateScriptEnvironment(null, inputArguments.ScriptArguments.ToArray());
+                ScriptContainer scriptContainer = (ScriptContainer)Activator.CreateInstance(scriptContainerType, scriptEnvironment);
+                scriptContainer.Execute();
             }
-
-#endif
-            needAutoClose = scriptEnvironment.AutoClose;
-            ExitCode = scriptEnvironment.ExitCode;
         }
+
 
         private ScriptContainer CreateCompiledScriptContainer(CompilerResults compilerResults, IScriptEnvironment scriptEnvironment)
         {

@@ -12,7 +12,7 @@ namespace CSScript
     /// <summary>
     /// Представляет средство для работы с информационными сообщениями.
     /// </summary>
-    internal class MessageManager
+    public class MessageManager
     {
         public ReadOnlyCollection<Message> MessageList => messageList.AsReadOnly();
 

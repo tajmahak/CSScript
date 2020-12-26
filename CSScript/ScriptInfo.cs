@@ -6,7 +6,7 @@ namespace CSScript
     /// <summary>
     /// Представляет структурированную информацию о скрипте.
     /// </summary>
-    internal class ScriptInfo
+    public class ScriptInfo
     {
         public ScriptInfo(string scriptPath)
         {

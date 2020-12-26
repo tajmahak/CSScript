@@ -7,7 +7,7 @@ namespace CSScript
     /// <summary>
     /// Представляет средство для работы с динамически подгружаемыми сборками.
     /// </summary>
-    internal class AssemblyManager
+    public class AssemblyManager
     {
         private readonly Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
 
