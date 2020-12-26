@@ -49,7 +49,7 @@
     <Compile Include="ScriptEnvironment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptContainer.cs" />
-    <Compile Include="ScriptCompiler.cs" />
+    <Compile Include="ScriptManager.cs" />
     <Compile Include="ColorScheme.cs" />
     <Compile Include="ScriptContent.cs" />
     <Compile Include="Utils.cs" />

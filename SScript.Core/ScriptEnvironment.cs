@@ -56,7 +56,7 @@ namespace CSScript.Core
                 string text = value.ToString();
                 if (!string.IsNullOrEmpty(text)) {
                     foreColor = foreColor ?? ColorScheme.Fore;
-                    Message message = new Message(text, DateTime.Now, foreColor.Value);
+                    Message message = new Message(text, foreColor.Value);
                     lock (messageList) {
                         messageList.Add(message);
                     }
@@ -75,89 +75,6 @@ namespace CSScript.Core
             Write(Environment.NewLine);
         }
 
-        public void WriteHelpInfo(string helpText)
-        {
-            string[] lines = helpText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++) {
-                ConsoleColor? color = null;
-                string[] line = ParseHelpInfoLine(lines[i]);
-                switch (line[0]) {
-                    case "c": color = ColorScheme.Caption; break;
-                    case "i": color = ColorScheme.Info; break;
-                }
-                WriteLine(line[1], color);
-            }
-        }
-
-        public void WriteStartInfo(string scriptPath)
-        {
-            WriteLine($"## {scriptPath}", ColorScheme.Info);
-            WriteLine($"## {DateTime.Now}", ColorScheme.Info);
-            WriteLine();
-        }
-
-        public void WriteException(Exception ex)
-        {
-            WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
-            foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
-                WriteLine("#" + stackTraceLine, ColorScheme.StackTrace);
-            }
-
-            if (ex.InnerException != null) {
-                WriteLine();
-                WriteException(ex.InnerException);
-            }
-        }
-
-        public void WriteCompileErrors(CompilerResults compilerResults)
-        {
-            WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", ColorScheme.Error);
-            int errorNumber = 1;
-            foreach (CompilerError error in compilerResults.Errors) {
-                if (error.Line > 0) {
-                    WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", ColorScheme.Error);
-                }
-                else {
-                    WriteLine($"# {errorNumber++}: {error.ErrorText}", ColorScheme.Error);
-                }
-            }
-        }
-
-        public void WriteSourceCode(string sourceCode, CompilerResults compilerResults = null)
-        {
-            HashSet<int> errorLines = new HashSet<int>();
-            if (compilerResults != null) {
-                foreach (CompilerError error in compilerResults.Errors) {
-                    errorLines.Add(error.Line);
-                }
-            }
-
-            string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++) {
-                string line = lines[i];
-                int lineNumber = i + 1;
-
-                Write(lineNumber.ToString().PadLeft(4) + ": ");
-                if (errorLines.Contains(lineNumber)) {
-                    WriteLine(line, ColorScheme.Error);
-                }
-                else {
-                    if (line.TrimStart().StartsWith("//")) {
-                        WriteLine(line, ColorScheme.Comment);
-                    }
-                    else {
-                        WriteLine(line, ColorScheme.SourceCode);
-                    }
-                }
-            }
-        }
-
-        public void WriteExitCode(int exitCode)
-        {
-            WriteLine();
-            WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.Info);
-        }
-
         public void Dispose()
         {
             // принудительное закрытие выполняющихся контролируемых процессов
@@ -173,19 +90,5 @@ namespace CSScript.Core
         }
 
 
-        private string[] ParseHelpInfoLine(string line)
-        {
-            if (line.StartsWith("`")) {
-                int index = line.IndexOf("`", 1);
-                return new string[]
-                {
-                    line.Substring(1, index - 1),
-                    line.Substring(index + 1),
-                };
-            }
-            else {
-                return new string[] { null, line };
-            }
-        }
     }
 }

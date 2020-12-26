@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace CSScript.Core
 {
     /// <summary>
-    /// Представляет интерфейс для взаимодействия скрипта с программой.
+    /// Представляет интерфейс для взаимодействия скрипта с окружением.
     /// </summary>
     public interface IScriptEnvironment
     {

@@ -2,7 +2,6 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -10,14 +9,24 @@ using System.Text;
 
 namespace CSScript.Core
 {
-    public static class ScriptCompiler
+    public static class ScriptManager
     {
         private const string compiledScriptName = "CompiledScriptContainer";
 
 
-        public static CompilerResults CompileScript(string scriptPath)
+        public static ScriptContent CreateScriptContent(string scriptPath)
         {
-            ScriptContent scriptContent = LoadScriptContent(scriptPath);
+            ScriptContent mainScript = new ScriptContent(scriptPath);
+            AppendScript(mainScript, scriptPath, 0);
+
+            Utils.DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
+            Utils.DeleteDuplicates(mainScript.UsingList, (a, b) => a.Equals(b));
+
+            return mainScript;
+        }
+
+        public static CompilerResults CompileScript(ScriptContent scriptContent)
+        {
             string sourceCode = CreateSourceCode(scriptContent);
             string[] referencedAssemblies = GetReferencedAssemblies(scriptContent);
             using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
@@ -47,42 +56,7 @@ namespace CSScript.Core
             return (ScriptContainer)instance;
         }
 
-
-        private static ScriptContent LoadScriptContent(string scriptPath)
-        {
-            ScriptContent mainScript = new ScriptContent(scriptPath);
-            AppendScript(mainScript, scriptPath, 0);
-
-            Utils.DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
-            Utils.DeleteDuplicates(mainScript.UsingList, (a, b) => a.Equals(b));
-
-            return mainScript;
-        }
-
-        private static void AppendScript(ScriptContent mainScript, string scriptPath, int level)
-        {
-            string workingDirectory = Utils.GetDirectory(scriptPath);
-
-            ScriptContent script = Utils.LoadScriptContent(scriptPath);
-            foreach (string defineItem in script.DefinedList) {
-                string defineFilePath = Utils.GetFilePath(defineItem, workingDirectory);
-                if (Utils.IsWindowsAssembly(defineFilePath)) {
-                    mainScript.DefinedList.Add(defineFilePath);
-                }
-                else {
-                    AppendScript(mainScript, defineFilePath, level + 1);
-                }
-            }
-
-            mainScript.ClassBlock.AppendLine(script.ClassBlock.ToString());
-            if (level == 0) { // выполнение процедуры допустимо только в скрипте самого высокого уровня
-                mainScript.ProcedureBlock.AppendLine(script.ProcedureBlock.ToString());
-            }
-            mainScript.NamespaceBlock.AppendLine(script.NamespaceBlock.ToString());
-            mainScript.UsingList.AddRange(script.UsingList);
-        }
-
-        private static string CreateSourceCode(ScriptContent scriptContent)
+        public static string CreateSourceCode(ScriptContent scriptContent)
         {
             Type scriptContainerType = typeof(ScriptContainer);
 
@@ -152,6 +126,31 @@ namespace CSScript.Core
             code.AppendLine("}");
 
             return code.ToString();
+        }
+
+
+
+        private static void AppendScript(ScriptContent mainScript, string scriptPath, int level)
+        {
+            string workingDirectory = Utils.GetDirectory(scriptPath);
+
+            ScriptContent script = Utils.LoadScriptContent(scriptPath);
+            foreach (string defineItem in script.DefinedList) {
+                string defineFilePath = Utils.GetFilePath(defineItem, workingDirectory);
+                if (Utils.IsWindowsAssembly(defineFilePath)) {
+                    mainScript.DefinedList.Add(defineFilePath);
+                }
+                else {
+                    AppendScript(mainScript, defineFilePath, level + 1);
+                }
+            }
+
+            mainScript.ClassBlock.AppendLine(script.ClassBlock.ToString());
+            if (level == 0) { // выполнение процедуры допустимо только в скрипте самого высокого уровня
+                mainScript.ProcedureBlock.AppendLine(script.ProcedureBlock.ToString());
+            }
+            mainScript.NamespaceBlock.AppendLine(script.NamespaceBlock.ToString());
+            mainScript.UsingList.AddRange(script.UsingList);
         }
 
         private static string[] GetReferencedAssemblies(ScriptContent scriptContent)

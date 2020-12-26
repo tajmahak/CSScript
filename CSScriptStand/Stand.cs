@@ -1,12 +1,8 @@
 ﻿using CSScript.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace CSScriptStand
 {
-    class Stand : ScriptContainer
+    internal class Stand : ScriptContainer
     {
         public Stand(IScriptEnvironment env) : base(env)
         {
@@ -17,7 +13,7 @@ namespace CSScriptStand
             AAA();
         }
 
-        void AAA()
+        private void AAA()
         {
             env.WriteLine("123", colors.Success);
         }
