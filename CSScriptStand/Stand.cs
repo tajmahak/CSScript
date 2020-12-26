@@ -20,7 +20,7 @@ namespace CSScriptStand
         }
 
 
-        #region --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.23) ---
+        #region --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.24) ---
 
         // Получение входящего аргумента по индексу
         private T GetArgument<T>(int index, T defaultValue)
@@ -53,9 +53,9 @@ namespace CSScriptStand
         }
 
         // Чтение текста из входного потока
-        private string ReadLine()
+        private string ReadLine(ConsoleColor? foreColor = null)
         {
-            return env.GetInputText();
+            return env.GetInputText(foreColor);
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)

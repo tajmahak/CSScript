@@ -10,7 +10,10 @@ namespace CSScriptStand
         {
             ScriptEnvironment scriptEnvironment = new ScriptEnvironment(null, args);
             scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
-            scriptEnvironment.InputTextRequred += (sender) => Console.ReadLine();
+            scriptEnvironment.InputTextRequred += (sender, foreColor) => {
+                Console.ForegroundColor = foreColor;
+                return Console.ReadLine();
+            };
 
             ScriptContainer scriptContainer = new Stand(scriptEnvironment);
             scriptContainer.Execute();

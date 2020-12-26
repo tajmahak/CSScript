@@ -29,7 +29,7 @@ namespace CSScript.Core
         public delegate void MessageAddedHandler(object sender, Message message);
         public event MessageAddedHandler MessageAdded;
 
-        public delegate string InputTextHandler(object sender);
+        public delegate string InputTextHandler(object sender, ConsoleColor foreColor);
         public event InputTextHandler InputTextRequred;
 
 
@@ -42,9 +42,9 @@ namespace CSScript.Core
             return process;
         }
 
-        public string GetInputText()
+        public string GetInputText(ConsoleColor? foreColor = null)
         {
-            return InputTextRequred.Invoke(this);
+            return InputTextRequred.Invoke(this, foreColor ?? ColorScheme.Fore);
         }
 
         public void Write(object value, ConsoleColor? foreColor = null)
@@ -52,8 +52,7 @@ namespace CSScript.Core
             if (value != null) {
                 string text = value.ToString();
                 if (!string.IsNullOrEmpty(text)) {
-                    foreColor = foreColor ?? ColorScheme.Fore;
-                    Message message = new Message(text, foreColor.Value);
+                    Message message = new Message(text, foreColor ?? ColorScheme.Fore);
                     lock (messageList) {
                         messageList.Add(message);
                     }

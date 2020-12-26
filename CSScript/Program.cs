@@ -32,7 +32,10 @@ namespace CSScript
                 else {
                     scriptEnvironment = new ScriptEnvironment(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
                     scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
-                    scriptEnvironment.InputTextRequred += (sender) => arguments.HideMode ? null : Console.ReadLine();
+                    scriptEnvironment.InputTextRequred += (sender, foreColor) => {
+                        Console.ForegroundColor = foreColor;
+                        return arguments.HideMode ? null : Console.ReadLine();
+                    };
 
                     WriteStartInfo(arguments.ScriptPath);
 
@@ -74,11 +77,8 @@ namespace CSScript
         private static void Write(string text, ConsoleColor? consoleColor = null)
         {
             Debug.Write(text);
-
-            ConsoleColor stockColor = Console.ForegroundColor;
             Console.ForegroundColor = consoleColor ?? ColorScheme.Fore;
             Console.Write(text);
-            Console.ForegroundColor = stockColor;
         }
 
         private static void WriteLine(string text, ConsoleColor? consoleColor = null)
