@@ -145,10 +145,10 @@ namespace CSScript.Core
                 }
             }
 
-            mainScript.ClassBlock.AppendLine(script.ClassBlock.ToString());
             if (level == 0) { // выполнение процедуры допустимо только в скрипте самого высокого уровня
                 mainScript.ProcedureBlock.AppendLine(script.ProcedureBlock.ToString());
             }
+            mainScript.ClassBlock.AppendLine(script.ClassBlock.ToString());
             mainScript.NamespaceBlock.AppendLine(script.NamespaceBlock.ToString());
             mainScript.UsingList.AddRange(script.UsingList);
         }

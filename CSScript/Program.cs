@@ -69,7 +69,6 @@ namespace CSScript
         }
 
 
-
         private static void Write(string text, ConsoleColor? consoleColor = null)
         {
             Debug.Write(text);
