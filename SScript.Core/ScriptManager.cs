@@ -157,7 +157,6 @@ namespace CSScript.Core
         {
             List<string> definedAssemblies = new List<string> {
                 "System.dll", // библиотека для работы множества основных функций
-                "System.Drawing.dll" // для работы команд вывода информации в лог
             };
             definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
             foreach (string definedAssemblyPath in scriptContent.DefinedList) // дополнительные библиотеки, указанные в #define
