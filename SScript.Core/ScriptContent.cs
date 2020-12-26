@@ -10,15 +10,10 @@ namespace CSScript.Core
     public class ScriptContent
     {
         public string ScriptPath { get; }
-
         public List<string> DefinedList { get; private set; } = new List<string>();
-
         public List<string> UsingList { get; private set; } = new List<string>();
-
         public StringBuilder ProcedureBlock { get; private set; } = new StringBuilder();
-
         public StringBuilder ClassBlock { get; private set; } = new StringBuilder();
-
         public StringBuilder NamespaceBlock { get; private set; } = new StringBuilder();
 
 
@@ -77,11 +72,8 @@ namespace CSScript.Core
         private class ScriptLine
         {
             public string SourceLine { get; }
-
             public bool IsEmpty { get; private set; }
-
             public string OperatorName { get; private set; }
-
             public string OperatorValue { get; private set; }
 
 
