@@ -32,7 +32,7 @@ namespace CSScript
                 else {
                     scriptEnvironment = new ScriptEnvironment(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
                     scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
-                    scriptEnvironment.InputTextRequred += (sender) => Console.ReadLine();
+                    scriptEnvironment.InputTextRequred += (sender) => arguments.HideMode ? null : Console.ReadLine();
 
                     WriteStartInfo(arguments.ScriptPath);
 
