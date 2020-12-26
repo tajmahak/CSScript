@@ -25,11 +25,9 @@ namespace CSScript
                 }
                 else if (arguments.RegisterMode) {
                     RegisterProgram();
-                    Console.ReadKey();
                 }
                 else if (arguments.UnregisterMode) {
                     UnregistryProgram();
-                    Console.ReadKey();
                 }
                 else {
                     scriptEnvironment = new ScriptEnvironment(arguments.ScriptPath, arguments.ScriptArguments.ToArray());

@@ -14,9 +14,9 @@ namespace CSScriptStand
 
         public override void Execute()
         {
-            
+
         }
-        
+
 
         #region --- СКРИПТОВЫЕ ФУНКЦИИ (версия 1.23) ---
 
