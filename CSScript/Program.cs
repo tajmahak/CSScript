@@ -71,6 +71,7 @@ namespace CSScript
                 if (scriptEnvironment != null) {
                     bool autoClose = scriptEnvironment.AutoClose;
 
+                    WriteLine();
                     WriteExitCode(scriptEnvironment.ExitCode);
                     scriptEnvironment.Dispose();
 
@@ -178,7 +179,6 @@ namespace CSScript
 
         private static void WriteExitCode(int exitCode)
         {
-            WriteLine();
             WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.Info);
         }
 

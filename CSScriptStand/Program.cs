@@ -23,11 +23,8 @@ namespace CSScriptStand
         private static void Write(string text, ConsoleColor consoleColor)
         {
             Debug.Write(text);
-
-            ConsoleColor stockColor = Console.ForegroundColor;
             Console.ForegroundColor = consoleColor;
             Console.Write(text);
-            Console.ForegroundColor = stockColor;
         }
     }
 }

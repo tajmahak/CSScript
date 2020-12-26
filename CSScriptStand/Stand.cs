@@ -14,9 +14,7 @@ namespace CSScriptStand
 
         public override void Execute()
         {
-            Write("Введите текст: ");
-            var a = ReadLine();
-            WriteLine(a);
+
         }
 
 
