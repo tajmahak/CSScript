@@ -17,8 +17,11 @@ namespace CSScript
         private static void Main(string[] args)
         {
             ScriptEnvironment scriptEnvironment = null;
+            bool hideMode = false;
             try {
                 InputArguments arguments = InputArguments.FromProgramArgs(args);
+                hideMode = arguments.HideMode;
+
                 if (arguments.IsEmpty) {
                     WriteHelpInfo();
                     Console.ReadKey();
@@ -30,6 +33,11 @@ namespace CSScript
                     UnregistryProgram();
                 }
                 else {
+                    if (arguments.HideMode) {
+                        // Скрытие окна консоли во время исполнения программы
+                        Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
+                    }
+
                     scriptEnvironment = new ScriptEnvironment(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
                     scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
                     scriptEnvironment.InputTextRequred += (sender, foreColor) => {
@@ -66,7 +74,7 @@ namespace CSScript
                     WriteExitCode(scriptEnvironment.ExitCode);
                     scriptEnvironment.Dispose();
 
-                    if (!autoClose) {
+                    if (!hideMode && !autoClose) {
                         Console.ReadKey();
                     }
                 }
