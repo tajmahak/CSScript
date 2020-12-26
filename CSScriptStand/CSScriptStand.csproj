@@ -36,7 +36,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -46,9 +45,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CSScript\CSScript.csproj">
-      <Project>{def8c111-c070-4585-9ad5-1b1ff24417c8}</Project>
-      <Name>CSScript</Name>
+    <ProjectReference Include="..\SScript.Core\SScript.Core.csproj">
+      <Project>{286dbd41-fa2d-43af-b56b-1edca7f716d5}</Project>
+      <Name>SScript.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
