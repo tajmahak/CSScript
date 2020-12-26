@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSScript.ShellExtension", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSScriptStand", "CSScriptStand\CSScriptStand.csproj", "{2F6C58BC-5F7E-4EA6-B673-906863106103}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SScript.Core", "SScript.Core\SScript.Core.csproj", "{286DBD41-FA2D-43AF-B56B-1EDCA7F716D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSScript.Core", "SScript.Core\CSScript.Core.csproj", "{286DBD41-FA2D-43AF-B56B-1EDCA7F716D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

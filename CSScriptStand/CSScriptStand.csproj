@@ -43,11 +43,12 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stand.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SScript.Core\SScript.Core.csproj">
+    <ProjectReference Include="..\SScript.Core\CSScript.Core.csproj">
       <Project>{286dbd41-fa2d-43af-b56b-1edca7f716d5}</Project>
-      <Name>SScript.Core</Name>
+      <Name>CSScript.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

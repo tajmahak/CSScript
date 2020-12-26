@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SScript.Core
+namespace CSScript.Core
 {
     /// <summary>
     /// Представляет информационное сообщение.

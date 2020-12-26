@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{286DBD41-FA2D-43AF-B56B-1EDCA7F716D5}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>SScript.Core</RootNamespace>
-    <AssemblyName>SScript.Core</AssemblyName>
+    <RootNamespace>CSScript.Core</RootNamespace>
+    <AssemblyName>CSScript.Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -44,11 +44,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IScriptEnvironment.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MessageManager.cs" />
+    <Compile Include="ProcessManager.cs" />
+    <Compile Include="ProgramScriptEnvironment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScriptContainer.cs" />
     <Compile Include="ScriptHandler.cs" />
-    <Compile Include="ScriptHandlerConfig.cs" />
+    <Compile Include="MessageColorScheme.cs" />
+    <Compile Include="ScriptContent.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

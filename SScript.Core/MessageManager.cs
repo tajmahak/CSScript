@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 
-namespace SScript.Core
+namespace CSScript.Core
 {
     /// <summary>
     /// Представляет средство для работы с информационными сообщениями.
@@ -17,7 +17,7 @@ namespace SScript.Core
         private readonly List<Message> messageList = new List<Message>();
 
 
-        public MessageManager()
+        internal MessageManager()
         {
         }
 
@@ -31,7 +31,7 @@ namespace SScript.Core
             if (value != null) {
                 string text = value.ToString();
                 if (!string.IsNullOrEmpty(text)) {
-                    foreColor = foreColor ?? ColorScheme.ForeColor;
+                    foreColor = foreColor ?? ColorScheme.Fore;
                     Message message = new Message(text, DateTime.Now, foreColor.Value);
                     lock (messageList) {
                         messageList.Add(message);
@@ -58,8 +58,8 @@ namespace SScript.Core
                 ConsoleColor? color = null;
                 string[] line = ParseHelpInfoLine(lines[i]);
                 switch (line[0]) {
-                    case "c": color = ColorScheme.CaptionColor; break;
-                    case "i": color = ColorScheme.InfoColor; break;
+                    case "c": color = ColorScheme.Caption; break;
+                    case "i": color = ColorScheme.Info; break;
                 }
                 WriteLine(line[1], color);
             }
@@ -67,16 +67,16 @@ namespace SScript.Core
 
         public void WriteStartInfo(string scriptPath)
         {
-            WriteLine($"## {scriptPath}", ColorScheme.InfoColor);
-            WriteLine($"## {DateTime.Now}", ColorScheme.InfoColor);
+            WriteLine($"## {scriptPath}", ColorScheme.Info);
+            WriteLine($"## {DateTime.Now}", ColorScheme.Info);
             WriteLine();
         }
 
         public void WriteException(Exception ex)
         {
-            WriteLine($"# Ошибка: {ex.Message}", ColorScheme.ErrorColor);
+            WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
-                WriteLine("#" + stackTraceLine, ColorScheme.StackTraceColor);
+                WriteLine("#" + stackTraceLine, ColorScheme.StackTrace);
             }
 
             if (ex.InnerException != null) {
@@ -87,14 +87,14 @@ namespace SScript.Core
 
         public void WriteCompileErrors(CompilerResults compilerResults)
         {
-            WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", ColorScheme.ErrorColor);
+            WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", ColorScheme.Error);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
                 if (error.Line > 0) {
-                    WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", ColorScheme.ErrorColor);
+                    WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", ColorScheme.Error);
                 }
                 else {
-                    WriteLine($"# {errorNumber++}: {error.ErrorText}", ColorScheme.ErrorColor);
+                    WriteLine($"# {errorNumber++}: {error.ErrorText}", ColorScheme.Error);
                 }
             }
         }
@@ -115,14 +115,14 @@ namespace SScript.Core
 
                 Write(lineNumber.ToString().PadLeft(4) + ": ");
                 if (errorLines.Contains(lineNumber)) {
-                    WriteLine(line, ColorScheme.ErrorColor);
+                    WriteLine(line, ColorScheme.Error);
                 }
                 else {
                     if (line.TrimStart().StartsWith("//")) {
-                        WriteLine(line, ColorScheme.CommentColor);
+                        WriteLine(line, ColorScheme.Comment);
                     }
                     else {
-                        WriteLine(line, ColorScheme.SourceCodeColor);
+                        WriteLine(line, ColorScheme.SourceCode);
                     }
                 }
             }
@@ -131,7 +131,7 @@ namespace SScript.Core
         public void WriteExitCode(int exitCode)
         {
             WriteLine();
-            WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.InfoColor);
+            WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.Info);
         }
 
         public string GetLog()
@@ -150,7 +150,7 @@ namespace SScript.Core
                     SaveLogInternal(logPath);
                 }
                 catch (Exception ex) {
-                    WriteLine($"# Не удалось сохранить лог: {ex.Message}", ColorScheme.ErrorColor);
+                    WriteLine($"# Не удалось сохранить лог: {ex.Message}", ColorScheme.Error);
                 }
             }
         }
