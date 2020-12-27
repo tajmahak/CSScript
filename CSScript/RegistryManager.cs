@@ -64,7 +64,7 @@ namespace CSScript
             key.SetValue(string.Empty, executingAssembly.Location);
 
             key = parentKey.CreateSubKey(assemblyName + "\\shell\\open\\command");
-            key.SetValue(string.Empty, $"\"{executingAssembly.Location}\" \"%1\" /a %*");
+            key.SetValue(string.Empty, $"\"{executingAssembly.Location}\" \"%1\" -a %*");
         }
 
         private static void UnregisterFileAssociation(RegistryKey parentKey) {
