@@ -28,50 +28,44 @@ namespace CSScript
                 if (arguments.IsEmpty) {
                     WriteHelpInfo();
                     Console.ReadKey();
-                }
-                else if (arguments.RegisterMode) {
+                } else if (arguments.RegisterMode) {
                     RegisterProgram();
-                }
-                else if (arguments.UnregisterMode) {
+                } else if (arguments.UnregisterMode) {
                     UnregistryProgram();
-                }
-                else {
+                } else {
                     if (arguments.HideMode) {
                         // Скрытие окна консоли во время исполнения программы
                         Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
                     }
 
                     scriptEnvironment = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
-                    scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
-                    scriptEnvironment.InputTextRequred += (sender, foreColor) => {
-                        Console.ForegroundColor = foreColor;
+                    scriptEnvironment.LogAdded += (sender, log) => Write(log.Text, log.Color);
+                    scriptEnvironment.ReadLineRequred += (sender, color) => {
+                        Console.ForegroundColor = color;
                         return arguments.HideMode ? null : Console.ReadLine();
                     };
 
                     WriteStartInfo(arguments.ScriptPath);
 
-                    ScriptInfo scriptInfo = ScriptManager.CreateScriptInfo(arguments.ScriptPath);
-                    CompilerResults compiledScript = ScriptManager.CompileScript(scriptInfo);
+                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath);
+                    CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
-                        definedAssemblies = ScriptManager.GetDefinedAssemblies(scriptInfo);
-                        ScriptContainer scriptContainer = ScriptManager.CreateScriptContainer(compiledScript, scriptEnvironment);
+                        definedAssemblies = ScriptUtils.GetDefinedAssemblies(scriptInfo);
+                        ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptEnvironment);
                         scriptContainer.Execute();
-                    }
-                    else {
+                    } else {
                         scriptEnvironment.ExitCode = 1;
                         WriteCompileErrors(compiledScript);
                         WriteLine();
-                        WriteSourceCode(ScriptManager.CreateSourceCode(scriptInfo), compiledScript);
+                        WriteSourceCode(ScriptUtils.CreateSourceCode(scriptInfo), compiledScript);
                     }
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 if (scriptEnvironment != null) {
                     scriptEnvironment.ExitCode = 1;
                 }
                 WriteException(ex);
-            }
-            finally {
+            } finally {
                 if (scriptEnvironment != null) {
                     bool autoClose = scriptEnvironment.AutoClose;
 
@@ -92,14 +86,14 @@ namespace CSScript
         }
 
 
-        private static void Write(string text, ConsoleColor? consoleColor = null) {
+        private static void Write(string text, ConsoleColor? color = null) {
             Debug.Write(text);
-            Console.ForegroundColor = consoleColor ?? ColorScheme.Fore;
+            Console.ForegroundColor = color ?? ColorScheme.Foreground;
             Console.Write(text);
         }
 
-        private static void WriteLine(string text, ConsoleColor? consoleColor = null) {
-            Write(text + Environment.NewLine, consoleColor);
+        private static void WriteLine(string text, ConsoleColor? color = null) {
+            Write(text + Environment.NewLine, color);
         }
 
         private static void WriteLine() {
@@ -111,7 +105,7 @@ namespace CSScript
         private static void WriteHelpInfo() {
             string[] lines = Resource.HelpText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++) {
-                ConsoleColor color = ColorScheme.Fore;
+                ConsoleColor color = ColorScheme.Foreground;
                 string[] line = ParseHelpInfoLine(lines[i]);
                 switch (line[0]) {
                     case "c": color = ColorScheme.Caption; break;
@@ -145,8 +139,7 @@ namespace CSScript
             foreach (CompilerError error in compilerResults.Errors) {
                 if (error.Line > 0) {
                     WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", ColorScheme.Error);
-                }
-                else {
+                } else {
                     WriteLine($"# {errorNumber++}: {error.ErrorText}", ColorScheme.Error);
                 }
             }
@@ -163,15 +156,13 @@ namespace CSScript
                 string line = lines[i];
                 int lineNumber = i + 1;
 
-                Write(lineNumber.ToString().PadLeft(4) + ": ", ColorScheme.Fore);
+                Write(lineNumber.ToString().PadLeft(4) + ": ", ColorScheme.Foreground);
                 if (errorLines.Contains(lineNumber)) {
                     WriteLine(line, ColorScheme.Error);
-                }
-                else {
+                } else {
                     if (line.TrimStart().StartsWith("//")) {
                         WriteLine(line, ColorScheme.Comment);
-                    }
-                    else {
+                    } else {
                         WriteLine(line, ColorScheme.SourceCode);
                     }
                 }
@@ -237,7 +228,7 @@ namespace CSScript
                 process.Kill();
             }
             // Запускается автоматически
-            //Process.Start("explorer.exe");
+            // Process.Start("explorer.exe");
         }
 
 
@@ -249,8 +240,7 @@ namespace CSScript
                     line.Substring(1, index - 1),
                     line.Substring(index + 1),
                 };
-            }
-            else {
+            } else {
                 return new string[] { null, line };
             }
         }

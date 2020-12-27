@@ -83,14 +83,12 @@ namespace CSScript.Core
                 string trimLine = line.TrimStart();
                 if (trimLine.Length == 0) {
                     scriptLine.IsEmpty = true;
-                }
-                else if (trimLine.StartsWith("#")) {
+                } else if (trimLine.StartsWith("#")) {
                     int index = trimLine.IndexOf(" ");
                     if (index != -1) {
                         scriptLine.OperatorName = trimLine.Substring(1, index - 1).ToLower();
                         scriptLine.OperatorValue = trimLine.Substring(index + 1).TrimEnd(';');
-                    }
-                    else {
+                    } else {
                         scriptLine.OperatorName = trimLine.Substring(1).ToLower();
                     }
                 }

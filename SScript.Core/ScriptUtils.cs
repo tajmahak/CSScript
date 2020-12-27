@@ -9,7 +9,7 @@ using System.Text;
 
 namespace CSScript.Core
 {
-    public static class ScriptManager
+    public static class ScriptUtils
     {
         private const string compiledScriptName = "CompiledScriptContainer";
         private const string compiledScriptNamespace = "CompiledScriptContainerNamespace";
@@ -39,17 +39,14 @@ namespace CSScript.Core
 
         public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptContext environment) {
             Validate.IsTrue(compilerResults.Errors.Count == 0);
-
-            string typeName = compiledScriptNamespace + "." + compiledScriptName;
-            Assembly compiledAssembly = compilerResults.CompiledAssembly;
-            object instance = compiledAssembly.CreateInstance(typeName,
+            return (ScriptContainer)compilerResults.CompiledAssembly.CreateInstance(
+                compiledScriptNamespace + "." + compiledScriptName,
                 false,
                 BindingFlags.Public | BindingFlags.Instance,
                 null,
                 new object[] { environment },
                 CultureInfo.CurrentCulture,
                 null);
-            return (ScriptContainer)instance;
         }
 
         public static string CreateSourceCode(ScriptInfo scriptInfo) {
@@ -135,8 +132,7 @@ namespace CSScript.Core
                 string defineFilePath = Utils.GetFilePath(defineItem, workingDirectory);
                 if (Utils.IsWindowsAssembly(defineFilePath)) {
                     mainScript.DefinedList.Add(defineFilePath);
-                }
-                else {
+                } else {
                     AppendScript(mainScript, defineFilePath, level + 1);
                 }
             }
@@ -154,8 +150,7 @@ namespace CSScript.Core
                 "System.dll", // библиотека для работы множества основных функций
             };
             definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
-            foreach (string definedAssemblyPath in scriptContent.DefinedList) // дополнительные библиотеки, указанные в #define
-            {
+            foreach (string definedAssemblyPath in scriptContent.DefinedList) { // дополнительные библиотеки, указанные в #define
                 definedAssemblies.Add(definedAssemblyPath);
             }
             return definedAssemblies.ToArray();

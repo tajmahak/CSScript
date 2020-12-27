@@ -4,27 +4,23 @@ using System.Diagnostics;
 namespace CSScript.Core
 {
     /// <summary>
-    /// Представляет интерфейс для взаимодействия скрипта с окружением.
+    /// Представляет интерфейс контекста для взаимодействия скрипта с окружением.
     /// </summary>
     public interface IScriptContext
     {
         string[] Args { get; }
-
+        int ExitCode { get; set; }
+        bool AutoClose { get; set; }
+        string ScriptPath { get; }
         ColorScheme ColorScheme { get; }
 
-        int ExitCode { get; set; }
+        void Write(object value, ConsoleColor? color = null);
 
-        bool AutoClose { get; set; }
-
-        string ScriptPath { get; }
-
-        void Write(object value, ConsoleColor? foreColor = null);
-
-        void WriteLine(object value, ConsoleColor? foreColor = null);
+        void WriteLine(object value, ConsoleColor? color = null);
 
         void WriteLine();
 
-        string ReadLine(ConsoleColor? foreColor = null);
+        string ReadLine(ConsoleColor? color = null);
 
         Process CreateManagedProcess();
     }

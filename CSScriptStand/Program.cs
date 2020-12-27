@@ -8,9 +8,9 @@ namespace CSScriptStand
     {
         private static void Main(string[] args) {
             ScriptContext scriptEnvironment = new ScriptContext(null, args);
-            scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
-            scriptEnvironment.InputTextRequred += (sender, foreColor) => {
-                Console.ForegroundColor = foreColor;
+            scriptEnvironment.LogAdded += (sender, message) => Write(message.Text, message.Color);
+            scriptEnvironment.ReadLineRequred += (sender, color) => {
+                Console.ForegroundColor = color;
                 return Console.ReadLine();
             };
 
@@ -19,9 +19,9 @@ namespace CSScriptStand
             Console.ReadKey();
         }
 
-        private static void Write(string text, ConsoleColor consoleColor) {
+        private static void Write(string text, ConsoleColor color) {
             Debug.Write(text);
-            Console.ForegroundColor = consoleColor;
+            Console.ForegroundColor = color;
             Console.Write(text);
         }
     }

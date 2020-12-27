@@ -17,12 +17,12 @@ namespace CSScriptStand
         }
 
 
-        #region --- СКРИПТОВЫЕ УТИЛИТЫ (версия 1.24) ---
+        #region --- СКРИПТОВЫЕ УТИЛИТЫ (версия 1.25) ---
 
         // Получение входящего аргумента по индексу
         private T GetArgument<T>(int index, T defaultValue) {
-            if (context.Args.Length > index) {
-                string value = context.Args[index];
+            if (Context.Args.Length > index) {
+                string value = Context.Args[index];
                 if (!string.IsNullOrEmpty(value)) {
                     return (T)Convert.ChangeType(value, typeof(T));
                 }
@@ -31,23 +31,40 @@ namespace CSScriptStand
         }
 
         // Вывод текста
-        private void Write(object value, ConsoleColor? foreColor = null) {
-            context.Write(value, foreColor);
+        private void Write(object value, ConsoleColor? color = null) {
+            Context.Write(value, color);
         }
 
         // Вывод текста с признаком конца строки
-        private void WriteLine(object value, ConsoleColor? foreColor = null) {
-            context.WriteLine(value, foreColor);
+        private void WriteLine(object value, ConsoleColor? color = null) {
+            Context.WriteLine(value, color);
         }
 
         // Вывод признака конца строки
         private void WriteLine() {
-            context.WriteLine();
+            Context.WriteLine();
         }
 
         // Чтение текста из входного потока
-        private string ReadLine(ConsoleColor? foreColor = null) {
-            return context.ReadLine(foreColor);
+        private string ReadLine(ConsoleColor? color = null) {
+            return Context.ReadLine(color);
+        }
+
+        // Проверка на выполнение условия, иначе Exception
+        private static void ValidateIsTrue(bool condition, string message = null) {
+            if (!condition) {
+                throw message == null ? new Exception() : new Exception(message);
+            }
+        }
+
+        // Проверка на не-null переменную, иначе Exception
+        private static void ValidateIsNotNull(object obj, string message = null) {
+            ValidateIsTrue(obj != null, message);
+        }
+
+        // Проверка на непустую строку, иначе Exception
+        private static void ValidateIsNotBlank(string value, string message = null) {
+            ValidateIsTrue(!string.IsNullOrEmpty(value), message);
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
@@ -58,7 +75,7 @@ namespace CSScriptStand
 
         // Запуск контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится) 
         private int StartManaged(string program, string args = null, bool printOutput = true, ConsoleColor? outputColor = null, Encoding encoding = null) {
-            Process process = context.CreateManagedProcess();
+            Process process = Context.CreateManagedProcess();
             return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
@@ -109,8 +126,7 @@ namespace CSScriptStand
                     File.Delete(file);
                 }
                 return files.Length;
-            }
-            else if (File.Exists(path)) {
+            } else if (File.Exists(path)) {
                 File.Delete(path);
                 return 1;
             }
@@ -127,10 +143,9 @@ namespace CSScriptStand
             foreach (string file in oldFiles) {
                 try {
                     File.Delete(file);
-                }
-                catch {
+                } catch {
                     string fileName = Path.GetFileName(file);
-                    context.WriteLine("Не удалось удалить файл '" + fileName + "'", colors.Error);
+                    Context.WriteLine("Не удалось удалить файл '" + fileName + "'", Colors.Error);
                 }
             }
         }
@@ -256,7 +271,7 @@ namespace CSScriptStand
                     __AsyncStreamReader asyncReader = new __AsyncStreamReader(process.StandardOutput.BaseStream, 1024);
                     asyncReader.DataReceived += (byte[] buffer, int count) => {
                         string text = encoding.GetString(buffer, 0, count);
-                        context.Write(text, outputColor);
+                        Context.Write(text, outputColor);
                     };
                     asyncReader.BeginRead();
                 }

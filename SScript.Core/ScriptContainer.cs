@@ -5,11 +5,11 @@
     /// </summary>
     public abstract class ScriptContainer
     {
-        public IScriptContext context { get; }
-        public ColorScheme colors => context.ColorScheme;
+        public IScriptContext Context { get; }
+        public ColorScheme Colors => Context.ColorScheme;
 
         public ScriptContainer(IScriptContext context) {
-            this.context = context;
+            Context = context;
         }
 
         public abstract void Execute();

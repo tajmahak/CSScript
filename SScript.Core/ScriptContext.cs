@@ -9,12 +9,12 @@ namespace CSScript.Core
     /// </summary>
     public class ScriptContext : IScriptContext, IDisposable
     {
+        public string ScriptPath { get; }
         public string[] Args { get; }
         public int ExitCode { get; set; }
         public bool AutoClose { get; set; }
-        public string ScriptPath { get; }
         public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
-        private readonly List<Message> messageList = new List<Message>();
+        private readonly List<LogFragment> log = new List<LogFragment>();
         private readonly List<Process> managedProcesses = new List<Process>();
 
 
@@ -24,36 +24,36 @@ namespace CSScript.Core
         }
 
 
-        public delegate void MessageAddedHandler(object sender, Message message);
-        public event MessageAddedHandler MessageAdded;
+        public delegate void LogAddedHandler(object sender, LogFragment logFragment);
+        public event LogAddedHandler LogAdded;
 
-        public delegate string InputTextHandler(object sender, ConsoleColor foreColor);
-        public event InputTextHandler InputTextRequred;
+        public delegate string ReadLineRequredHandler(object sender, ConsoleColor color);
+        public event ReadLineRequredHandler ReadLineRequred;
 
 
-        public void Write(object value, ConsoleColor? foreColor = null) {
+        public void Write(object value, ConsoleColor? color = null) {
             if (value != null) {
                 string text = value.ToString();
                 if (!string.IsNullOrEmpty(text)) {
-                    Message message = new Message(text, foreColor ?? ColorScheme.Fore);
-                    lock (messageList) {
-                        messageList.Add(message);
+                    LogFragment logFragment = new LogFragment(text, color ?? ColorScheme.Foreground);
+                    lock (log) {
+                        log.Add(logFragment);
                     }
-                    MessageAdded?.Invoke(this, message);
+                    LogAdded?.Invoke(this, logFragment);
                 }
             }
         }
 
-        public void WriteLine(object value, ConsoleColor? foreColor = null) {
-            Write(value + Environment.NewLine, foreColor);
+        public void WriteLine(object value, ConsoleColor? color = null) {
+            Write(value + Environment.NewLine, color);
         }
 
         public void WriteLine() {
             Write(Environment.NewLine);
         }
 
-        public string ReadLine(ConsoleColor? foreColor = null) {
-            return InputTextRequred.Invoke(this, foreColor ?? ColorScheme.Fore);
+        public string ReadLine(ConsoleColor? color = null) {
+            return ReadLineRequred.Invoke(this, color ?? ColorScheme.Foreground);
         }
 
         public Process CreateManagedProcess() {
@@ -70,8 +70,7 @@ namespace CSScript.Core
                 for (int i = 0; i < managedProcesses.Count; i++) {
                     try {
                         managedProcesses[i].Kill();
-                    }
-                    catch {
+                    } catch {
                     }
                 }
             }
