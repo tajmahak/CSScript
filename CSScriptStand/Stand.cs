@@ -21,8 +21,8 @@ namespace CSScriptStand
 
         // Получение входящего аргумента по индексу
         private T GetArgument<T>(int index, T defaultValue) {
-            if (env.Args.Length > index) {
-                string value = env.Args[index];
+            if (context.Args.Length > index) {
+                string value = context.Args[index];
                 if (!string.IsNullOrEmpty(value)) {
                     return (T)Convert.ChangeType(value, typeof(T));
                 }
@@ -32,22 +32,22 @@ namespace CSScriptStand
 
         // Вывод текста
         private void Write(object value, ConsoleColor? foreColor = null) {
-            env.Write(value, foreColor);
+            context.Write(value, foreColor);
         }
 
         // Вывод текста с признаком конца строки
         private void WriteLine(object value, ConsoleColor? foreColor = null) {
-            env.WriteLine(value, foreColor);
+            context.WriteLine(value, foreColor);
         }
 
         // Вывод признака конца строки
         private void WriteLine() {
-            env.WriteLine();
+            context.WriteLine();
         }
 
         // Чтение текста из входного потока
         private string ReadLine(ConsoleColor? foreColor = null) {
-            return env.ReadLine(foreColor);
+            return context.ReadLine(foreColor);
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
@@ -58,7 +58,7 @@ namespace CSScriptStand
 
         // Запуск контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится) 
         private int StartManaged(string program, string args = null, bool printOutput = true, ConsoleColor? outputColor = null, Encoding encoding = null) {
-            Process process = env.CreateManagedProcess();
+            Process process = context.CreateManagedProcess();
             return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
@@ -130,7 +130,7 @@ namespace CSScriptStand
                 }
                 catch {
                     string fileName = Path.GetFileName(file);
-                    env.WriteLine("Не удалось удалить файл '" + fileName + "'", colors.Error);
+                    context.WriteLine("Не удалось удалить файл '" + fileName + "'", colors.Error);
                 }
             }
         }
@@ -256,7 +256,7 @@ namespace CSScriptStand
                     __AsyncStreamReader asyncReader = new __AsyncStreamReader(process.StandardOutput.BaseStream, 1024);
                     asyncReader.DataReceived += (byte[] buffer, int count) => {
                         string text = encoding.GetString(buffer, 0, count);
-                        env.Write(text, outputColor);
+                        context.Write(text, outputColor);
                     };
                     asyncReader.BeginRead();
                 }

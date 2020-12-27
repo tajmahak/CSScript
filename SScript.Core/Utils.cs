@@ -38,11 +38,5 @@ namespace CSScript.Core
                 }
             }
         }
-
-        public static string GetNamespaceName(Type type) {
-            string fullName = type.FullName;
-            int index = fullName.LastIndexOf('.');
-            return fullName.Remove(index);
-        }
     }
 }

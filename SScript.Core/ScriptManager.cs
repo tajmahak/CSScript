@@ -3,6 +3,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -40,7 +41,7 @@ namespace CSScript.Core
         public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptContext environment) {
             Validate.IsTrue(compilerResults.Errors.Count == 0);
 
-            string typeName = Utils.GetNamespaceName(typeof(ScriptContainer)) + "." + compiledScriptName;
+            string typeName = compiledScriptNamespace + "." + compiledScriptName;
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
             object instance = compiledAssembly.CreateInstance(typeName,
                 false,
@@ -60,7 +61,7 @@ namespace CSScript.Core
                 code.AppendLine("using " + usingItem + ";");
             }
             code.AppendLine();
-            code.AppendLine("namespace " + Utils.GetNamespaceName(scriptContainerType) + " {");
+            code.AppendLine("namespace " + compiledScriptNamespace + " {");
             code.AppendLine();
             code.AppendLine("public class " + compiledScriptName + " : " + scriptContainerType.FullName + " {");
 
