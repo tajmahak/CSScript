@@ -3,7 +3,6 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -117,7 +116,16 @@ namespace CSScript.Core
             return code.ToString();
         }
 
-
+        public static Dictionary<string, Assembly> GetDefinedAssemblies(ScriptInfo scriptInfo) {
+            Dictionary<string, Assembly> assemblies = new Dictionary<string, Assembly>();
+            foreach (string assemblyPath in scriptInfo.DefinedList) {
+                Assembly assembly = Assembly.LoadFrom(assemblyPath);
+                if (!assemblies.ContainsKey(assembly.FullName)) {
+                    assemblies.Add(assembly.FullName, assembly);
+                }
+            }
+            return assemblies;
+        }
 
         private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level) {
             string workingDirectory = Utils.GetDirectoryName(scriptPath);

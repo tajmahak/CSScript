@@ -2,7 +2,7 @@
 
 namespace CSScript.Core
 {
-    internal static class Validate
+    public static class Validate
     {
         public static void IsTrue(bool condition, string message = null) {
             if (!condition) {

@@ -13,8 +13,12 @@ namespace CSScript
     internal class Program
     {
         private static readonly ColorScheme ColorScheme = ColorScheme.Default;
+        private static Dictionary<string, Assembly> definedAssemblies;
+
 
         private static void Main(string[] args) {
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
             ScriptContext scriptEnvironment = null;
             bool hideMode = false;
             try {
@@ -48,15 +52,16 @@ namespace CSScript
 
                     ScriptInfo scriptInfo = ScriptManager.CreateScriptInfo(arguments.ScriptPath);
                     CompilerResults compiledScript = ScriptManager.CompileScript(scriptInfo);
-                    if (compiledScript.Errors.Count > 0) {
+                    if (compiledScript.Errors.Count == 0) {
+                        definedAssemblies = ScriptManager.GetDefinedAssemblies(scriptInfo);
+                        ScriptContainer scriptContainer = ScriptManager.CreateScriptContainer(compiledScript, scriptEnvironment);
+                        scriptContainer.Execute();
+                    }
+                    else {
                         scriptEnvironment.ExitCode = 1;
                         WriteCompileErrors(compiledScript);
                         WriteLine();
                         WriteSourceCode(ScriptManager.CreateSourceCode(scriptInfo), compiledScript);
-                    }
-                    else {
-                        ScriptContainer scriptContainer = ScriptManager.CreateScriptContainer(compiledScript, scriptEnvironment);
-                        scriptContainer.Execute();
                     }
                 }
             }
@@ -79,6 +84,11 @@ namespace CSScript
                     }
                 }
             }
+        }
+
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            definedAssemblies.TryGetValue(args.Name, out Assembly assembly);
+            return assembly;
         }
 
 
@@ -174,50 +184,42 @@ namespace CSScript
 
 
         private static void RegisterProgram() {
-            if (HasAdministativePrivilegies()) {
-                WriteLine("Регистрация программы в реестре...");
+            Validate.IsTrue(HasAdministativePrivilegies(), "Для работы с реестром необходимы права администратора.");
 
-                RegistryManager.RegisterFileAssociation();
+            WriteLine("Регистрация программы в реестре...");
+            RegistryManager.RegisterFileAssociation();
 
-                string executingPath = Assembly.GetExecutingAssembly().Location;
-                string path = Path.GetDirectoryName(executingPath);
-                string shellExtensionAssemblyPath = Path.Combine(path, "CSScript.ShellExtension.dll");
+            string executingPath = Assembly.GetExecutingAssembly().Location;
+            string path = Path.GetDirectoryName(executingPath);
+            string shellExtensionAssemblyPath = Path.Combine(path, "CSScript.ShellExtension.dll");
 
-                if (File.Exists(shellExtensionAssemblyPath)) {
-                    WriteLine("Регистрация расширения оболочки...");
-                    Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
-                    RegistryManager.RegisterShellExtension(shellExtensionAssembly);
-                }
-                WriteLine("Перезапуск 'Проводник'...");
-                RestartWindowsExplorer();
-
-                WriteLine("Успешно", ColorScheme.Success);
+            if (File.Exists(shellExtensionAssemblyPath)) {
+                WriteLine("Регистрация расширения оболочки...");
+                Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
+                RegistryManager.RegisterShellExtension(shellExtensionAssembly);
             }
-            else {
-                throw new Exception("Для работы с реестром необходимы права администратора.");
-            }
+            WriteLine("Перезапуск 'Проводник'...");
+            RestartWindowsExplorer();
+
+            WriteLine("Успешно", ColorScheme.Success);
         }
 
         private static void UnregistryProgram() {
-            if (HasAdministativePrivilegies()) {
-                WriteLine("Удаление регистрации программы в реестре...");
+            Validate.IsTrue(HasAdministativePrivilegies(), "Для работы с реестром необходимы права администратора.");
 
-                RegistryManager.UnregisterFileAssociation();
+            WriteLine("Удаление регистрации программы в реестре...");
+            RegistryManager.UnregisterFileAssociation();
 
-                string shellExtensionAssemblyPath = "CSScript.ShellExtension.dll";
-                if (File.Exists(shellExtensionAssemblyPath)) {
-                    WriteLine("Удаление регистрации расширения оболочки...");
-                    Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
-                    RegistryManager.UnregisterShellExtension(shellExtensionAssembly);
-                }
-                WriteLine("Перезапуск 'Проводник'...");
-                RestartWindowsExplorer();
-
-                WriteLine("Успешно", ColorScheme.Success);
+            string shellExtensionAssemblyPath = "CSScript.ShellExtension.dll";
+            if (File.Exists(shellExtensionAssemblyPath)) {
+                WriteLine("Удаление регистрации расширения оболочки...");
+                Assembly shellExtensionAssembly = Assembly.LoadFrom(shellExtensionAssemblyPath);
+                RegistryManager.UnregisterShellExtension(shellExtensionAssembly);
             }
-            else {
-                throw new Exception("Для работы с реестром необходимы права администратора.");
-            }
+            WriteLine("Перезапуск 'Проводник'...");
+            RestartWindowsExplorer();
+
+            WriteLine("Успешно", ColorScheme.Success);
         }
 
         private static bool HasAdministativePrivilegies() {
