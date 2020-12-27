@@ -12,6 +12,6 @@
             Context = context;
         }
 
-        public abstract void Execute();
+        public abstract void Start();
     }
 }

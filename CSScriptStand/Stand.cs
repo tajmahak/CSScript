@@ -12,12 +12,13 @@ namespace CSScriptStand
     {
         public Stand(IScriptContext env) : base(env) { }
 
-        public override void Execute() {
+        public override void Start() {
+
 
         }
 
 
-        #region --- СКРИПТОВЫЕ УТИЛИТЫ (версия 1.25) ---
+        #region --- СКРИПТОВЫЕ УТИЛИТЫ (версия 1.26) ---
 
         // Получение входящего аргумента по индексу
         private T GetArgument<T>(int index, T defaultValue) {
@@ -250,9 +251,7 @@ namespace CSScriptStand
         }
 
         private int __StartProcess(Process process, string program, string args, bool printOutput, ConsoleColor? outputColor, Encoding encoding) {
-            if (encoding == null) {
-                encoding = Encoding.Default;
-            }
+            encoding = encoding ?? Encoding.GetEncoding(866);
 
             CheckFileExists(program, false);
             using (process) {
@@ -261,50 +260,21 @@ namespace CSScriptStand
                 startInfo.Arguments = args;
                 startInfo.CreateNoWindow = true;
                 startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
                 if (printOutput) {
                     startInfo.UseShellExecute = false; // в некоторых случаях выполнение при значении 'true' невозможно (например команда 'mode')
                     startInfo.RedirectStandardOutput = true; // перенаправление ввода/вывода невозможно без включенной опции 'UseShellExecute'
+                    startInfo.RedirectStandardError = true;
                 }
 
                 process.Start();
-                if (printOutput) {
-                    __AsyncStreamReader asyncReader = new __AsyncStreamReader(process.StandardOutput.BaseStream, 1024);
-                    asyncReader.DataReceived += (byte[] buffer, int count) => {
-                        string text = encoding.GetString(buffer, 0, count);
-                        Context.Write(text, outputColor);
-                    };
-                    asyncReader.BeginRead();
-                }
                 process.WaitForExit();
-                return process.ExitCode;
-            }
-        }
 
-
-        private class __AsyncStreamReader
-        {
-            private readonly Stream stream;
-            private readonly byte[] buffer;
-            public __AsyncStreamReader(Stream stream, int bufferSize) {
-                this.stream = stream;
-                buffer = new byte[bufferSize];
-            }
-
-            public delegate void DataReceivedHandler(byte[] buffer, int count);
-            public event DataReceivedHandler DataReceived;
-
-            public void BeginRead() {
-                stream.BeginRead(buffer, 0, buffer.Length, AsyncCallback, null);
-            }
-
-            private void AsyncCallback(IAsyncResult ar) {
-                int count = stream.EndRead(ar);
-                if (count > 0) {
-                    if (DataReceived != null) {
-                        DataReceived.Invoke(buffer, count);
-                    }
-                    stream.BeginRead(buffer, 0, buffer.Length, AsyncCallback, null);
+                if (printOutput) {
+                    WriteLine(new StreamReader(process.StandardOutput.BaseStream, encoding).ReadToEnd(), outputColor);
+                    WriteLine(new StreamReader(process.StandardError.BaseStream, encoding).ReadToEnd(), outputColor);
                 }
+                return process.ExitCode;
             }
         }
 

@@ -7,23 +7,26 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Security.Principal;
+using System.Threading;
 
 namespace CSScript
 {
     internal class Program
     {
+        private static ScriptContext scriptContext;
         private static readonly ColorScheme ColorScheme = ColorScheme.Default;
         private static Dictionary<string, Assembly> definedAssemblies;
+        private static Thread scriptThread;
+        private static volatile bool scriptThreadAborted;
 
 
         private static void Main(string[] args) {
+            Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
-            ScriptContext scriptEnvironment = null;
-            bool hideMode = false;
+            InputArguments arguments = null;
             try {
-                InputArguments arguments = InputArguments.FromProgramArgs(args);
-                hideMode = arguments.HideMode;
+                arguments = InputArguments.FromProgramArgs(args);
 
                 if (arguments.IsEmpty) {
                     WriteHelpInfo();
@@ -38,9 +41,9 @@ namespace CSScript
                         Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
                     }
 
-                    scriptEnvironment = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
-                    scriptEnvironment.LogAdded += (sender, log) => Write(log.Text, log.Color);
-                    scriptEnvironment.ReadLineRequred += (sender, color) => {
+                    scriptContext = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
+                    scriptContext.LogAdded += (sender, log) => Write(log.Text, log.Color);
+                    scriptContext.ReadLineRequred += (sender, color) => {
                         Console.ForegroundColor = color;
                         return arguments.HideMode ? null : Console.ReadLine();
                     };
@@ -50,35 +53,51 @@ namespace CSScript
                     ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath);
                     CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
+                        Environment.CurrentDirectory = Utils.GetDirectoryName(scriptInfo.ScriptPath);
                         definedAssemblies = ScriptUtils.GetDefinedAssemblies(scriptInfo);
-                        ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptEnvironment);
-                        scriptContainer.Execute();
+                        ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptContext);
+
+                        scriptThread = new Thread(scriptContainer.Start) {
+                            IsBackground = true
+                        };
+                        scriptThread.Start();
+                        scriptThread.Join();
+
                     } else {
-                        scriptEnvironment.ExitCode = 1;
+                        scriptContext.ExitCode = 1;
                         WriteCompileErrors(compiledScript);
                         WriteLine();
                         WriteSourceCode(ScriptUtils.CreateSourceCode(scriptInfo), compiledScript);
                     }
                 }
             } catch (Exception ex) {
-                if (scriptEnvironment != null) {
-                    scriptEnvironment.ExitCode = 1;
+                if (scriptContext != null) {
+                    scriptContext.ExitCode = 1;
                 }
                 WriteException(ex);
             } finally {
-                if (scriptEnvironment != null) {
-                    bool autoClose = scriptEnvironment.AutoClose;
+                if (scriptContext != null) {
+                    bool autoClose = scriptContext.AutoClose;
+                    scriptContext.Dispose();
 
                     WriteLine();
-                    WriteExitCode(scriptEnvironment.ExitCode);
-                    scriptEnvironment.Dispose();
-
-                    if (!hideMode && !autoClose) {
+                    if (!scriptThreadAborted) {
+                        WriteExitCode(scriptContext.ExitCode);
+                    } else {
+                        WriteAbort();
+                    }
+                    if (!arguments.HideMode && !autoClose || scriptThreadAborted) {
                         Console.ReadKey();
                     }
                 }
                 Console.ForegroundColor = ConsoleColor.White; // восстановление цвета консоли
             }
+        }
+
+        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
+            e.Cancel = true;
+            scriptThreadAborted = true;
+            scriptThread.Abort();
         }
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
@@ -171,9 +190,13 @@ namespace CSScript
         }
 
         private static void WriteExitCode(int exitCode) {
-            WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.Info);
+            ConsoleColor color = exitCode == 0 ? ColorScheme.Success : ColorScheme.Error;
+            WriteLine($"# Выполнено ({exitCode})", color);
         }
 
+        private static void WriteAbort() {
+            WriteLine($"# Прервано", ColorScheme.Error);
+        }
 
         private static void RegisterProgram() {
             Validate.IsTrue(HasAdministativePrivilegies(), "Для работы с реестром необходимы права администратора.");

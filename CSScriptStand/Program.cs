@@ -7,6 +7,7 @@ namespace CSScriptStand
     internal class Program
     {
         private static void Main(string[] args) {
+
             ScriptContext scriptEnvironment = new ScriptContext(null, args);
             scriptEnvironment.LogAdded += (sender, message) => Write(message.Text, message.Color);
             scriptEnvironment.ReadLineRequred += (sender, color) => {
@@ -15,8 +16,13 @@ namespace CSScriptStand
             };
 
             ScriptContainer scriptContainer = new Stand(scriptEnvironment);
-            scriptContainer.Execute();
-            Console.ReadKey();
+            scriptContainer.Start();
+
+            if (!scriptEnvironment.AutoClose) {
+                scriptEnvironment.WriteLine();
+                scriptEnvironment.WriteLine("# Выполнено (" + scriptEnvironment.ExitCode + ")");
+                Console.ReadKey();
+            }
         }
 
         private static void Write(string text, ConsoleColor color) {
