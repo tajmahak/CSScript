@@ -77,6 +77,7 @@ namespace CSScript
                         Console.ReadKey();
                     }
                 }
+                Console.ForegroundColor = ConsoleColor.White; // восстановление цвета консоли
             }
         }
 
