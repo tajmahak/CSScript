@@ -76,6 +76,7 @@
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
     <Compile Include="RegistryManager.cs" />
+    <Compile Include="ScriptRuntimeException.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SScript.Core\CSScript.Core.csproj">

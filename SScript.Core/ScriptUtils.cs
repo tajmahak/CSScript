@@ -37,9 +37,9 @@ namespace CSScript.Core
             }
         }
 
-        public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptContext environment) {
-            Validate.IsTrue(compilerResults.Errors.Count == 0);
-            return (ScriptContainer)compilerResults.CompiledAssembly.CreateInstance(
+        public static ScriptContainer CreateScriptContainer(CompilerResults compiledScript, IScriptContext environment) {
+            Validate.IsTrue(compiledScript.Errors.Count == 0);
+            return (ScriptContainer)compiledScript.CompiledAssembly.CreateInstance(
                 compiledScriptNamespace + "." + compiledScriptName,
                 false,
                 BindingFlags.Public | BindingFlags.Instance,

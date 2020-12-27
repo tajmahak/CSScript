@@ -19,7 +19,6 @@ namespace CSScript
         private Thread scriptThread;
         private volatile bool scriptThreadAborted;
 
-
         private static void Main(string[] args) {
             new Program().Start(args);
         }
@@ -45,28 +44,35 @@ namespace CSScript
                         // Скрытие окна консоли во время исполнения программы
                         Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
                     }
+                    WriteStartInfo(arguments.ScriptPath);
 
                     scriptContext = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
-                    scriptContext.LogAdded += (sender, log) => Write(log.Text, log.Color);
+                    scriptContext.LogFragmentAdded += (sender, log) => Write(log.Text, log.Color);
                     scriptContext.ReadLineRequred += (sender, color) => {
                         Console.ForegroundColor = color;
                         return arguments.HideMode ? null : Console.ReadLine();
                     };
 
-                    WriteStartInfo(arguments.ScriptPath);
+                    // Для использования в скрипте относительных путей к файлам
+                    Environment.CurrentDirectory = Utils.GetDirectoryName(arguments.ScriptPath);
 
                     ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath);
                     CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
-                        Environment.CurrentDirectory = Utils.GetDirectoryName(scriptInfo.ScriptPath);
                         definedAssemblies = ScriptUtils.GetDefinedAssemblies(scriptInfo);
-                        ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptContext);
 
-                        scriptThread = new Thread(scriptContainer.Start) {
+                        ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptContext);
+                        Exception scriptException = null;
+                        scriptThread = new Thread(() => {
+                            try { scriptContainer.Start(); } catch (Exception ex) { scriptException = ex; }
+                        }) {
                             IsBackground = true
                         };
                         scriptThread.Start();
                         scriptThread.Join();
+                        if (scriptException != null) {
+                            throw new ScriptRuntimeException(scriptException);
+                        }
 
                     } else {
                         scriptContext.ExitCode = 1;
@@ -75,11 +81,13 @@ namespace CSScript
                         WriteSourceCode(ScriptUtils.CreateSourceCode(scriptInfo), compiledScript);
                     }
                 }
+
             } catch (Exception ex) {
                 if (scriptContext != null) {
                     scriptContext.ExitCode = 1;
                 }
                 WriteException(ex);
+
             } finally {
                 if (scriptContext != null) {
                     bool autoClose = scriptContext.AutoClose;
@@ -94,6 +102,7 @@ namespace CSScript
                     if (!arguments.HideMode && !autoClose || scriptThreadAborted) {
                         Console.ReadKey();
                     }
+                    Environment.ExitCode = scriptContext.ExitCode;
                 }
                 Console.ForegroundColor = ConsoleColor.White; // восстановление цвета консоли
             }
@@ -147,6 +156,10 @@ namespace CSScript
         }
 
         private void WriteException(Exception ex) {
+            if (ex is ScriptRuntimeException) {
+                ex = ex.InnerException; // для корректного отображения StackTrace
+            }
+
             WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
                 WriteLine("#" + stackTraceLine, ColorScheme.StackTrace);

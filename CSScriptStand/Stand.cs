@@ -14,7 +14,6 @@ namespace CSScriptStand
 
         public override void Start() {
 
-
         }
 
 

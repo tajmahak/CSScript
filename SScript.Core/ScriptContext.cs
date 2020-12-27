@@ -24,8 +24,8 @@ namespace CSScript.Core
         }
 
 
-        public delegate void LogAddedHandler(object sender, LogFragment logFragment);
-        public event LogAddedHandler LogAdded;
+        public delegate void LogFragmentAddedHandler(object sender, LogFragment logFragment);
+        public event LogFragmentAddedHandler LogFragmentAdded;
 
         public delegate string ReadLineRequredHandler(object sender, ConsoleColor color);
         public event ReadLineRequredHandler ReadLineRequred;
@@ -39,7 +39,7 @@ namespace CSScript.Core
                     lock (log) {
                         log.Add(logFragment);
                     }
-                    LogAdded?.Invoke(this, logFragment);
+                    LogFragmentAdded?.Invoke(this, logFragment);
                 }
             }
         }

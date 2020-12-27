@@ -147,7 +147,7 @@
   .WriteLine([value: object], [color: ConsoleColor]): void    - вывод сообщения в лог с переносом на следующую строку;
   .ReadLine([caption: string], [color: ConsoleColor]): string - чтение текста из входного потока;
   .CreateManagedProcess(): Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
- Colors: ColorScheme - получает цвета для использования в консоли (аналог context.ColorScheme);
+ Colors: ColorScheme - получает цвета для использования в консоли (аналог Context.ColorScheme);
 
 `c`Пример скрипта:
  PrintHelloWorld();
