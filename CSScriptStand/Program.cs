@@ -7,7 +7,6 @@ namespace CSScriptStand
     internal class Program
     {
         private static void Main(string[] args) {
-
             ScriptContext scriptEnvironment = new ScriptContext(null, args);
             scriptEnvironment.LogAdded += (sender, message) => Write(message.Text, message.Color);
             scriptEnvironment.ReadLineRequred += (sender, color) => {

@@ -13,14 +13,19 @@ namespace CSScript
 {
     internal class Program
     {
-        private static ScriptContext scriptContext;
-        private static readonly ColorScheme ColorScheme = ColorScheme.Default;
-        private static Dictionary<string, Assembly> definedAssemblies;
-        private static Thread scriptThread;
-        private static volatile bool scriptThreadAborted;
+        private ScriptContext scriptContext;
+        private readonly ColorScheme ColorScheme = ColorScheme.Default;
+        private Dictionary<string, Assembly> definedAssemblies;
+        private Thread scriptThread;
+        private volatile bool scriptThreadAborted;
 
 
         private static void Main(string[] args) {
+            new Program().Start(args);
+        }
+
+
+        private void Start(string[] args) {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
@@ -94,35 +99,35 @@ namespace CSScript
             }
         }
 
-        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
+        private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
             e.Cancel = true;
             scriptThreadAborted = true;
-            scriptThread.Abort();
+            scriptThread?.Abort();
         }
 
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
             definedAssemblies.TryGetValue(args.Name, out Assembly assembly);
             return assembly;
         }
 
 
-        private static void Write(string text, ConsoleColor? color = null) {
+        private void Write(string text, ConsoleColor? color = null) {
             Debug.Write(text);
             Console.ForegroundColor = color ?? ColorScheme.Foreground;
             Console.Write(text);
         }
 
-        private static void WriteLine(string text, ConsoleColor? color = null) {
+        private void WriteLine(string text, ConsoleColor? color = null) {
             Write(text + Environment.NewLine, color);
         }
 
-        private static void WriteLine() {
+        private void WriteLine() {
             Debug.WriteLine(null);
             Console.WriteLine();
         }
 
 
-        private static void WriteHelpInfo() {
+        private void WriteHelpInfo() {
             string[] lines = Resource.HelpText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++) {
                 ConsoleColor color = ColorScheme.Foreground;
@@ -135,13 +140,13 @@ namespace CSScript
             }
         }
 
-        private static void WriteStartInfo(string scriptPath) {
+        private void WriteStartInfo(string scriptPath) {
             WriteLine($"## {scriptPath}", ColorScheme.Info);
             WriteLine($"## {DateTime.Now}", ColorScheme.Info);
             WriteLine();
         }
 
-        private static void WriteException(Exception ex) {
+        private void WriteException(Exception ex) {
             WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
                 WriteLine("#" + stackTraceLine, ColorScheme.StackTrace);
@@ -153,7 +158,7 @@ namespace CSScript
             }
         }
 
-        private static void WriteCompileErrors(CompilerResults compilerResults) {
+        private void WriteCompileErrors(CompilerResults compilerResults) {
             WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", ColorScheme.Error);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
@@ -165,7 +170,7 @@ namespace CSScript
             }
         }
 
-        private static void WriteSourceCode(string sourceCode, CompilerResults compiledScript) {
+        private void WriteSourceCode(string sourceCode, CompilerResults compiledScript) {
             HashSet<int> errorLines = new HashSet<int>();
             foreach (CompilerError error in compiledScript.Errors) {
                 errorLines.Add(error.Line);
@@ -189,16 +194,16 @@ namespace CSScript
             }
         }
 
-        private static void WriteExitCode(int exitCode) {
+        private void WriteExitCode(int exitCode) {
             ConsoleColor color = exitCode == 0 ? ColorScheme.Success : ColorScheme.Error;
             WriteLine($"# Выполнено ({exitCode})", color);
         }
 
-        private static void WriteAbort() {
+        private void WriteAbort() {
             WriteLine($"# Прервано", ColorScheme.Error);
         }
 
-        private static void RegisterProgram() {
+        private void RegisterProgram() {
             Validate.IsTrue(HasAdministativePrivilegies(), "Для работы с реестром необходимы права администратора.");
 
             WriteLine("Регистрация программы в реестре...");
@@ -219,7 +224,7 @@ namespace CSScript
             WriteLine("Успешно", ColorScheme.Success);
         }
 
-        private static void UnregistryProgram() {
+        private void UnregistryProgram() {
             Validate.IsTrue(HasAdministativePrivilegies(), "Для работы с реестром необходимы права администратора.");
 
             WriteLine("Удаление регистрации программы в реестре...");
@@ -237,7 +242,7 @@ namespace CSScript
             WriteLine("Успешно", ColorScheme.Success);
         }
 
-        private static bool HasAdministativePrivilegies() {
+        private bool HasAdministativePrivilegies() {
             bool isElevated;
             using (WindowsIdentity identity = WindowsIdentity.GetCurrent()) {
                 WindowsPrincipal principal = new WindowsPrincipal(identity);
@@ -246,7 +251,7 @@ namespace CSScript
             return isElevated;
         }
 
-        private static void RestartWindowsExplorer() {
+        private void RestartWindowsExplorer() {
             Process[] explorer = Process.GetProcessesByName("explorer");
             foreach (Process process in explorer) {
                 process.Kill();
@@ -256,7 +261,7 @@ namespace CSScript
         }
 
 
-        private static string[] ParseHelpInfoLine(string line) {
+        private string[] ParseHelpInfoLine(string line) {
             if (line.StartsWith("`")) {
                 int index = line.IndexOf("`", 1);
                 return new string[]
