@@ -8,15 +8,10 @@ namespace CSScript.Core
     internal static class Utils
     {
         public static string GetFilePath(string filePath, string workingDirectory) {
-            if (Path.IsPathRooted(filePath)) {
-                return filePath;
-            }
-            else {
-                return Path.Combine(workingDirectory, filePath);
-            }
+            return Path.IsPathRooted(filePath) ? filePath : Path.Combine(workingDirectory, filePath);
         }
 
-        public static string GetDirectory(string filePath) {
+        public static string GetDirectoryName(string filePath) {
             string path = Path.GetFullPath(filePath);
             return Path.GetDirectoryName(path);
         }

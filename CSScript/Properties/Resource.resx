@@ -145,7 +145,7 @@
   .ScriptPath: string - получает абсолютный путь к исполняемому скрипту;
   .Write(value: object, [foreColor: ConsoleColor]): void       - вывод сообщения в лог;
   .WriteLine([value: object], [foreColor: ConsoleColor]): void - вывод сообщения в лог с переносом на следующую строку;
-  .GetInputText([caption: string], [foreColor: ConsoleColor]): string - чтение текста из входного потока;
+  .ReadLine([caption: string], [foreColor: ConsoleColor]): string - чтение текста из входного потока;
   .CreateManagedProcess(): Process - создание контролируемого процесса (принудительное завершение вместе с аварийным сбоем в работе скрипта);
  colors: ColorScheme - получает цвета для использования в консоли;
 

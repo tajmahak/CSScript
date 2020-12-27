@@ -31,18 +31,6 @@ namespace CSScript.Core
         public event InputTextHandler InputTextRequred;
 
 
-        public Process CreateManagedProcess() {
-            Process process = new Process();
-            lock (managedProcesses) {
-                managedProcesses.Add(process);
-            }
-            return process;
-        }
-
-        public string GetInputText(ConsoleColor? foreColor = null) {
-            return InputTextRequred.Invoke(this, foreColor ?? ColorScheme.Fore);
-        }
-
         public void Write(object value, ConsoleColor? foreColor = null) {
             if (value != null) {
                 string text = value.ToString();
@@ -62,6 +50,18 @@ namespace CSScript.Core
 
         public void WriteLine() {
             Write(Environment.NewLine);
+        }
+
+        public string ReadLine(ConsoleColor? foreColor = null) {
+            return InputTextRequred.Invoke(this, foreColor ?? ColorScheme.Fore);
+        }
+
+        public Process CreateManagedProcess() {
+            Process process = new Process();
+            lock (managedProcesses) {
+                managedProcesses.Add(process);
+            }
+            return process;
         }
 
         public void Dispose() {

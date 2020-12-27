@@ -12,6 +12,7 @@ namespace CSScript.Core
     public static class ScriptManager
     {
         private const string compiledScriptName = "CompiledScriptContainer";
+        private const string compiledScriptNamespace = "CompiledScriptContainerNamespace";
 
 
         public static ScriptInfo CreateScriptInfo(string scriptPath) {
@@ -37,9 +38,7 @@ namespace CSScript.Core
         }
 
         public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptContext environment) {
-            if (compilerResults.Errors.Count > 0) {
-                throw new Exception();
-            }
+            Validate.IsTrue(compilerResults.Errors.Count == 0);
 
             string typeName = Utils.GetNamespaceName(typeof(ScriptContainer)) + "." + compiledScriptName;
             Assembly compiledAssembly = compilerResults.CompiledAssembly;
@@ -67,51 +66,44 @@ namespace CSScript.Core
 
             // Создание конструктора
             ConstructorInfo[] consructors = scriptContainerType.GetConstructors();
-            if (consructors.Length == 1) {
-                code.AppendLine();
-                code.Append("public " + compiledScriptName + "(");
-                ConstructorInfo constructor = consructors[0];
-                ParameterInfo[] constructorParams = constructor.GetParameters();
+            Validate.IsTrue(consructors.Length == 1);
+            code.AppendLine();
+            code.Append("public " + compiledScriptName + "(");
+            ConstructorInfo constructor = consructors[0];
+            ParameterInfo[] constructorParams = constructor.GetParameters();
 
-                List<string> stringList = new List<string>(constructorParams.Length);
-                foreach (ParameterInfo constructorParam in constructorParams) {
-                    stringList.Add(constructorParam.ParameterType.FullName + " " + constructorParam.Name);
-                }
-                code.Append(string.Join(", ", stringList));
+            List<string> stringList = new List<string>(constructorParams.Length);
+            foreach (ParameterInfo constructorParam in constructorParams) {
+                stringList.Add(constructorParam.ParameterType.FullName + " " + constructorParam.Name);
+            }
+            code.Append(string.Join(", ", stringList));
 
-                stringList.Clear();
-                foreach (ParameterInfo constructorParam in constructorParams) {
-                    stringList.Add(constructorParam.Name);
-                }
-                code.Append(") : base(" + string.Join(", ", stringList) + ") { }");
-                code.AppendLine();
+            stringList.Clear();
+            foreach (ParameterInfo constructorParam in constructorParams) {
+                stringList.Add(constructorParam.Name);
             }
-            else {
-                throw new NotSupportedException();
-            }
+            code.Append(") : base(" + string.Join(", ", stringList) + ") { }");
+            code.AppendLine();
+
 
             // Переопределение метода
             MethodInfo[] abstractMethods = scriptContainerType.GetMethods()
                 .Where(x => x.IsAbstract && x.ReturnType == typeof(void))
                 .ToArray();
-            if (abstractMethods.Length == 1) {
-                MethodInfo abstractMethod = abstractMethods[0];
-                code.AppendLine();
-                code.Append("public override void " + abstractMethod.Name + "(");
+            Validate.IsTrue(abstractMethods.Length == 1);
+            MethodInfo abstractMethod = abstractMethods[0];
+            code.AppendLine();
+            code.Append("public override void " + abstractMethod.Name + "(");
 
-                ParameterInfo[] abstractMethodParams = abstractMethod.GetParameters();
-                List<string> stringList = new List<string>(abstractMethodParams.Length);
-                foreach (ParameterInfo abstractMethodParam in abstractMethodParams) {
-                    stringList.Add(abstractMethodParam.ParameterType.FullName + " " + abstractMethodParam.Name);
-                }
-                code.Append(string.Join(", ", stringList) + ") {");
-                code.AppendLine();
-                code.AppendLine(scriptInfo.ProcedureBlock.ToString());
-                code.AppendLine("}");
+            ParameterInfo[] abstractMethodParams = abstractMethod.GetParameters();
+            stringList.Clear();
+            foreach (ParameterInfo abstractMethodParam in abstractMethodParams) {
+                stringList.Add(abstractMethodParam.ParameterType.FullName + " " + abstractMethodParam.Name);
             }
-            else {
-                throw new NotSupportedException();
-            }
+            code.Append(string.Join(", ", stringList) + ") {");
+            code.AppendLine();
+            code.AppendLine(scriptInfo.ProcedureBlock.ToString());
+            code.AppendLine("}");
 
             code.AppendLine();
             code.AppendLine(scriptInfo.ClassBlock.ToString());
@@ -127,7 +119,7 @@ namespace CSScript.Core
 
 
         private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level) {
-            string workingDirectory = Utils.GetDirectory(scriptPath);
+            string workingDirectory = Utils.GetDirectoryName(scriptPath);
 
             ScriptInfo script = Utils.LoadScriptInfo(scriptPath);
             foreach (string defineItem in script.DefinedList) {

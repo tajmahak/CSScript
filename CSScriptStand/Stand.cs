@@ -47,7 +47,7 @@ namespace CSScriptStand
 
         // Чтение текста из входного потока
         private string ReadLine(ConsoleColor? foreColor = null) {
-            return env.GetInputText(foreColor);
+            return env.ReadLine(foreColor);
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)

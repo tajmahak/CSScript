@@ -24,7 +24,7 @@ namespace CSScript.Core
 
         void WriteLine();
 
-        string GetInputText(ConsoleColor? foreColor = null);
+        string ReadLine(ConsoleColor? foreColor = null);
 
         Process CreateManagedProcess();
     }
