@@ -7,20 +7,17 @@ namespace CSScript
 {
     public static class RegistryManager
     {
-        public static void RegisterFileAssociation()
-        {
+        public static void RegisterFileAssociation() {
             RegisterFileAssociation(Registry.ClassesRoot);
             RegisterFileAssociation(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true));
         }
 
-        public static void UnregisterFileAssociation()
-        {
+        public static void UnregisterFileAssociation() {
             UnregisterFileAssociation(Registry.ClassesRoot);
             UnregisterFileAssociation(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true));
         }
 
-        public static void RegisterShellExtension(Assembly extAssembly)
-        {
+        public static void RegisterShellExtension(Assembly extAssembly) {
             foreach (Type type in extAssembly.GetTypes()) {
                 object[] attributes = type.GetCustomAttributes(typeof(ComVisibleAttribute), false);
                 if (attributes.Length == 0) {
@@ -42,8 +39,7 @@ namespace CSScript
             }
         }
 
-        public static void UnregisterShellExtension(Assembly extAssembly)
-        {
+        public static void UnregisterShellExtension(Assembly extAssembly) {
             foreach (Type type in extAssembly.GetTypes()) {
                 object[] attributes = type.GetCustomAttributes(typeof(ComVisibleAttribute), false);
                 if (attributes.Length == 0) {
@@ -57,8 +53,7 @@ namespace CSScript
         }
 
 
-        private static void RegisterFileAssociation(RegistryKey parentKey)
-        {
+        private static void RegisterFileAssociation(RegistryKey parentKey) {
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = executingAssembly.GetName().Name;
 
@@ -72,8 +67,7 @@ namespace CSScript
             key.SetValue(string.Empty, $"\"{executingAssembly.Location}\" \"%1\" /a %*");
         }
 
-        private static void UnregisterFileAssociation(RegistryKey parentKey)
-        {
+        private static void UnregisterFileAssociation(RegistryKey parentKey) {
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = executingAssembly.GetName().Name;
 
@@ -81,8 +75,7 @@ namespace CSScript
             parentKey.DeleteSubKeyTree(assemblyName, false);
         }
 
-        private static void InstallDropHandlerServer(RegistryKey parentKey, Type dropHandlerType)
-        {
+        private static void InstallDropHandlerServer(RegistryKey parentKey, Type dropHandlerType) {
             RegistryKey key = parentKey.CreateSubKey($"{{{dropHandlerType.GUID}}}");
             key.SetValue(string.Empty, dropHandlerType.Name);
 
@@ -102,13 +95,11 @@ namespace CSScript
             key.SetValue("CodeBase", "file:///" + dropHandlerType.Assembly.Location.Replace("\\", "/"));
         }
 
-        private static void UninstallDropHandlerServer(RegistryKey parentKey, Type dropHandlerType)
-        {
+        private static void UninstallDropHandlerServer(RegistryKey parentKey, Type dropHandlerType) {
             parentKey.DeleteSubKeyTree($"{{{dropHandlerType.GUID}}}", false);
         }
 
-        private static void RegisterDropHandlerServer(RegistryKey parentKey, Type dropHandlerType)
-        {
+        private static void RegisterDropHandlerServer(RegistryKey parentKey, Type dropHandlerType) {
             RegistryKey key = parentKey.CreateSubKey("DropHandler");
             key.SetValue(string.Empty, $"{{{dropHandlerType.GUID}}}");
         }

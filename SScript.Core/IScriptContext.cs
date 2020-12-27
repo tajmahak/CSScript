@@ -6,7 +6,7 @@ namespace CSScript.Core
     /// <summary>
     /// Представляет интерфейс для взаимодействия скрипта с окружением.
     /// </summary>
-    public interface IScriptEnvironment
+    public interface IScriptContext
     {
         string[] Args { get; }
 

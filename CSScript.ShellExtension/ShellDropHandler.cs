@@ -13,13 +13,11 @@ namespace CSScript.ShellExtension
     [COMServerAssociation(AssociationType.ClassOfExtension, ".cssc")]
     public class ShellDropHandler : SharpDropHandler
     {
-        protected override void DragEnter(DragEventArgs dragEventArgs)
-        {
+        protected override void DragEnter(DragEventArgs dragEventArgs) {
             dragEventArgs.Effect = DragDropEffects.Link;
         }
 
-        protected override void Drop(DragEventArgs dragEventArgs)
-        {
+        protected override void Drop(DragEventArgs dragEventArgs) {
             StringBuilder args = new StringBuilder();
             foreach (string dragItem in DragItems) {
                 if (args.Length > 0) {

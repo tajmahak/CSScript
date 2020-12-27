@@ -7,7 +7,7 @@ namespace CSScript.Core
     /// <summary>
     /// Представляет структурированную информацию о скрипте.
     /// </summary>
-    public class ScriptContent
+    public class ScriptInfo
     {
         public string ScriptPath { get; }
         public List<string> DefinedList { get; private set; } = new List<string>();
@@ -17,18 +17,15 @@ namespace CSScript.Core
         public StringBuilder NamespaceBlock { get; private set; } = new StringBuilder();
 
 
-        public ScriptContent(string scriptPath)
-        {
+        public ScriptInfo(string scriptPath) {
             ScriptPath = scriptPath;
         }
 
-        public static ScriptContent FromFile(string scriptPath, string text)
-        {
-            return new ScriptContent(scriptPath).LoadFromText(text);
+        public static ScriptInfo FromFile(string scriptPath, string text) {
+            return new ScriptInfo(scriptPath).LoadFromText(text);
         }
 
-        private ScriptContent LoadFromText(string text)
-        {
+        private ScriptInfo LoadFromText(string text) {
             StringBuilder currentBlock = ProcedureBlock;
 
             string[] textLines = text.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -77,13 +74,11 @@ namespace CSScript.Core
             public string OperatorValue { get; private set; }
 
 
-            private ScriptLine(string sourceLine)
-            {
+            private ScriptLine(string sourceLine) {
                 SourceLine = sourceLine;
             }
 
-            public static ScriptLine Parse(string line)
-            {
+            public static ScriptLine Parse(string line) {
                 ScriptLine scriptLine = new ScriptLine(line);
                 string trimLine = line.TrimStart();
                 if (trimLine.Length == 0) {

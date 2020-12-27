@@ -7,7 +7,7 @@ namespace CSScript.Core
     /// <summary>
     /// Представляет реализацию взаимодействия скрипта с программой.
     /// </summary>
-    public class ScriptEnvironment : IScriptEnvironment, IDisposable
+    public class ScriptContext : IScriptContext, IDisposable
     {
         public string[] Args { get; }
         public int ExitCode { get; set; }
@@ -18,8 +18,7 @@ namespace CSScript.Core
         private readonly List<Process> managedProcesses = new List<Process>();
 
 
-        public ScriptEnvironment(string scriptPath, string[] scriptArgs)
-        {
+        public ScriptContext(string scriptPath, string[] scriptArgs) {
             ScriptPath = scriptPath;
             Args = scriptArgs;
         }
@@ -32,8 +31,7 @@ namespace CSScript.Core
         public event InputTextHandler InputTextRequred;
 
 
-        public Process CreateManagedProcess()
-        {
+        public Process CreateManagedProcess() {
             Process process = new Process();
             lock (managedProcesses) {
                 managedProcesses.Add(process);
@@ -41,13 +39,11 @@ namespace CSScript.Core
             return process;
         }
 
-        public string GetInputText(ConsoleColor? foreColor = null)
-        {
+        public string GetInputText(ConsoleColor? foreColor = null) {
             return InputTextRequred.Invoke(this, foreColor ?? ColorScheme.Fore);
         }
 
-        public void Write(object value, ConsoleColor? foreColor = null)
-        {
+        public void Write(object value, ConsoleColor? foreColor = null) {
             if (value != null) {
                 string text = value.ToString();
                 if (!string.IsNullOrEmpty(text)) {
@@ -60,18 +56,15 @@ namespace CSScript.Core
             }
         }
 
-        public void WriteLine(object value, ConsoleColor? foreColor = null)
-        {
+        public void WriteLine(object value, ConsoleColor? foreColor = null) {
             Write(value + Environment.NewLine, foreColor);
         }
 
-        public void WriteLine()
-        {
+        public void WriteLine() {
             Write(Environment.NewLine);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             // принудительное закрытие выполняющихся контролируемых процессов
             lock (managedProcesses) {
                 for (int i = 0; i < managedProcesses.Count; i++) {

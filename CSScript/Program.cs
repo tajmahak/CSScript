@@ -14,9 +14,8 @@ namespace CSScript
     {
         private static readonly ColorScheme ColorScheme = ColorScheme.Default;
 
-        private static void Main(string[] args)
-        {
-            ScriptEnvironment scriptEnvironment = null;
+        private static void Main(string[] args) {
+            ScriptContext scriptEnvironment = null;
             bool hideMode = false;
             try {
                 InputArguments arguments = InputArguments.FromProgramArgs(args);
@@ -38,7 +37,7 @@ namespace CSScript
                         Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
                     }
 
-                    scriptEnvironment = new ScriptEnvironment(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
+                    scriptEnvironment = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
                     scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
                     scriptEnvironment.InputTextRequred += (sender, foreColor) => {
                         Console.ForegroundColor = foreColor;
@@ -47,13 +46,13 @@ namespace CSScript
 
                     WriteStartInfo(arguments.ScriptPath);
 
-                    ScriptContent scriptContent = ScriptManager.CreateScriptContent(arguments.ScriptPath);
-                    CompilerResults compiledScript = ScriptManager.CompileScript(scriptContent);
+                    ScriptInfo scriptInfo = ScriptManager.CreateScriptInfo(arguments.ScriptPath);
+                    CompilerResults compiledScript = ScriptManager.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count > 0) {
                         scriptEnvironment.ExitCode = 1;
                         WriteCompileErrors(compiledScript);
                         WriteLine();
-                        WriteSourceCode(ScriptManager.CreateSourceCode(scriptContent), compiledScript);
+                        WriteSourceCode(ScriptManager.CreateSourceCode(scriptInfo), compiledScript);
                     }
                     else {
                         ScriptContainer scriptContainer = ScriptManager.CreateScriptContainer(compiledScript, scriptEnvironment);
@@ -83,27 +82,23 @@ namespace CSScript
         }
 
 
-        private static void Write(string text, ConsoleColor? consoleColor = null)
-        {
+        private static void Write(string text, ConsoleColor? consoleColor = null) {
             Debug.Write(text);
             Console.ForegroundColor = consoleColor ?? ColorScheme.Fore;
             Console.Write(text);
         }
 
-        private static void WriteLine(string text, ConsoleColor? consoleColor = null)
-        {
+        private static void WriteLine(string text, ConsoleColor? consoleColor = null) {
             Write(text + Environment.NewLine, consoleColor);
         }
 
-        private static void WriteLine()
-        {
+        private static void WriteLine() {
             Debug.WriteLine(null);
             Console.WriteLine();
         }
 
 
-        private static void WriteHelpInfo()
-        {
+        private static void WriteHelpInfo() {
             string[] lines = Resource.HelpText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++) {
                 ConsoleColor color = ColorScheme.Fore;
@@ -116,15 +111,13 @@ namespace CSScript
             }
         }
 
-        private static void WriteStartInfo(string scriptPath)
-        {
+        private static void WriteStartInfo(string scriptPath) {
             WriteLine($"## {scriptPath}", ColorScheme.Info);
             WriteLine($"## {DateTime.Now}", ColorScheme.Info);
             WriteLine();
         }
 
-        private static void WriteException(Exception ex)
-        {
+        private static void WriteException(Exception ex) {
             WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
                 WriteLine("#" + stackTraceLine, ColorScheme.StackTrace);
@@ -136,8 +129,7 @@ namespace CSScript
             }
         }
 
-        private static void WriteCompileErrors(CompilerResults compilerResults)
-        {
+        private static void WriteCompileErrors(CompilerResults compilerResults) {
             WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", ColorScheme.Error);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
@@ -150,8 +142,7 @@ namespace CSScript
             }
         }
 
-        private static void WriteSourceCode(string sourceCode, CompilerResults compiledScript)
-        {
+        private static void WriteSourceCode(string sourceCode, CompilerResults compiledScript) {
             HashSet<int> errorLines = new HashSet<int>();
             foreach (CompilerError error in compiledScript.Errors) {
                 errorLines.Add(error.Line);
@@ -177,14 +168,12 @@ namespace CSScript
             }
         }
 
-        private static void WriteExitCode(int exitCode)
-        {
+        private static void WriteExitCode(int exitCode) {
             WriteLine($"# Выполнено с кодом возврата: {exitCode}", ColorScheme.Info);
         }
 
 
-        private static void RegisterProgram()
-        {
+        private static void RegisterProgram() {
             if (HasAdministativePrivilegies()) {
                 WriteLine("Регистрация программы в реестре...");
 
@@ -209,8 +198,7 @@ namespace CSScript
             }
         }
 
-        private static void UnregistryProgram()
-        {
+        private static void UnregistryProgram() {
             if (HasAdministativePrivilegies()) {
                 WriteLine("Удаление регистрации программы в реестре...");
 
@@ -232,8 +220,7 @@ namespace CSScript
             }
         }
 
-        private static bool HasAdministativePrivilegies()
-        {
+        private static bool HasAdministativePrivilegies() {
             bool isElevated;
             using (WindowsIdentity identity = WindowsIdentity.GetCurrent()) {
                 WindowsPrincipal principal = new WindowsPrincipal(identity);
@@ -242,8 +229,7 @@ namespace CSScript
             return isElevated;
         }
 
-        private static void RestartWindowsExplorer()
-        {
+        private static void RestartWindowsExplorer() {
             Process[] explorer = Process.GetProcessesByName("explorer");
             foreach (Process process in explorer) {
                 process.Kill();
@@ -253,8 +239,7 @@ namespace CSScript
         }
 
 
-        private static string[] ParseHelpInfoLine(string line)
-        {
+        private static string[] ParseHelpInfoLine(string line) {
             if (line.StartsWith("`")) {
                 int index = line.IndexOf("`", 1);
                 return new string[]

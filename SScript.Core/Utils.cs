@@ -7,8 +7,7 @@ namespace CSScript.Core
 {
     internal static class Utils
     {
-        public static string GetFilePath(string filePath, string workingDirectory)
-        {
+        public static string GetFilePath(string filePath, string workingDirectory) {
             if (Path.IsPathRooted(filePath)) {
                 return filePath;
             }
@@ -17,27 +16,23 @@ namespace CSScript.Core
             }
         }
 
-        public static string GetDirectory(string filePath)
-        {
+        public static string GetDirectory(string filePath) {
             string path = Path.GetFullPath(filePath);
             return Path.GetDirectoryName(path);
         }
 
 
-        public static ScriptContent LoadScriptContent(string scriptPath)
-        {
+        public static ScriptInfo LoadScriptInfo(string scriptPath) {
             string scriptText = File.ReadAllText(scriptPath, Encoding.UTF8);
-            return ScriptContent.FromFile(scriptPath, scriptText);
+            return ScriptInfo.FromFile(scriptPath, scriptText);
         }
 
-        public static bool IsWindowsAssembly(string filePath)
-        {
+        public static bool IsWindowsAssembly(string filePath) {
             string extension = Path.GetExtension(filePath).ToLower();
             return extension.Equals(".exe") || extension.Equals(".dll");
         }
 
-        public static void DeleteDuplicates<T>(List<T> list, Func<T, T, bool> comparison)
-        {
+        public static void DeleteDuplicates<T>(List<T> list, Func<T, T, bool> comparison) {
             for (int i = 0; i < list.Count - 1; i++) {
                 T value1 = list[i];
                 for (int j = i + 1; j < list.Count; j++) {
@@ -49,8 +44,7 @@ namespace CSScript.Core
             }
         }
 
-        public static string GetNamespaceName(Type type)
-        {
+        public static string GetNamespaceName(Type type) {
             string fullName = type.FullName;
             int index = fullName.LastIndexOf('.');
             return fullName.Remove(index);

@@ -7,8 +7,7 @@ namespace CSScript.Core
     /// </summary>
     public class InputArguments
     {
-        public static InputArguments FromProgramArgs(string[] args)
-        {
+        public static InputArguments FromProgramArgs(string[] args) {
             InputArguments inputArguments = new InputArguments();
 
             if (args.Length == 0) {

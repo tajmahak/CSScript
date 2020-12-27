@@ -7,8 +7,7 @@ namespace CSScript.Core
         public string Text { get; private set; }
         public ConsoleColor ForeColor { get; private set; }
 
-        public Message(string text, ConsoleColor foreColor)
-        {
+        public Message(string text, ConsoleColor foreColor) {
             Text = text;
             ForeColor = foreColor;
         }

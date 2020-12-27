@@ -10,10 +10,9 @@ namespace CSScriptStand
 {
     internal class Stand : ScriptContainer
     {
-        public Stand(IScriptEnvironment env) : base(env) { }
+        public Stand(IScriptContext env) : base(env) { }
 
-        public override void Execute()
-        {
+        public override void Execute() {
 
         }
 
@@ -21,8 +20,7 @@ namespace CSScriptStand
         #region --- СКРИПТОВЫЕ УТИЛИТЫ (версия 1.24) ---
 
         // Получение входящего аргумента по индексу
-        private T GetArgument<T>(int index, T defaultValue)
-        {
+        private T GetArgument<T>(int index, T defaultValue) {
             if (env.Args.Length > index) {
                 string value = env.Args[index];
                 if (!string.IsNullOrEmpty(value)) {
@@ -33,46 +31,39 @@ namespace CSScriptStand
         }
 
         // Вывод текста
-        private void Write(object value, ConsoleColor? foreColor = null)
-        {
+        private void Write(object value, ConsoleColor? foreColor = null) {
             env.Write(value, foreColor);
         }
 
         // Вывод текста с признаком конца строки
-        private void WriteLine(object value, ConsoleColor? foreColor = null)
-        {
+        private void WriteLine(object value, ConsoleColor? foreColor = null) {
             env.WriteLine(value, foreColor);
         }
 
         // Вывод признака конца строки
-        private void WriteLine()
-        {
+        private void WriteLine() {
             env.WriteLine();
         }
 
         // Чтение текста из входного потока
-        private string ReadLine(ConsoleColor? foreColor = null)
-        {
+        private string ReadLine(ConsoleColor? foreColor = null) {
             return env.GetInputText(foreColor);
         }
 
         // Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
-        private int Start(string program, string args = null, bool printOutput = true, ConsoleColor? outputColor = null, Encoding encoding = null)
-        {
+        private int Start(string program, string args = null, bool printOutput = true, ConsoleColor? outputColor = null, Encoding encoding = null) {
             Process process = new Process();
             return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
         // Запуск контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится) 
-        private int StartManaged(string program, string args = null, bool printOutput = true, ConsoleColor? outputColor = null, Encoding encoding = null)
-        {
+        private int StartManaged(string program, string args = null, bool printOutput = true, ConsoleColor? outputColor = null, Encoding encoding = null) {
             Process process = env.CreateManagedProcess();
             return __StartProcess(process, program, args, printOutput, outputColor, encoding);
         }
 
         // Создание папки
-        private bool CreateDirectory(string path, bool isFilePath = false)
-        {
+        private bool CreateDirectory(string path, bool isFilePath = false) {
             string dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
             if (!Directory.Exists(dirPath)) {
                 Directory.CreateDirectory(dirPath);
@@ -82,8 +73,7 @@ namespace CSScriptStand
         }
 
         // Добавление префикса к имени файла
-        private string AddNamePrefix(string path, string prefix)
-        {
+        private string AddNamePrefix(string path, string prefix) {
             string dirPath = Path.GetDirectoryName(path);
             string fileName = Path.GetFileNameWithoutExtension(path);
             string ext = Path.GetExtension(path);
@@ -91,8 +81,7 @@ namespace CSScriptStand
         }
 
         // Добавление суффикса к имени файла
-        private string AddNameSuffix(string path, string suffix)
-        {
+        private string AddNameSuffix(string path, string suffix) {
             string dirPath = Path.GetDirectoryName(path);
             string fileName = Path.GetFileNameWithoutExtension(path);
             string ext = Path.GetExtension(path);
@@ -100,23 +89,20 @@ namespace CSScriptStand
         }
 
         // Переименование файла (без учёта расширения)
-        private string RenameFile(string path, string newName)
-        {
+        private string RenameFile(string path, string newName) {
             string dirPath = Path.GetDirectoryName(path);
             string ext = Path.GetExtension(path);
             return dirPath + "\\" + newName + ext;
         }
 
         // Переименование файла (с учётом расширения)
-        private string RenameFileAndExtension(string path, string newName)
-        {
+        private string RenameFileAndExtension(string path, string newName) {
             string dirPath = Path.GetDirectoryName(path);
             return dirPath + "\\" + newName;
         }
 
         // Удаление списка файлов
-        private int DeleteFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly)
-        {
+        private int DeleteFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly) {
             if (Directory.Exists(path)) {
                 string[] files = Directory.GetFiles(path, searchPattern, searchOption);
                 foreach (string file in files) {
@@ -132,8 +118,7 @@ namespace CSScriptStand
         }
 
         // Удаление старых файлов в папке (по дате изменения)
-        private void DeleteOldFiles(string path, int remainCount, string searchPattern = null)
-        {
+        private void DeleteOldFiles(string path, int remainCount, string searchPattern = null) {
             if (string.IsNullOrEmpty(searchPattern)) {
                 searchPattern = "*";
             }
@@ -151,8 +136,7 @@ namespace CSScriptStand
         }
 
         // Получение списка старых файлов в папке (по дате изменения)
-        private string[] GetOldFiles(string[] files, int remainCount)
-        {
+        private string[] GetOldFiles(string[] files, int remainCount) {
             List<KeyValuePair<string, DateTime>> fileList = new List<KeyValuePair<string, DateTime>>();
             foreach (string file in files) {
                 DateTime fileDate = new FileInfo(file).LastWriteTime;
@@ -169,8 +153,7 @@ namespace CSScriptStand
         }
 
         // Вычисление MD5 хэша для файла
-        private string GetMD5Hash(string filePath)
-        {
+        private string GetMD5Hash(string filePath) {
             CheckFileExists(filePath, true);
             byte[] hash;
             using (MD5 md5 = MD5.Create()) {
@@ -186,8 +169,7 @@ namespace CSScriptStand
         }
 
         // Сравнение содержимого файлов
-        private bool CompareFiles(string file1Path, string file2Path)
-        {
+        private bool CompareFiles(string file1Path, string file2Path) {
             CheckFileExists(file1Path, true);
             CheckFileExists(file2Path, true);
 
@@ -207,8 +189,7 @@ namespace CSScriptStand
         }
 
         // Вывод исключения в случае, если файла не существует
-        private void CheckFileExists(string filePath, bool checkRelativePath)
-        {
+        private void CheckFileExists(string filePath, bool checkRelativePath) {
             if (!File.Exists(filePath)) {
                 // игнорирование коротких путей файлов используется в случае,
                 // если операционной системе известен путь к файлу, в отличие от программы
@@ -222,12 +203,10 @@ namespace CSScriptStand
         // Аргументы для командной строки 7-Zip
         private class SevenZipArgs
         {
-            public SevenZipArgs()
-            {
+            public SevenZipArgs() {
 
             }
-            public SevenZipArgs(string input, string output)
-            {
+            public SevenZipArgs(string input, string output) {
                 Input = input;
                 Output = output;
             }
@@ -238,8 +217,7 @@ namespace CSScriptStand
             public string Password;
             public bool EncryptFileStructure = true;
 
-            public override string ToString()
-            {
+            public override string ToString() {
                 StringBuilder stringArgs = new StringBuilder();
                 stringArgs.Append("a"); // Добавление файлов в архив. Если архивного файла не существует, создает его
                 stringArgs.Append(" \"" + Output + "\"");
@@ -256,8 +234,7 @@ namespace CSScriptStand
             }
         }
 
-        private int __StartProcess(Process process, string program, string args, bool printOutput, ConsoleColor? outputColor, Encoding encoding)
-        {
+        private int __StartProcess(Process process, string program, string args, bool printOutput, ConsoleColor? outputColor, Encoding encoding) {
             if (encoding == null) {
                 encoding = Encoding.Default;
             }
@@ -293,8 +270,7 @@ namespace CSScriptStand
         {
             private readonly Stream stream;
             private readonly byte[] buffer;
-            public __AsyncStreamReader(Stream stream, int bufferSize)
-            {
+            public __AsyncStreamReader(Stream stream, int bufferSize) {
                 this.stream = stream;
                 buffer = new byte[bufferSize];
             }
@@ -302,13 +278,11 @@ namespace CSScriptStand
             public delegate void DataReceivedHandler(byte[] buffer, int count);
             public event DataReceivedHandler DataReceived;
 
-            public void BeginRead()
-            {
+            public void BeginRead() {
                 stream.BeginRead(buffer, 0, buffer.Length, AsyncCallback, null);
             }
 
-            private void AsyncCallback(IAsyncResult ar)
-            {
+            private void AsyncCallback(IAsyncResult ar) {
                 int count = stream.EndRead(ar);
                 if (count > 0) {
                     if (DataReceived != null) {

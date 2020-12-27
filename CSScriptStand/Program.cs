@@ -6,9 +6,8 @@ namespace CSScriptStand
 {
     internal class Program
     {
-        private static void Main(string[] args)
-        {
-            ScriptEnvironment scriptEnvironment = new ScriptEnvironment(null, args);
+        private static void Main(string[] args) {
+            ScriptContext scriptEnvironment = new ScriptContext(null, args);
             scriptEnvironment.MessageAdded += (sender, message) => Write(message.Text, message.ForeColor);
             scriptEnvironment.InputTextRequred += (sender, foreColor) => {
                 Console.ForegroundColor = foreColor;
@@ -20,8 +19,7 @@ namespace CSScriptStand
             Console.ReadKey();
         }
 
-        private static void Write(string text, ConsoleColor consoleColor)
-        {
+        private static void Write(string text, ConsoleColor consoleColor) {
             Debug.Write(text);
             Console.ForegroundColor = consoleColor;
             Console.Write(text);

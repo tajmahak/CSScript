@@ -14,9 +14,8 @@ namespace CSScript.Core
         private const string compiledScriptName = "CompiledScriptContainer";
 
 
-        public static ScriptContent CreateScriptContent(string scriptPath)
-        {
-            ScriptContent mainScript = new ScriptContent(scriptPath);
+        public static ScriptInfo CreateScriptInfo(string scriptPath) {
+            ScriptInfo mainScript = new ScriptInfo(scriptPath);
             AppendScript(mainScript, scriptPath, 0);
 
             Utils.DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
@@ -25,10 +24,9 @@ namespace CSScript.Core
             return mainScript;
         }
 
-        public static CompilerResults CompileScript(ScriptContent scriptContent)
-        {
-            string sourceCode = CreateSourceCode(scriptContent);
-            string[] referencedAssemblies = GetReferencedAssemblies(scriptContent);
+        public static CompilerResults CompileScript(ScriptInfo scriptInfo) {
+            string sourceCode = CreateSourceCode(scriptInfo);
+            string[] referencedAssemblies = GetReferencedAssemblies(scriptInfo);
             using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
                 CompilerParameters compileParameters = new CompilerParameters(referencedAssemblies) {
                     GenerateInMemory = true,
@@ -38,8 +36,7 @@ namespace CSScript.Core
             }
         }
 
-        public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptEnvironment environment)
-        {
+        public static ScriptContainer CreateScriptContainer(CompilerResults compilerResults, IScriptContext environment) {
             if (compilerResults.Errors.Count > 0) {
                 throw new Exception();
             }
@@ -56,12 +53,11 @@ namespace CSScript.Core
             return (ScriptContainer)instance;
         }
 
-        public static string CreateSourceCode(ScriptContent scriptContent)
-        {
+        public static string CreateSourceCode(ScriptInfo scriptInfo) {
             Type scriptContainerType = typeof(ScriptContainer);
 
             StringBuilder code = new StringBuilder();
-            foreach (string usingItem in scriptContent.UsingList) {
+            foreach (string usingItem in scriptInfo.UsingList) {
                 code.AppendLine("using " + usingItem + ";");
             }
             code.AppendLine();
@@ -110,7 +106,7 @@ namespace CSScript.Core
                 }
                 code.Append(string.Join(", ", stringList) + ") {");
                 code.AppendLine();
-                code.AppendLine(scriptContent.ProcedureBlock.ToString());
+                code.AppendLine(scriptInfo.ProcedureBlock.ToString());
                 code.AppendLine("}");
             }
             else {
@@ -118,11 +114,11 @@ namespace CSScript.Core
             }
 
             code.AppendLine();
-            code.AppendLine(scriptContent.ClassBlock.ToString());
+            code.AppendLine(scriptInfo.ClassBlock.ToString());
             code.AppendLine("}");
 
             code.AppendLine();
-            code.AppendLine(scriptContent.NamespaceBlock.ToString());
+            code.AppendLine(scriptInfo.NamespaceBlock.ToString());
             code.AppendLine("}");
 
             return code.ToString();
@@ -130,11 +126,10 @@ namespace CSScript.Core
 
 
 
-        private static void AppendScript(ScriptContent mainScript, string scriptPath, int level)
-        {
+        private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level) {
             string workingDirectory = Utils.GetDirectory(scriptPath);
 
-            ScriptContent script = Utils.LoadScriptContent(scriptPath);
+            ScriptInfo script = Utils.LoadScriptInfo(scriptPath);
             foreach (string defineItem in script.DefinedList) {
                 string defineFilePath = Utils.GetFilePath(defineItem, workingDirectory);
                 if (Utils.IsWindowsAssembly(defineFilePath)) {
@@ -153,8 +148,7 @@ namespace CSScript.Core
             mainScript.UsingList.AddRange(script.UsingList);
         }
 
-        private static string[] GetReferencedAssemblies(ScriptContent scriptContent)
-        {
+        private static string[] GetReferencedAssemblies(ScriptInfo scriptContent) {
             List<string> definedAssemblies = new List<string> {
                 "System.dll", // библиотека для работы множества основных функций
             };

@@ -5,11 +5,10 @@
     /// </summary>
     public abstract class ScriptContainer
     {
-        public IScriptEnvironment env { get; }
+        public IScriptContext env { get; }
         public ColorScheme colors => env.ColorScheme;
 
-        public ScriptContainer(IScriptEnvironment env)
-        {
+        public ScriptContainer(IScriptContext env) {
             this.env = env;
         }
 
