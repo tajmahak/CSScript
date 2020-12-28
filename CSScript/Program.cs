@@ -90,19 +90,20 @@ namespace CSScript
 
             } finally {
                 if (scriptContext != null) {
-                    bool autoClose = scriptContext.AutoClose;
+                    bool pause = scriptContext.Pause || arguments.Pause;
+                    int exitCode = scriptContext.ExitCode;
                     scriptContext.Dispose();
 
                     WriteLine();
                     if (!scriptThreadAborted) {
-                        WriteExitCode(scriptContext.ExitCode);
+                        WriteExitCode(exitCode);
                     } else {
                         WriteAbort();
                     }
-                    if (!arguments.HideMode && !autoClose || scriptThreadAborted) {
+                    if (pause && !arguments.HideMode) {
                         Console.ReadKey();
                     }
-                    Environment.ExitCode = scriptContext.ExitCode;
+                    Environment.ExitCode = exitCode;
                 }
                 Console.ForegroundColor = ConsoleColor.White; // восстановление цвета консоли
             }

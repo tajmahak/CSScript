@@ -12,7 +12,7 @@ namespace CSScript.Core
         public string ScriptPath { get; }
         public string[] Args { get; }
         public int ExitCode { get; set; }
-        public bool AutoClose { get; set; }
+        public bool Pause { get; set; }
         public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
         private readonly List<LogFragment> log = new List<LogFragment>();
         private readonly List<Process> managedProcesses = new List<Process>();

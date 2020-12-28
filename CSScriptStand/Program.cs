@@ -17,11 +17,10 @@ namespace CSScriptStand
             ScriptContainer scriptContainer = new Stand(scriptEnvironment);
             scriptContainer.Start();
 
-            if (!scriptEnvironment.AutoClose) {
-                scriptEnvironment.WriteLine();
-                scriptEnvironment.WriteLine("# Выполнено (" + scriptEnvironment.ExitCode + ")");
-                Console.ReadKey();
-            }
+            scriptEnvironment.WriteLine();
+            scriptEnvironment.WriteLine("# Выполнено (" + scriptEnvironment.ExitCode + ")",
+                scriptEnvironment.ExitCode == 0 ? scriptContainer.Colors.Success : scriptContainer.Colors.Error);
+            Console.ReadKey();
         }
 
         private static void Write(string text, ConsoleColor color) {
