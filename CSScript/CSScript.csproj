@@ -66,6 +66,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\ColorScheme.cs" />
+    <Compile Include="Core\IScriptContext.cs" />
+    <Compile Include="Core\LogFragment.cs" />
+    <Compile Include="Core\ScriptContainer.cs" />
+    <Compile Include="Core\ScriptContext.cs" />
+    <Compile Include="Core\ScriptInfo.cs" />
+    <Compile Include="Core\ScriptUtils.cs" />
+    <Compile Include="Core\Validate.cs" />
     <Compile Include="InputArguments.cs" />
     <Compile Include="Native.cs" />
     <Compile Include="Program.cs" />
@@ -82,12 +90,6 @@
     </Compile>
     <Compile Include="RegistryManager.cs" />
     <Compile Include="ScriptRuntimeException.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SScript.Core\CSScript.Core.csproj">
-      <Project>{286dbd41-fa2d-43af-b56b-1edca7f716d5}</Project>
-      <Name>CSScript.Core</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resource.resx">

@@ -50,13 +50,13 @@
     <Compile Include="Stand.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SScript.Core\CSScript.Core.csproj">
-      <Project>{286DBD41-FA2D-43AF-B56B-1EDCA7F716D5}</Project>
-      <Name>CSScript.Core</Name>
-    </ProjectReference>
+    <None Include="Key.snk" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Key.snk" />
+    <ProjectReference Include="..\CSScript\CSScript.csproj">
+      <Project>{2f6c58bc-5f7e-4ea6-b673-906863106103}</Project>
+      <Name>CSScript</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
