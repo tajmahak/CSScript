@@ -3,6 +3,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -15,12 +16,15 @@ namespace CSScript.Core
         private const string compiledScriptNamespace = "CompiledScriptContainerNamespace";
 
 
-        public static ScriptInfo CreateScriptInfo(string scriptPath) {
-            ScriptInfo mainScript = new ScriptInfo(scriptPath);
-            AppendScript(mainScript, scriptPath, 0);
+        public delegate string DefinePathResolver(string defineFilePath, string workingDirectory);
 
-            Utils.DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
-            Utils.DeleteDuplicates(mainScript.UsingList, (a, b) => a.Equals(b));
+
+        public static ScriptInfo CreateScriptInfo(string scriptPath, DefinePathResolver definePathResolver) {
+            ScriptInfo mainScript = new ScriptInfo(scriptPath);
+            AppendScript(mainScript, scriptPath, 0, definePathResolver);
+
+            DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
+            DeleteDuplicates(mainScript.UsingList, (a, b) => a.Equals(b));
 
             return mainScript;
         }
@@ -124,16 +128,17 @@ namespace CSScript.Core
             return assemblies;
         }
 
-        private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level) {
-            string workingDirectory = Utils.GetDirectoryName(scriptPath);
 
-            ScriptInfo script = Utils.LoadScriptInfo(scriptPath);
+        private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level, DefinePathResolver definePathResolver) {
+            string workingDirectory = GetDirectoryName(scriptPath);
+
+            ScriptInfo script = LoadScriptInfo(scriptPath);
             foreach (string defineItem in script.DefinedList) {
-                string defineFilePath = Utils.GetFilePath(defineItem, workingDirectory);
-                if (Utils.IsWindowsAssembly(defineFilePath)) {
+                string defineFilePath = GetDefineFilePath(defineItem, workingDirectory, definePathResolver);
+                if (IsWindowsAssembly(defineFilePath)) {
                     mainScript.DefinedList.Add(defineFilePath);
                 } else {
-                    AppendScript(mainScript, defineFilePath, level + 1);
+                    AppendScript(mainScript, defineFilePath, level + 1, definePathResolver);
                 }
             }
 
@@ -145,6 +150,25 @@ namespace CSScript.Core
             mainScript.UsingList.AddRange(script.UsingList);
         }
 
+        private static string GetDefineFilePath(string filePath, string workingDirectory, DefinePathResolver definePathResolver) {
+            if (Path.IsPathRooted(filePath)) {
+                return filePath;
+            }
+
+            string testFilePath = Path.Combine(workingDirectory, filePath);
+            if (File.Exists(testFilePath)) {
+                return filePath;
+            }
+
+            testFilePath = definePathResolver(filePath, workingDirectory);
+            testFilePath = Path.GetFullPath(testFilePath);
+            if (File.Exists(testFilePath)) {
+                return testFilePath;
+            }
+
+            throw new FileNotFoundException("Файл не найден.", testFilePath);
+        }
+
         private static string[] GetReferencedAssemblies(ScriptInfo scriptContent) {
             List<string> definedAssemblies = new List<string> {
                 "System.dll", // библиотека для работы множества основных функций
@@ -154,6 +178,33 @@ namespace CSScript.Core
                 definedAssemblies.Add(definedAssemblyPath);
             }
             return definedAssemblies.ToArray();
+        }
+
+        private static ScriptInfo LoadScriptInfo(string scriptPath) {
+            string scriptText = File.ReadAllText(scriptPath, Encoding.UTF8);
+            return ScriptInfo.FromFile(scriptPath, scriptText);
+        }
+
+        private static bool IsWindowsAssembly(string filePath) {
+            string extension = Path.GetExtension(filePath).ToLower();
+            return extension.Equals(".exe") || extension.Equals(".dll");
+        }
+
+        private static void DeleteDuplicates<T>(List<T> list, Func<T, T, bool> comparison) {
+            for (int i = 0; i < list.Count - 1; i++) {
+                T value1 = list[i];
+                for (int j = i + 1; j < list.Count; j++) {
+                    T value2 = list[j];
+                    if (comparison(value1, value2)) {
+                        list.RemoveAt(j--);
+                    }
+                }
+            }
+        }
+
+        private static string GetDirectoryName(string filePath) {
+            string path = Path.GetFullPath(filePath);
+            return Path.GetDirectoryName(path);
         }
     }
 }

@@ -53,15 +53,17 @@ namespace CSScript
                         return arguments.HideMode ? null : Console.ReadLine();
                     };
 
-                    // Для использования в скрипте относительных путей к файлам
-                    Environment.CurrentDirectory = Utils.GetDirectoryName(arguments.ScriptPath);
-
-                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath);
+                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath, DefineFilePathResolve);
                     CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
                         definedAssemblies = ScriptUtils.GetDefinedAssemblies(scriptInfo);
 
                         ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptContext);
+
+                        // Для использования в скрипте относительных путей к файлам
+                        Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(arguments.ScriptPath));
+
+
                         Exception scriptException = null;
                         scriptThread = new Thread(() => {
                             try { scriptContainer.Start(); } catch (Exception ex) { scriptException = ex; }
@@ -118,6 +120,10 @@ namespace CSScript
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
             definedAssemblies.TryGetValue(args.Name, out Assembly assembly);
             return assembly;
+        }
+
+        private string DefineFilePathResolve(string defineFilePath, string workingDirectory) {
+            return Path.Combine(Settings.Default.ScriptLibDirectory, defineFilePath);
         }
 
 
