@@ -165,7 +165,7 @@
  `#`#class``
  
  void PrintHelloWorld() {
-	 string scriptName = Path.GetFileName(Context.ScriptPath);
+     string scriptName = Path.GetFileName(Context.ScriptPath);
      Context.WriteLine("Hello World from " + scriptName, Colors.Caption);
  }
  

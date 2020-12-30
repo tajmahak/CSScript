@@ -284,8 +284,7 @@ namespace CSScript
             foreach (Process process in explorer) {
                 process.Kill();
             }
-            // Запускается автоматически
-            // Process.Start("explorer.exe");
+            // Process.Start("explorer.exe"); - запускается автоматически
         }
     }
 }
