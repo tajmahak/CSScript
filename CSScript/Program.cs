@@ -15,7 +15,7 @@ namespace CSScript
     {
         private ScriptContext scriptContext;
         private readonly ColorScheme ColorScheme = ColorScheme.Default;
-        private Dictionary<string, Assembly> definedAssemblies;
+        private Dictionary<string, Assembly> importedAssemblies;
         private Thread scriptThread;
         private volatile bool scriptThreadAborted;
 
@@ -26,7 +26,10 @@ namespace CSScript
 
         private void Start(string[] args) {
             Console.CancelKeyPress += Console_CancelKeyPress;
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
+            Console.ForegroundColor = ColorScheme.Foreground;
+            Console.BackgroundColor = ColorScheme.Background;
+            // Console.Clear(); - при выполнении скрипта в командной строке очищается в т.ч. вся предыдущая информация
 
             InputArguments arguments = null;
             try {
@@ -38,7 +41,7 @@ namespace CSScript
                 } else if (arguments.RegisterMode) {
                     RegisterProgram();
                 } else if (arguments.UnregisterMode) {
-                    UnregistryProgram();
+                    UnregisterProgram();
                 } else {
                     if (arguments.HideMode) {
                         // Скрытие окна консоли во время исполнения программы
@@ -53,10 +56,12 @@ namespace CSScript
                         return arguments.HideMode ? null : Console.ReadLine();
                     };
 
-                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath, DefineFilePathResolve);
+                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath, importFilePathResolve);
                     CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
-                        definedAssemblies = ScriptUtils.GetDefinedAssemblies(scriptInfo);
+
+                        importedAssemblies = ScriptUtils.GetImportedAssemblies(scriptInfo);
+                        AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
                         ScriptContainer scriptContainer = ScriptUtils.CreateScriptContainer(compiledScript, scriptContext);
 
@@ -118,12 +123,12 @@ namespace CSScript
         }
 
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            definedAssemblies.TryGetValue(args.Name, out Assembly assembly);
+            importedAssemblies.TryGetValue(args.Name, out Assembly assembly);
             return assembly;
         }
 
-        private string DefineFilePathResolve(string defineFilePath, string workingDirectory) {
-            return Path.Combine(Settings.Default.ScriptLibDirectory, defineFilePath);
+        private string importFilePathResolve(string importFilePath, string workingDirectory) {
+            return Path.Combine(Settings.Default.ScriptLibDirectory, importFilePath);
         }
 
 
@@ -144,16 +149,19 @@ namespace CSScript
 
 
         private void WriteHelpInfo() {
-            string[] lines = Resource.HelpText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++) {
-                ConsoleColor color = ColorScheme.Foreground;
-                string[] line = ParseHelpInfoLine(lines[i]);
-                switch (line[0]) {
-                    case "c": color = ColorScheme.Caption; break;
-                    case "i": color = ColorScheme.Info; break;
+            string[] split = Resource.HelpText.Split('`');
+            ConsoleColor consoleColor = ColorScheme.Foreground;
+            foreach (string fragment in split) {
+                switch (fragment) {
+                    case "": consoleColor = ColorScheme.Foreground; break;
+                    case "c": consoleColor = ColorScheme.Caption; break;
+                    case "i": consoleColor = ColorScheme.Info; break;
+                    case "//": consoleColor = ConsoleColor.Green; break; // комментарий
+                    case "#": consoleColor = ConsoleColor.Yellow; break; // директива
+                    default: Write(fragment, consoleColor); break;
                 }
-                WriteLine(line[1], color);
             }
+            Console.WriteLine();
         }
 
         private void WriteStartInfo(string scriptPath) {
@@ -169,7 +177,7 @@ namespace CSScript
 
             WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
-                WriteLine("#" + stackTraceLine, ColorScheme.StackTrace);
+                WriteLine("#" + stackTraceLine, ConsoleColor.Gray);
             }
 
             if (ex.InnerException != null) {
@@ -206,9 +214,9 @@ namespace CSScript
                     WriteLine(line, ColorScheme.Error);
                 } else {
                     if (line.TrimStart().StartsWith("//")) {
-                        WriteLine(line, ColorScheme.Comment);
+                        WriteLine(line, ConsoleColor.Green);
                     } else {
-                        WriteLine(line, ColorScheme.SourceCode);
+                        WriteLine(line, ConsoleColor.Cyan);
                     }
                 }
             }
@@ -244,7 +252,7 @@ namespace CSScript
             WriteLine("Успешно", ColorScheme.Success);
         }
 
-        private void UnregistryProgram() {
+        private void UnregisterProgram() {
             Validate.IsTrue(HasAdministativePrivilegies(), "Для работы с реестром необходимы права администратора.");
 
             WriteLine("Удаление регистрации программы в реестре...");
@@ -278,20 +286,6 @@ namespace CSScript
             }
             // Запускается автоматически
             // Process.Start("explorer.exe");
-        }
-
-
-        private string[] ParseHelpInfoLine(string line) {
-            if (line.StartsWith("`")) {
-                int index = line.IndexOf("`", 1);
-                return new string[]
-                {
-                    line.Substring(1, index - 1),
-                    line.Substring(index + 1),
-                };
-            } else {
-                return new string[] { null, line };
-            }
         }
     }
 }

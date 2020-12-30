@@ -16,14 +16,14 @@ namespace CSScript.Core
         private const string compiledScriptNamespace = "CompiledScriptContainerNamespace";
 
 
-        public delegate string DefinePathResolver(string defineFilePath, string workingDirectory);
+        public delegate string ImportResolveHandler(string importFilePath, string workingDirectory);
 
 
-        public static ScriptInfo CreateScriptInfo(string scriptPath, DefinePathResolver definePathResolver) {
+        public static ScriptInfo CreateScriptInfo(string scriptPath, ImportResolveHandler importResolver) {
             ScriptInfo mainScript = new ScriptInfo(scriptPath);
-            AppendScript(mainScript, scriptPath, 0, definePathResolver);
+            AppendScript(mainScript, scriptPath, 0, importResolver);
 
-            DeleteDuplicates(mainScript.DefinedList, (a, b) => a.Equals(b));
+            DeleteDuplicates(mainScript.ImportList, (a, b) => a.Equals(b));
             DeleteDuplicates(mainScript.UsingList, (a, b) => a.Equals(b));
 
             return mainScript;
@@ -117,9 +117,9 @@ namespace CSScript.Core
             return code.ToString();
         }
 
-        public static Dictionary<string, Assembly> GetDefinedAssemblies(ScriptInfo scriptInfo) {
+        public static Dictionary<string, Assembly> GetImportedAssemblies(ScriptInfo scriptInfo) {
             Dictionary<string, Assembly> assemblies = new Dictionary<string, Assembly>();
-            foreach (string assemblyPath in scriptInfo.DefinedList) {
+            foreach (string assemblyPath in scriptInfo.ImportList) {
                 Assembly assembly = Assembly.LoadFrom(assemblyPath);
                 if (!assemblies.ContainsKey(assembly.FullName)) {
                     assemblies.Add(assembly.FullName, assembly);
@@ -129,16 +129,16 @@ namespace CSScript.Core
         }
 
 
-        private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level, DefinePathResolver definePathResolver) {
+        private static void AppendScript(ScriptInfo mainScript, string scriptPath, int level, ImportResolveHandler importResolver) {
             string workingDirectory = GetDirectoryName(scriptPath);
 
             ScriptInfo script = LoadScriptInfo(scriptPath);
-            foreach (string defineItem in script.DefinedList) {
-                string defineFilePath = GetDefineFilePath(defineItem, workingDirectory, definePathResolver);
-                if (IsWindowsAssembly(defineFilePath)) {
-                    mainScript.DefinedList.Add(defineFilePath);
+            foreach (string importItem in script.ImportList) {
+                string importFilePath = GetImportFilePath(importItem, workingDirectory, importResolver);
+                if (IsWindowsAssembly(importFilePath)) {
+                    mainScript.ImportList.Add(importFilePath);
                 } else {
-                    AppendScript(mainScript, defineFilePath, level + 1, definePathResolver);
+                    AppendScript(mainScript, importFilePath, level + 1, importResolver);
                 }
             }
 
@@ -150,7 +150,7 @@ namespace CSScript.Core
             mainScript.UsingList.AddRange(script.UsingList);
         }
 
-        private static string GetDefineFilePath(string filePath, string workingDirectory, DefinePathResolver definePathResolver) {
+        private static string GetImportFilePath(string filePath, string workingDirectory, ImportResolveHandler importResolver) {
             if (Path.IsPathRooted(filePath)) {
                 return filePath;
             }
@@ -160,7 +160,7 @@ namespace CSScript.Core
                 return filePath;
             }
 
-            testFilePath = definePathResolver(filePath, workingDirectory);
+            testFilePath = importResolver(filePath, workingDirectory);
             testFilePath = Path.GetFullPath(testFilePath);
             if (File.Exists(testFilePath)) {
                 return testFilePath;
@@ -170,14 +170,14 @@ namespace CSScript.Core
         }
 
         private static string[] GetReferencedAssemblies(ScriptInfo scriptContent) {
-            List<string> definedAssemblies = new List<string> {
+            List<string> importedAssemblies = new List<string> {
                 "System.dll", // библиотека для работы множества основных функций
             };
-            definedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
-            foreach (string definedAssemblyPath in scriptContent.DefinedList) { // дополнительные библиотеки, указанные в #define
-                definedAssemblies.Add(definedAssemblyPath);
+            importedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
+            foreach (string importedAssemblyPath in scriptContent.ImportList) { // дополнительные библиотеки, указанные в #import
+                importedAssemblies.Add(importedAssemblyPath);
             }
-            return definedAssemblies.ToArray();
+            return importedAssemblies.ToArray();
         }
 
         private static ScriptInfo LoadScriptInfo(string scriptPath) {

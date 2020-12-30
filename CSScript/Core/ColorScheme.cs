@@ -7,15 +7,12 @@ namespace CSScript.Core
     /// </summary>
     public class ColorScheme
     {
-        public ConsoleColor Back { get; set; } = ConsoleColor.Black;
-        public ConsoleColor Caption { get; set; } = ConsoleColor.Red;
-        public ConsoleColor Comment { get; set; } = ConsoleColor.Green;
-        public ConsoleColor Error { get; set; } = ConsoleColor.DarkRed;
+        public ConsoleColor Background { get; set; } = ConsoleColor.Black;
         public ConsoleColor Foreground { get; set; } = ConsoleColor.White;
+        public ConsoleColor Caption { get; set; } = ConsoleColor.DarkCyan;
         public ConsoleColor Info { get; set; } = ConsoleColor.Gray;
-        public ConsoleColor SourceCode { get; set; } = ConsoleColor.Cyan;
-        public ConsoleColor StackTrace { get; set; } = ConsoleColor.Gray;
         public ConsoleColor Success { get; set; } = ConsoleColor.Green;
+        public ConsoleColor Error { get; set; } = ConsoleColor.DarkRed;
 
         public static ColorScheme Default => new ColorScheme();
     }

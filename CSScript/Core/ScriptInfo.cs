@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace CSScript.Core
@@ -10,7 +11,7 @@ namespace CSScript.Core
     public class ScriptInfo
     {
         public string ScriptPath { get; }
-        public List<string> DefinedList { get; private set; } = new List<string>();
+        public List<string> ImportList { get; private set; } = new List<string>();
         public List<string> UsingList { get; private set; } = new List<string>();
         public StringBuilder ProcedureBlock { get; private set; } = new StringBuilder();
         public StringBuilder ClassBlock { get; private set; } = new StringBuilder();
@@ -33,8 +34,8 @@ namespace CSScript.Core
                 ScriptLine scriptLine = ScriptLine.Parse(textLine);
                 if (!scriptLine.IsEmpty) {
                     switch (scriptLine.OperatorName) {
-                        case "define":
-                            DefinedList.Add(scriptLine.OperatorValue);
+                        case "import":
+                            ImportList.Add(scriptLine.OperatorValue);
                             break;
 
                         case "using":
