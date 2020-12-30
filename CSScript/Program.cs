@@ -25,6 +25,11 @@ namespace CSScript
 
 
         private void Start(string[] args) {
+
+            // При запуске рабочая папка должна быть папкой с программой, для разрешения путей к импортируемым файлам.
+            Environment.CurrentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            // Для остановки скрипта комбинацией Ctrl+C
             Console.CancelKeyPress += Console_CancelKeyPress;
 
             Console.ForegroundColor = ColorScheme.Foreground;
@@ -38,10 +43,13 @@ namespace CSScript
                 if (arguments.IsEmpty) {
                     WriteHelpInfo();
                     Console.ReadKey();
+
                 } else if (arguments.RegisterMode) {
                     RegisterProgram();
+
                 } else if (arguments.UnregisterMode) {
                     UnregisterProgram();
+
                 } else {
                     if (arguments.HideMode) {
                         // Скрытие окна консоли во время исполнения программы
@@ -67,7 +75,6 @@ namespace CSScript
 
                         // Для использования в скрипте относительных путей к файлам
                         Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(arguments.ScriptPath));
-
 
                         Exception scriptException = null;
                         scriptThread = new Thread(() => {

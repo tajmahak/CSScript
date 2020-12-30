@@ -166,7 +166,7 @@ namespace CSScript.Core
                 return testFilePath;
             }
 
-            throw new FileNotFoundException("Файл не найден.", testFilePath);
+            throw new FileNotFoundException("Файл '" + testFilePath + "' не найден.", testFilePath);
         }
 
         private static string[] GetReferencedAssemblies(ScriptInfo scriptContent) {
