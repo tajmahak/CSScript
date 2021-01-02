@@ -43,7 +43,7 @@ namespace CSScript
                 WriteHeader();
                 if (arguments.IsEmpty) {
                     WriteHelpInfo();
-                    Console.ReadKey();
+                    ReadKeyByExit();
 
                 } else if (arguments.RegisterMode) {
                     RegisterProgram();
@@ -116,7 +116,7 @@ namespace CSScript
                         WriteAbort();
                     }
                     if (pause && !arguments.HideMode) {
-                        Console.ReadKey();
+                        ReadKeyByExit();
                     }
                     Environment.ExitCode = exitCode;
                 }
@@ -153,6 +153,12 @@ namespace CSScript
         private void WriteLine() {
             Debug.WriteLine(null);
             Console.WriteLine();
+        }
+
+        public void ReadKeyByExit() {
+            WriteLine();
+            Write("Для выхода нажмите любую клавишу...", ColorScheme.Info);
+            Console.ReadKey();
         }
 
 
