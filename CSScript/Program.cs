@@ -40,6 +40,7 @@ namespace CSScript
             try {
                 arguments = InputArguments.FromProgramArgs(args);
 
+                WriteHeader();
                 if (arguments.IsEmpty) {
                     WriteHelpInfo();
                     Console.ReadKey();
@@ -155,6 +156,10 @@ namespace CSScript
         }
 
 
+        private void WriteHeader() {
+            WriteLine($"## {DateTime.Now} (build {GetBuildDate().ToShortDateString()})", ColorScheme.Info);
+        }
+
         private void WriteHelpInfo() {
             string[] split = Resource.HelpText.Split('`');
             ConsoleColor consoleColor = ColorScheme.Foreground;
@@ -168,12 +173,11 @@ namespace CSScript
                     default: Write(fragment, consoleColor); break;
                 }
             }
-            Console.WriteLine();
+            WriteLine();
         }
 
         private void WriteStartInfo(string scriptPath) {
             WriteLine($"## {scriptPath}", ColorScheme.Info);
-            WriteLine($"## {DateTime.Now}", ColorScheme.Info);
             WriteLine();
         }
 
@@ -292,6 +296,12 @@ namespace CSScript
                 process.Kill();
             }
             // Process.Start("explorer.exe"); - запускается автоматически
+        }
+
+
+        private static DateTime GetBuildDate() {
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            return new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
         }
     }
 }
