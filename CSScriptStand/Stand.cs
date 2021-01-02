@@ -15,7 +15,7 @@ namespace CSScriptStand
         public Stand(CSScript.Core.IScriptContext env) : base(env) { }
 
         public override void Start() {
-
+            
         }
 
 
@@ -185,12 +185,12 @@ namespace CSScriptStand
         }
 
         // Вывод исключения в случае, если файла не существует
-        public static void CheckFileExists(string filePath, bool checkRelativePath) {
+        public static void CheckFileExists(string filePath, bool checkRelativePath = true) {
             if (!File.Exists(filePath)) {
                 // игнорирование коротких путей файлов используется в случае,
                 // если операционной системе известен путь к файлу, в отличие от программы
                 // (например программы из папки WINDOWS\system32)
-                if (checkRelativePath && !Path.IsPathRooted(filePath)) {
+                if (Path.IsPathRooted(filePath) || (checkRelativePath && !Path.IsPathRooted(filePath))) {
                     throw new Exception("Не удаётся найти '" + filePath + "'.");
                 }
             }
@@ -198,7 +198,7 @@ namespace CSScriptStand
 
         // Вычисление MD5 хэша для файла
         public static string GetMD5Hash(string filePath) {
-            CheckFileExists(filePath, true);
+            CheckFileExists(filePath);
             byte[] hash;
             using (MD5 md5 = MD5.Create()) {
                 using (FileStream stream = File.OpenRead(filePath)) {
@@ -214,8 +214,8 @@ namespace CSScriptStand
 
         // Сравнение содержимого файлов
         public static bool CompareFiles(string file1Path, string file2Path) {
-            CheckFileExists(file1Path, true);
-            CheckFileExists(file2Path, true);
+            CheckFileExists(file1Path);
+            CheckFileExists(file2Path);
 
             long file1Length = new FileInfo(file1Path).Length;
             long file2Length = new FileInfo(file2Path).Length;
