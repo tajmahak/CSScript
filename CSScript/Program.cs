@@ -298,8 +298,7 @@ namespace CSScript
             // Process.Start("explorer.exe"); - запускается автоматически
         }
 
-
-        private static DateTime GetBuildDate() {
+        private DateTime GetBuildDate() {
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
             return new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
         }
