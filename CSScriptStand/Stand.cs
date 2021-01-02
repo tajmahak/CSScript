@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -17,8 +20,7 @@ namespace CSScriptStand
 
 
 
-        #region --- СКРИПТОВЫЕ УТИЛИТЫ (28.12.2020) ---
-
+        #region --- СКРИПТОВЫЕ УТИЛИТЫ (02.01.2021) ---
 
 
         /// --- РАБОТА С КОНТЕКСТОМ ---
@@ -64,6 +66,34 @@ namespace CSScriptStand
         public ProcessResult StartManaged(string program, string args = null, bool redirectOutput = false, Encoding encoding = null) {
             Process process = Context.CreateManagedProcess();
             return __StartProcess(process, program, args, redirectOutput, encoding);
+        }
+
+        // Получение текстового лога
+        public string GetLog() {
+            StringBuilder log = new StringBuilder();
+            foreach (CSScript.Core.LogFragment logFragment in Context.Log) {
+                log.Append(logFragment.Text);
+            }
+            return log.ToString();
+        }
+
+        // Получение лога в формате HTML (для отправки по E-Mail)
+        public string GetHtmlLog() {
+            StringBuilder log = new StringBuilder();
+            //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
+            log.Append("<pre>");
+            foreach (CSScript.Core.LogFragment logFragment in Context.Log) {
+                if (logFragment.Color != Colors.Foreground && logFragment.Color != Colors.Background) {
+                    log.Append("<font color=\"" + ColorTranslator.ToHtml(__GetColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
+                } else {
+                    log.Append(logFragment.Text);
+                }
+            }
+            log.Replace(Environment.NewLine, "<br>");
+            log.Append("</pre>");
+            //log.Append("</div>");
+
+            return log.ToString();
         }
 
 
@@ -299,6 +329,21 @@ namespace CSScriptStand
 
         /// --- ПРОЧЕЕ ---
 
+        // Отправка электронного письма с использованием SMTP-сервера Mail.Ru
+        public bool SendEmailFromMailRu(MailMessage message, string login, string password) {
+            try {
+                SmtpClient smtp = new SmtpClient("smtp.mail.ru", 25) {
+                    Credentials = new NetworkCredential(login, password),
+                    EnableSsl = true
+                };
+                smtp.Send(message);
+                return true;
+            } catch (Exception ex) {
+                WriteLine("Не удалось отправить сообщение: " + ex.Message, Colors.Error);
+                return false;
+            }
+        }
+
         // Аргументы для командной строки 7-Zip
         public class SevenZipArgs
         {
@@ -334,6 +379,9 @@ namespace CSScriptStand
             }
         }
 
+
+        /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
+
         // Результат выполнения процесса
         public class ProcessResult
         {
@@ -341,9 +389,6 @@ namespace CSScriptStand
             public string OutputText { get; set; }
             public string ErrorText { get; set; }
         }
-
-
-        /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
         private ProcessResult __StartProcess(Process process, string program, string args, bool redirectOutput, Encoding encoding) {
             ProcessResult result = new ProcessResult();
@@ -384,7 +429,27 @@ namespace CSScriptStand
             }
         }
 
-
+        private static Color __GetColor(ConsoleColor consoleColor) {
+            switch (consoleColor) {
+                case ConsoleColor.Black: return Color.Black;
+                case ConsoleColor.DarkBlue: return Color.DarkBlue;
+                case ConsoleColor.DarkGreen: return Color.DarkGreen;
+                case ConsoleColor.DarkCyan: return Color.DarkCyan;
+                case ConsoleColor.DarkRed: return Color.DarkRed;
+                case ConsoleColor.DarkMagenta: return Color.DarkMagenta;
+                case ConsoleColor.DarkYellow: return Color.Orange;
+                case ConsoleColor.Gray: return Color.Gray;
+                case ConsoleColor.DarkGray: return Color.DarkGray;
+                case ConsoleColor.Blue: return Color.Blue;
+                case ConsoleColor.Green: return Color.Green;
+                case ConsoleColor.Cyan: return Color.Cyan;
+                case ConsoleColor.Red: return Color.Red;
+                case ConsoleColor.Magenta: return Color.Magenta;
+                case ConsoleColor.Yellow: return Color.Yellow;
+                case ConsoleColor.White: return Color.White;
+                default: throw new NotImplementedException();
+            }
+        }
 
         #endregion
     }
