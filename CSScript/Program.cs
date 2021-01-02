@@ -64,7 +64,7 @@ namespace CSScript
                         return arguments.HideMode ? null : Console.ReadLine();
                     };
 
-                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath, importFilePathResolve);
+                    ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(arguments.ScriptPath, ResolveImportFilePath);
                     CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
 
@@ -134,7 +134,7 @@ namespace CSScript
             return assembly;
         }
 
-        private string importFilePathResolve(string importFilePath, string workingDirectory) {
+        private string ResolveImportFilePath(string importFilePath, string workingDirectory) {
             return Path.Combine(Settings.Default.ScriptLibDirectory, importFilePath);
         }
 

@@ -120,9 +120,11 @@ namespace CSScript.Core
         public static Dictionary<string, Assembly> GetImportedAssemblies(ScriptInfo scriptInfo) {
             Dictionary<string, Assembly> assemblies = new Dictionary<string, Assembly>();
             foreach (string assemblyPath in scriptInfo.ImportList) {
-                Assembly assembly = Assembly.LoadFrom(assemblyPath);
-                if (!assemblies.ContainsKey(assembly.FullName)) {
-                    assemblies.Add(assembly.FullName, assembly);
+                if (File.Exists(assemblyPath)) { // если сборки не существует по указанному пути, вероятно она имеется в GAC
+                    Assembly assembly = Assembly.LoadFrom(assemblyPath);
+                    if (!assemblies.ContainsKey(assembly.FullName)) {
+                        assemblies.Add(assembly.FullName, assembly);
+                    }
                 }
             }
             return assemblies;
@@ -164,6 +166,10 @@ namespace CSScript.Core
             testFilePath = Path.GetFullPath(testFilePath);
             if (File.Exists(testFilePath)) {
                 return testFilePath;
+            }
+
+            if (IsWindowsAssembly(filePath)) {
+                return filePath; // вероятно, сборка содержится в GAC
             }
 
             throw new FileNotFoundException("Файл '" + testFilePath + "' не найден.", testFilePath);
