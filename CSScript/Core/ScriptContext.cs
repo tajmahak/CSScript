@@ -14,6 +14,8 @@ namespace CSScript.Core
         public int ExitCode { get; set; }
         public bool Pause { get; set; }
         public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
+        public ICollection<LogFragment> Log => log.AsReadOnly();
+
         private readonly List<LogFragment> log = new List<LogFragment>();
         private readonly List<Process> managedProcesses = new List<Process>();
 

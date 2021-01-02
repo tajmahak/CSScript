@@ -144,6 +144,7 @@
   ``.ExitCode: int   `i`- получает или задаёт код возврата скрипта;
   ``.Pause: bool     `i`- получает или задаёт значение, следует ли ожидать от пользователя подтверждение закрытия;
   ``.ScriptPath: string `i`- получает абсолютный путь к исполняемому скрипту;
+  ``.Log: ICollection&lt;LogFragment&gt; `i`- получает лог работы скрипта;
   ``.Write(value: object, [color: ConsoleColor]): void          `i`- вывод сообщения в лог;
   ``.WriteLine([value: object], [color: ConsoleColor]): void    `i`- вывод сообщения в лог с переносом строки;
   ``.ReadLine([caption: string], [color: ConsoleColor]): string `i`- чтение текста из входного потока;

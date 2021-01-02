@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace CSScript.Core
@@ -12,6 +13,7 @@ namespace CSScript.Core
         int ExitCode { get; set; }
         bool Pause { get; set; }
         string ScriptPath { get; }
+        ICollection<LogFragment> Log { get; }
         ColorScheme ColorScheme { get; }
 
         void Write(object value, ConsoleColor? color = null);
