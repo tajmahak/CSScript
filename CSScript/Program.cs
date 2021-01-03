@@ -163,7 +163,11 @@ namespace CSScript
 
 
         private void WriteHeader() {
-            WriteLine($"## {DateTime.Now} (build {GetBuildDate().ToShortDateString()})", ColorScheme.Info);
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            string versionText = $"{version.Major:0}.{version.Minor:00}";
+            DateTime buildDate = new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
+            
+            WriteLine($"## {DateTime.Now} (version {versionText} build {buildDate.ToShortDateString()})", ColorScheme.Info);
         }
 
         private void WriteHelpInfo() {
@@ -302,11 +306,6 @@ namespace CSScript
                 process.Kill();
             }
             // Process.Start("explorer.exe"); - запускается автоматически
-        }
-
-        private DateTime GetBuildDate() {
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
-            return new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
         }
     }
 }
