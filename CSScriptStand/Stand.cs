@@ -15,12 +15,12 @@ namespace CSScriptStand
         public Stand(CSScript.Core.IScriptContext env) : base(env) { }
 
         public override void Start() {
-            
+
         }
 
 
 
-        #region --- СКРИПТОВЫЕ УТИЛИТЫ (02.01.2021) ---
+        #region --- СКРИПТОВЫЕ УТИЛИТЫ (06.01.2021) ---
 
         /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -48,6 +48,11 @@ namespace CSScriptStand
         // Вывод переноса строки
         public void WriteLine() {
             Context.WriteLine();
+        }
+
+        // Вывод штампа даты и времени
+        public void WriteTimeStamp() {
+            Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", Colors.Info);
         }
 
         // Чтение текста из входного потока
@@ -346,15 +351,15 @@ namespace CSScriptStand
         // Аргументы для командной строки 7-Zip
         public class SevenZipArgs
         {
-            public string Input { get; set; }
-            public string Output { get; set; }
-            public int CompressionLevel { get; set; }
-            public string Password { get; set; }
-            public bool EncryptFileStructure { get; set; }
+            public string Input; // Путь к каталогам и файлам для упаковки в архив
+            public string Output; // Путь к файлу архива
+            public int CompressionLevel = 9; // Уровень компрессии. 0 - без компрессии (быстро), 9 - самая большая компрессия (медленно)
+            public string Password; // Пароль для архива
+            public bool EncryptFileStructure = true; // Шифровать имена файлов (в случае установки пароля на архив)
+            public bool IncludeOpenFiles = true; // Включить файл в архив, даже если он в данный момент используется. Для резервного копирования очень полезный ключ
+            public bool ZipFormat = false; // Создание архива в формате ZIP
 
             public SevenZipArgs() {
-                CompressionLevel = 9;
-                EncryptFileStructure = true;
             }
             public SevenZipArgs(string input, string output) : this() {
                 Input = input;
@@ -364,15 +369,21 @@ namespace CSScriptStand
             public override string ToString() {
                 StringBuilder stringArgs = new StringBuilder();
                 stringArgs.Append("a"); // Добавление файлов в архив. Если архивного файла не существует, создает его
-                stringArgs.Append(" \"" + Output + "\"");
-                stringArgs.Append(" -ssw"); // Включить файл в архив, даже если он в данный момент используется. Для резервного копирования очень полезный ключ
-                stringArgs.Append(" -mx" + CompressionLevel); // Уровень компрессии. 0 - без компрессии (быстро), 9 - самая большая компрессия (медленно)
+                stringArgs.Append(" -y"); // Утвердительно ответить на все вопросы, которые может запросить система.
+                if (ZipFormat) {
+                    stringArgs.Append(" -tzip");
+                }
+                stringArgs.Append(" -mx" + CompressionLevel);
+                if (IncludeOpenFiles) {
+                    stringArgs.Append(" -ssw");
+                }
                 if (!string.IsNullOrEmpty(Password)) {
-                    stringArgs.Append(" -p" + Password); // Пароль для архива
+                    stringArgs.Append(" -p" + Password);
                     if (EncryptFileStructure) {
-                        stringArgs.Append(" -mhe"); // Шифровать имена файлов
+                        stringArgs.Append(" -mhe");
                     }
                 }
+                stringArgs.Append(" \"" + Output + "\"");
                 stringArgs.Append(" \"" + Input + "\"");
                 return stringArgs.ToString();
             }
