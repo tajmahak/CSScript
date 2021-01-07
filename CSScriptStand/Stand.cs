@@ -36,37 +36,44 @@ namespace CSScriptStand
             return defaultValue;
         }
 
-        // Вывод текста
+        // Вывод текста в стандартный выходной поток
         public void Write(object value, ConsoleColor? color = null) {
             Context.Write(value, color);
         }
 
-        // Вывод текста с переносом строки
+        // Вывод текста с переносом строки в стандартный выходной поток
         public void WriteLine(object value, ConsoleColor? color = null) {
             Context.WriteLine(value, color);
         }
 
-        // Вывод переноса строки
+        // Вывод переноса строки в стандартный выходной поток
         public void WriteLine() {
             Context.WriteLine();
         }
 
-
+        // Вывод текста в стандартный поток ошибок
         public void WriteError(object value) {
             Context.WriteError(value);
         }
 
+        // Вывод текста с переносом строки в стандартный поток ошибок
         public void WriteErrorLine(object value) {
             Context.WriteErrorLine(value);
         }
 
+        // Вывод переноса строки в стандартный поток ошибок
         public void WriteErrorLine() {
             Context.WriteErrorLine();
         }
 
-        // Вывод штампа даты и времени
+        // Вывод штампа даты и времени в стандартный выходной поток
         public void WriteTimeStamp() {
             Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", Colors.Info);
+        }
+
+        // Вывод штампа даты и времени в стандартный поток ошибок
+        public void WriteErrorTimeStamp() {
+            WriteError("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ");
         }
 
         // Чтение текста из входного потока
