@@ -14,6 +14,7 @@ namespace CSScript.Core
         bool Pause { get; set; }
         string ScriptPath { get; }
         ICollection<LogFragment> OutLog { get; }
+        ICollection<LogFragment> ErrorLog { get; }
         ColorScheme ColorScheme { get; }
 
         void Write(object value, ConsoleColor? color = null);
