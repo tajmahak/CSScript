@@ -16,16 +16,12 @@ namespace CSScriptStand
         public Stand(CSScript.Core.IScriptContext env) : base(env) { }
 
         public override void Start() {
-            WriteLine("o");
-            WriteErrorLine("error");
-            WriteLine("o");
 
-            Context.Pause = true;
         }
 
 
 
-        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (06.01.2021) ---
+        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (07.01.2021) ---
 
         /// --- РАБОТА С КОНТЕКСТОМ ---
 
