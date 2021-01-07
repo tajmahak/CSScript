@@ -59,7 +59,8 @@ namespace CSScript
                     WriteStartInfo(arguments.ScriptPath);
 
                     scriptContext = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
-                    scriptContext.LogFragmentAdded += (sender, log) => Write(log.Text, log.Color);
+                    scriptContext.OutputLogFragmentAdded += (sender, log) => Write(log.Text, log.Color);
+                    scriptContext.ErrorLogFragmentAdded += (sender, log) => WriteError(log.Text, log.Color);
                     scriptContext.ReadLineRequred += (sender, color) => {
                         Console.ForegroundColor = color;
                         return arguments.HideMode ? null : Console.ReadLine();
@@ -143,7 +144,7 @@ namespace CSScript
         private void Write(string text, ConsoleColor? color = null) {
             Debug.Write(text);
             Console.ForegroundColor = color ?? ColorScheme.Foreground;
-            Console.Write(text);
+            Console.Out.Write(text);
         }
 
         private void WriteLine(string text, ConsoleColor? color = null) {
@@ -151,8 +152,13 @@ namespace CSScript
         }
 
         private void WriteLine() {
-            Debug.WriteLine(null);
-            Console.WriteLine();
+            Write(Environment.NewLine);
+        }
+
+        private void WriteError(string text, ConsoleColor? color = null) {
+            Debug.Write(text);
+            Console.ForegroundColor = color ?? ColorScheme.Error;
+            Console.Error.Write(text);
         }
 
         public void ReadKeyByExit() {
@@ -166,7 +172,7 @@ namespace CSScript
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
             string versionText = $"{version.Major:0}.{version.Minor:00}";
             DateTime buildDate = new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
-            
+
             WriteLine($"## {DateTime.Now} (version {versionText} build {buildDate.ToShortDateString()})", ColorScheme.Info);
         }
 

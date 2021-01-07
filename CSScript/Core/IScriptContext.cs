@@ -13,7 +13,7 @@ namespace CSScript.Core
         int ExitCode { get; set; }
         bool Pause { get; set; }
         string ScriptPath { get; }
-        ICollection<LogFragment> Log { get; }
+        ICollection<LogFragment> OutLog { get; }
         ColorScheme ColorScheme { get; }
 
         void Write(object value, ConsoleColor? color = null);
@@ -21,6 +21,12 @@ namespace CSScript.Core
         void WriteLine(object value, ConsoleColor? color = null);
 
         void WriteLine();
+
+        void WriteError(object value);
+
+        void WriteErrorLine(object value);
+
+        void WriteErrorLine();
 
         string ReadLine(ConsoleColor? color = null);
 

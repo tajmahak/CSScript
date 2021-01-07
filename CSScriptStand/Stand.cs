@@ -16,7 +16,11 @@ namespace CSScriptStand
         public Stand(CSScript.Core.IScriptContext env) : base(env) { }
 
         public override void Start() {
+            WriteLine("o");
+            WriteErrorLine("error");
+            WriteLine("o");
 
+            Context.Pause = true;
         }
 
 
@@ -51,6 +55,19 @@ namespace CSScriptStand
             Context.WriteLine();
         }
 
+
+        public void WriteError(object value) {
+            Context.WriteError(value);
+        }
+
+        public void WriteErrorLine(object value) {
+            Context.WriteErrorLine(value);
+        }
+
+        public void WriteErrorLine() {
+            Context.WriteErrorLine();
+        }
+
         // Вывод штампа даты и времени
         public void WriteTimeStamp() {
             Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", Colors.Info);
@@ -76,7 +93,7 @@ namespace CSScriptStand
         // Получение текстового лога
         public string GetLog() {
             StringBuilder log = new StringBuilder();
-            foreach (CSScript.Core.LogFragment logFragment in Context.Log) {
+            foreach (CSScript.Core.LogFragment logFragment in Context.OutLog) {
                 log.Append(logFragment.Text);
             }
             return log.ToString();
@@ -87,7 +104,7 @@ namespace CSScriptStand
             StringBuilder log = new StringBuilder();
             //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
             log.Append("<pre>");
-            foreach (CSScript.Core.LogFragment logFragment in Context.Log) {
+            foreach (CSScript.Core.LogFragment logFragment in Context.OutLog) {
                 if (logFragment.Color != Colors.Foreground && logFragment.Color != Colors.Background) {
                     log.Append("<font color=\"" + ColorTranslator.ToHtml(__GetColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
                 } else {

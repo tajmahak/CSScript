@@ -14,9 +14,11 @@ namespace CSScript.Core
         public int ExitCode { get; set; }
         public bool Pause { get; set; }
         public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
-        public ICollection<LogFragment> Log => log.AsReadOnly();
+        public ICollection<LogFragment> OutLog => outLog.AsReadOnly();
+        public ICollection<LogFragment> ErrorLog => errorLog.AsReadOnly();
 
-        private readonly List<LogFragment> log = new List<LogFragment>();
+        private readonly List<LogFragment> outLog = new List<LogFragment>();
+        private readonly List<LogFragment> errorLog = new List<LogFragment>();
         private readonly List<Process> managedProcesses = new List<Process>();
 
 
@@ -27,7 +29,8 @@ namespace CSScript.Core
 
 
         public delegate void LogFragmentAddedHandler(object sender, LogFragment logFragment);
-        public event LogFragmentAddedHandler LogFragmentAdded;
+        public event LogFragmentAddedHandler OutputLogFragmentAdded;
+        public event LogFragmentAddedHandler ErrorLogFragmentAdded;
 
         public delegate string ReadLineRequredHandler(object sender, ConsoleColor color);
         public event ReadLineRequredHandler ReadLineRequred;
@@ -38,10 +41,10 @@ namespace CSScript.Core
                 string text = value.ToString();
                 if (!string.IsNullOrEmpty(text)) {
                     LogFragment logFragment = new LogFragment(text, color ?? ColorScheme.Foreground);
-                    lock (log) {
-                        log.Add(logFragment);
+                    lock (outLog) {
+                        outLog.Add(logFragment);
                     }
-                    LogFragmentAdded?.Invoke(this, logFragment);
+                    OutputLogFragmentAdded?.Invoke(this, logFragment);
                 }
             }
         }
@@ -52,6 +55,27 @@ namespace CSScript.Core
 
         public void WriteLine() {
             Write(Environment.NewLine);
+        }
+
+        public void WriteError(object value) {
+            if (value != null) {
+                string text = value.ToString();
+                if (!string.IsNullOrEmpty(text)) {
+                    LogFragment logFragment = new LogFragment(text, ColorScheme.Error);
+                    lock (errorLog) {
+                        errorLog.Add(logFragment);
+                    }
+                    ErrorLogFragmentAdded?.Invoke(this, logFragment);
+                }
+            }
+        }
+
+        public void WriteErrorLine(object value) {
+            WriteError(value + Environment.NewLine);
+        }
+
+        public void WriteErrorLine() {
+            WriteError(Environment.NewLine);
         }
 
         public string ReadLine(ConsoleColor? color = null) {
