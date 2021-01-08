@@ -21,7 +21,7 @@ namespace CSScriptStand
 
 
 
-        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (07.01.2021) ---
+        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (08.01.2021) ---
 
         /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -108,7 +108,7 @@ namespace CSScriptStand
             //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
             log.Append("<pre>");
             foreach (CSScript.Core.LogFragment logFragment in Context.OutLog) {
-                if (logFragment.Color != Colors.Foreground && logFragment.Color != Colors.Background) {
+                if (logFragment.Color != Colors.Foreground) {
                     log.Append("<font color=\"" + ColorTranslator.ToHtml(__GetColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
                 } else {
                     log.Append(logFragment.Text);
@@ -378,6 +378,7 @@ namespace CSScriptStand
             public string Password; // Пароль для архива
             public bool EncryptFileStructure = true; // Шифровать имена файлов (в случае установки пароля на архив)
             public bool IncludeOpenFiles = true; // Включить файл в архив, даже если он в данный момент используется. Для резервного копирования очень полезный ключ
+            public string PartSize = null; // Разбиение архива на указанный размер [b|k|m|g]
             public bool ZipFormat = false; // Создание архива в формате ZIP
 
             public SevenZipArgs() {
@@ -404,6 +405,10 @@ namespace CSScriptStand
                         stringArgs.Append(" -mhe");
                     }
                 }
+                if (!string.IsNullOrEmpty(PartSize)) {
+                    stringArgs.Append(" -v" + PartSize);
+                }
+
                 stringArgs.Append(" \"" + Output + "\"");
                 stringArgs.Append(" \"" + Input + "\"");
                 return stringArgs.ToString();

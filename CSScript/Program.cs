@@ -13,8 +13,7 @@ namespace CSScript
 {
     internal class Program
     {
-        private ScriptContext scriptContext;
-        private readonly ColorScheme ColorScheme = ColorScheme.Default;
+        private readonly ColorScheme colorScheme = ColorScheme.Default;
         private Dictionary<string, Assembly> importedAssemblies;
         private Thread scriptThread;
         private volatile bool scriptThreadAborted;
@@ -32,11 +31,10 @@ namespace CSScript
             // Для остановки скрипта комбинацией Ctrl+C
             Console.CancelKeyPress += Console_CancelKeyPress;
 
-            Console.ForegroundColor = ColorScheme.Foreground;
-            Console.BackgroundColor = ColorScheme.Background;
-            // Console.Clear(); - при выполнении скрипта в командной строке очищается в т.ч. вся предыдущая информация
+            Console.ForegroundColor = colorScheme.Foreground;
 
             InputArguments arguments = null;
+            ScriptContext scriptContext = null;
             try {
                 arguments = InputArguments.FromProgramArgs(args);
 
@@ -58,6 +56,7 @@ namespace CSScript
                     }
                     WriteStartInfo(arguments.ScriptPath);
 
+                    // Создание контекста, через который скомпилированный скрипт будет взаимодействовать с окружением
                     scriptContext = new ScriptContext(arguments.ScriptPath, arguments.ScriptArguments.ToArray());
                     scriptContext.OutputLogFragmentAdded += (sender, log) => Write(log.Text, log.Color);
                     scriptContext.ErrorLogFragmentAdded += (sender, log) => WriteError(log.Text, log.Color);
@@ -70,6 +69,7 @@ namespace CSScript
                     CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
                     if (compiledScript.Errors.Count == 0) {
 
+                        // При использовании в скрипте сторонних сборок, необходимо их разрешать вручную
                         importedAssemblies = ScriptUtils.GetImportedAssemblies(scriptInfo);
                         AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
@@ -78,6 +78,7 @@ namespace CSScript
                         // Для использования в скрипте относительных путей к файлам
                         Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(arguments.ScriptPath));
 
+                        // Запуск скрипта в отдельном потоке (для возможности прерывания во время исполнения)
                         Exception scriptException = null;
                         scriptThread = new Thread(() => {
                             try { scriptContainer.Start(); } catch (Exception ex) { scriptException = ex; }
@@ -143,7 +144,7 @@ namespace CSScript
 
         private void Write(string text, ConsoleColor? color = null) {
             Debug.Write(text);
-            Console.ForegroundColor = color ?? ColorScheme.Foreground;
+            Console.ForegroundColor = color ?? colorScheme.Foreground;
             Console.Out.Write(text);
         }
 
@@ -157,13 +158,13 @@ namespace CSScript
 
         private void WriteError(string text, ConsoleColor? color = null) {
             Debug.Write(text);
-            Console.ForegroundColor = color ?? ColorScheme.Error;
+            Console.ForegroundColor = color ?? colorScheme.Error;
             Console.Error.Write(text);
         }
 
         public void ReadKeyByExit() {
             WriteLine();
-            Write("Для выхода нажмите любую клавишу...", ColorScheme.Info);
+            Write("Для выхода нажмите любую клавишу...", colorScheme.Info);
             Console.ReadKey();
         }
 
@@ -173,17 +174,17 @@ namespace CSScript
             string versionText = $"{version.Major:0}.{version.Minor:00}";
             DateTime buildDate = new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
 
-            WriteLine($"## {DateTime.Now} (version {versionText} build {buildDate.ToShortDateString()})", ColorScheme.Info);
+            WriteLine($"## {DateTime.Now} (version {versionText} build {buildDate.ToShortDateString()})", colorScheme.Info);
         }
 
         private void WriteHelpInfo() {
             string[] split = Resource.HelpText.Split('`');
-            ConsoleColor consoleColor = ColorScheme.Foreground;
+            ConsoleColor consoleColor = colorScheme.Foreground;
             foreach (string fragment in split) {
                 switch (fragment) {
-                    case "": consoleColor = ColorScheme.Foreground; break;
-                    case "c": consoleColor = ColorScheme.Caption; break;
-                    case "i": consoleColor = ColorScheme.Info; break;
+                    case "": consoleColor = colorScheme.Foreground; break;
+                    case "c": consoleColor = colorScheme.Caption; break;
+                    case "i": consoleColor = colorScheme.Info; break;
                     case "//": consoleColor = ConsoleColor.Green; break; // комментарий
                     case "#": consoleColor = ConsoleColor.Yellow; break; // директива
                     default: Write(fragment, consoleColor); break;
@@ -193,7 +194,7 @@ namespace CSScript
         }
 
         private void WriteStartInfo(string scriptPath) {
-            WriteLine($"## {scriptPath}", ColorScheme.Info);
+            WriteLine($"## {scriptPath}", colorScheme.Info);
             WriteLine();
         }
 
@@ -202,7 +203,7 @@ namespace CSScript
                 ex = ex.InnerException; // для корректного отображения StackTrace
             }
 
-            WriteLine($"# Ошибка: {ex.Message}", ColorScheme.Error);
+            WriteLine($"# Ошибка: {ex.Message}", colorScheme.Error);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
                 WriteLine("#" + stackTraceLine, ConsoleColor.Gray);
             }
@@ -214,13 +215,13 @@ namespace CSScript
         }
 
         private void WriteCompileErrors(CompilerResults compilerResults) {
-            WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", ColorScheme.Error);
+            WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", colorScheme.Error);
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
                 if (error.Line > 0) {
-                    WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", ColorScheme.Error);
+                    WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", colorScheme.Error);
                 } else {
-                    WriteLine($"# {errorNumber++}: {error.ErrorText}", ColorScheme.Error);
+                    WriteLine($"# {errorNumber++}: {error.ErrorText}", colorScheme.Error);
                 }
             }
         }
@@ -236,26 +237,24 @@ namespace CSScript
                 string line = lines[i];
                 int lineNumber = i + 1;
 
-                Write(lineNumber.ToString().PadLeft(4) + ": ", ColorScheme.Foreground);
+                Write(lineNumber.ToString().PadLeft(4) + ": ", colorScheme.Foreground);
                 if (errorLines.Contains(lineNumber)) {
-                    WriteLine(line, ColorScheme.Error);
+                    WriteLine(line, colorScheme.Error);
+                } else if (line.TrimStart().StartsWith("//")) {
+                    WriteLine(line, ConsoleColor.Green);
                 } else {
-                    if (line.TrimStart().StartsWith("//")) {
-                        WriteLine(line, ConsoleColor.Green);
-                    } else {
-                        WriteLine(line, ConsoleColor.Cyan);
-                    }
+                    WriteLine(line, ConsoleColor.Cyan);
                 }
             }
         }
 
         private void WriteExitCode(int exitCode) {
-            ConsoleColor color = exitCode == 0 ? ColorScheme.Success : ColorScheme.Error;
+            ConsoleColor color = exitCode == 0 ? colorScheme.Success : colorScheme.Error;
             WriteLine($"# Выполнено ({exitCode})", color);
         }
 
         private void WriteAbort() {
-            WriteLine($"# Прервано", ColorScheme.Error);
+            WriteLine($"# Прервано", colorScheme.Error);
         }
 
         private void RegisterProgram() {
@@ -276,7 +275,7 @@ namespace CSScript
             WriteLine("Перезапуск 'Проводник'...");
             RestartWindowsExplorer();
 
-            WriteLine("Успешно", ColorScheme.Success);
+            WriteLine("Успешно", colorScheme.Success);
         }
 
         private void UnregisterProgram() {
@@ -294,7 +293,7 @@ namespace CSScript
             WriteLine("Перезапуск 'Проводник'...");
             RestartWindowsExplorer();
 
-            WriteLine("Успешно", ColorScheme.Success);
+            WriteLine("Успешно", colorScheme.Success);
         }
 
         private bool HasAdministativePrivilegies() {

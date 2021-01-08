@@ -91,7 +91,7 @@ namespace CSScript.Core
         }
 
         public void Dispose() {
-            // принудительное закрытие выполняющихся контролируемых процессов
+            // Принудительное закрытие выполняющихся контролируемых процессов
             lock (managedProcesses) {
                 for (int i = 0; i < managedProcesses.Count; i++) {
                     try {
