@@ -9,13 +9,19 @@ namespace CSScript.Core
     /// </summary>
     public interface IScriptContext
     {
-        string[] Args { get; }
-        int ExitCode { get; set; }
-        bool Pause { get; set; }
         string ScriptPath { get; }
-        ICollection<LogFragment> OutLog { get; }
-        ICollection<LogFragment> ErrorLog { get; }
+
+        string[] Args { get; }
+
+        bool Pause { get; set; }
+
+        int ExitCode { get; set; }
+
         ColorScheme ColorScheme { get; }
+
+        ICollection<LogFragment> OutLog { get; }
+
+        ICollection<LogFragment> ErrorLog { get; }
 
         void Write(object value, ConsoleColor? color = null);
 

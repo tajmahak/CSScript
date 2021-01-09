@@ -11,8 +11,8 @@ namespace CSScript.Core
     {
         public string ScriptPath { get; }
         public string[] Args { get; }
-        public int ExitCode { get; set; }
         public bool Pause { get; set; }
+        public int ExitCode { get; set; }
         public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
         public ICollection<LogFragment> OutLog => outLog.AsReadOnly();
         public ICollection<LogFragment> ErrorLog => errorLog.AsReadOnly();

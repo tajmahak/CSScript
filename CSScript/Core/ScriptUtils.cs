@@ -86,7 +86,6 @@ namespace CSScript.Core
             code.Append(") : base(" + string.Join(", ", stringList) + ") { }");
             code.AppendLine();
 
-
             // Переопределение метода
             MethodInfo[] abstractMethods = scriptContainerType.GetMethods()
                 .Where(x => x.IsAbstract && x.ReturnType == typeof(void))
