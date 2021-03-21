@@ -136,7 +136,7 @@ namespace CSScriptStand
                     } else if (Directory.Exists(fsObject)) {
                         files.AddRange(Directory.GetFiles(fsObject, "*", SearchOption.AllDirectories));
                     } else {
-                        throw new Exception($"Неизвестный файл/папка: '{fsObject}'");
+                        throw new Exception("Неизвестный файл/папка: '" + fsObject + "'");
                     }
                 }
             }
