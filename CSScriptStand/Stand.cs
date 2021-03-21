@@ -21,7 +21,7 @@ namespace CSScriptStand
 
 
 
-        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (03.03.2021) ---
+        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (21.03.2021) ---
 
         /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -123,6 +123,25 @@ namespace CSScriptStand
 
 
         /// --- РАБОТА С ФАЙЛАМИ / ПАПКАМИ ---
+
+        // Получение общего списка файлов. В качестве параметров могут быть пути к файлам и папкам (например из аргументов программы)
+        public static string[] GetFiles(params string[] fsObjects) {
+            List<string> files = new List<string>();
+            for (int i = 0; i < fsObjects.Length; i++) {
+                string fsObject = fsObjects[i];
+                fsObject = fsObject.Trim('\"');
+                if (!string.IsNullOrEmpty(fsObject)) {
+                    if (File.Exists(fsObject)) {
+                        files.Add(fsObject);
+                    } else if (Directory.Exists(fsObject)) {
+                        files.AddRange(Directory.GetFiles(fsObject, "*", SearchOption.AllDirectories));
+                    } else {
+                        throw new Exception($"Неизвестный файл/папка: '{fsObject}'");
+                    }
+                }
+            }
+            return files.ToArray();
+        }
 
         // Создание папки
         public static bool CreateDirectory(string path, bool isFilePath = false) {
