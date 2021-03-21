@@ -204,6 +204,7 @@ namespace CSScript
             }
 
             WriteLine($"# Ошибка: {ex.Message}", colorScheme.Error);
+            WriteLine($"# {ex.GetType().Name}:", ConsoleColor.Gray);
             foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
                 WriteLine("#" + stackTraceLine, ConsoleColor.Gray);
             }
