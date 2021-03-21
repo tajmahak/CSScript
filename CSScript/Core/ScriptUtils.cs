@@ -21,6 +21,8 @@ namespace CSScript.Core
 
         public static ScriptInfo CreateScriptInfo(string scriptPath, ImportResolveHandler importResolver) {
             ScriptInfo mainScript = new ScriptInfo(scriptPath);
+            mainScript.UsingList.Add("System"); // добавление по умолчанию основного пространство имён
+
             AppendScript(mainScript, scriptPath, 0, importResolver);
 
             DeleteDuplicates(mainScript.ImportList, (a, b) => a.Equals(b));
