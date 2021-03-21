@@ -1,7 +1,6 @@
 #import System.Drawing.dll
 #import System.Core.dll
 
-#using System;
 #using System.Collections.Generic;
 #using System.Diagnostics;
 #using System.Drawing;
@@ -13,7 +12,7 @@
 
 #class
 
-#region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (03.03.2021) ---
+#region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (21.03.2021) ---
 
 /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -100,7 +99,7 @@ public string GetHtmlLog() {
 	//log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
 	log.Append("<pre>");
 	foreach (CSScript.Core.LogFragment logFragment in Context.OutLog) {
-		if (logFragment.Color != Colors.Foreground && logFragment.Color != Colors.Background) {
+		if (logFragment.Color != Colors.Foreground) {
 			log.Append("<font color=\"" + ColorTranslator.ToHtml(__GetColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
 		} else {
 			log.Append(logFragment.Text);
@@ -115,6 +114,25 @@ public string GetHtmlLog() {
 
 
 /// --- РАБОТА С ФАЙЛАМИ / ПАПКАМИ ---
+
+// Получение общего списка файлов. В качестве параметров могут быть пути к файлам и папкам (например из аргументов программы)
+public static string[] GetFiles(params string[] fsObjects) {
+	List<string> files = new List<string>();
+	for (int i = 0; i < fsObjects.Length; i++) {
+		string fsObject = fsObjects[i];
+		fsObject = fsObject.Trim('\"');
+		if (!string.IsNullOrEmpty(fsObject)) {
+			if (File.Exists(fsObject)) {
+				files.Add(fsObject);
+			} else if (Directory.Exists(fsObject)) {
+				files.AddRange(Directory.GetFiles(fsObject, "*", SearchOption.AllDirectories));
+			} else {
+				throw new Exception("Неизвестный файл/папка: '" + fsObject + "'");
+			}
+		}
+	}
+	return files.ToArray();
+}
 
 // Создание папки
 public static bool CreateDirectory(string path, bool isFilePath = false) {
@@ -370,7 +388,7 @@ public class SevenZipArgs
 	public string Password; // Пароль для архива
 	public bool EncryptFileStructure = true; // Шифровать имена файлов (в случае установки пароля на архив)
 	public bool IncludeOpenFiles = true; // Включить файл в архив, даже если он в данный момент используется. Для резервного копирования очень полезный ключ
-	public string PartSize = null; // Размер части архива
+	public string PartSize = null; // Разбиение архива на указанный размер [b|k|m|g]
 	public bool ZipFormat = false; // Создание архива в формате ZIP
 
 	public SevenZipArgs() {
