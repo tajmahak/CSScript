@@ -82,12 +82,10 @@ namespace CSScript.Core
             return ReadLineRequred.Invoke(this, color ?? ColorScheme.Foreground);
         }
 
-        public Process CreateManagedProcess() {
-            Process process = new Process();
+        public void RegisterProcess(Process process) {
             lock (managedProcesses) {
                 managedProcesses.Add(process);
             }
-            return process;
         }
 
         public void Dispose() {

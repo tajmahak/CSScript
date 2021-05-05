@@ -37,6 +37,6 @@ namespace CSScript.Core
 
         string ReadLine(ConsoleColor? color = null);
 
-        Process CreateManagedProcess();
+        void RegisterProcess(Process process);
     }
 }
