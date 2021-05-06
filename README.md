@@ -44,7 +44,7 @@
     - ```.WriteError(value: object): void``` - вывод сообщения в лог ошибок;
     - ```.WriteErrorLine([value: object]): void``` - вывод сообщения в лог ошибок с переносом строки;
     - ```.ReadLine([caption: string], [color: ConsoleColor]): string``` - чтение текста из входного потока;
-    - ```.CreateManagedProcess(): Process``` - создание процесса, контролируемого окружением (автозакрытие в случае ошибки);
+    - ```.RegisterProcess(process: Process): void``` - регистрация созданного процесса для автозакрытия в случае ошибки в работе скрипта;
 - ```Colors: ColorScheme``` - получает цвета для использования в консоли (аналог: ```Context.ColorScheme```);
     - ```.Background``` - цвет фона;
     - ```.Foreground``` - цвет основного текста;
@@ -58,7 +58,6 @@
 ```C#
 // Выполнение кода в основной области (внутри процедуры)
 PrintHelloWorld();
-Context.Pause = true;
 
 // Начало области внутри класса
 #class
