@@ -191,28 +191,40 @@ namespace CSScriptStand
                 return new StreamReader(StandardOutput.BaseStream, encoding);
             }
 
+            public StreamReader GetStandardOutput() {
+                return GetStandardOutput(Encoding.GetEncoding(866));
+            }
+
             public StreamReader GetStandardError(Encoding encoding) {
                 return new StreamReader(StandardError.BaseStream, encoding);
             }
 
-            public string GetOutputText(Encoding encoding) {
+            public StreamReader GetStandardError() {
+                return GetStandardError(Encoding.GetEncoding(866));
+            }
+
+            public string GetStandardOutputText(Encoding encoding) {
                 using (StreamReader reader = GetStandardOutput(encoding)) {
                     return reader.ReadToEnd();
                 }
             }
 
-            public string GetOutputText() {
-                return GetOutputText(Encoding.GetEncoding(866));
+            public string GetStandardOutputText() {
+                using (StreamReader reader = GetStandardOutput()) {
+                    return reader.ReadToEnd();
+                }
             }
 
-            public string GetErrorText(Encoding encoding) {
+            public string GetStandardErrorText(Encoding encoding) {
                 using (StreamReader reader = GetStandardError(encoding)) {
                     return reader.ReadToEnd();
                 }
             }
 
-            public string GetErrorText() {
-                return GetErrorText(Encoding.GetEncoding(866));
+            public string GetStandardErrorText() {
+                using (StreamReader reader = GetStandardError()) {
+                    return reader.ReadToEnd();
+                }
             }
 
             public bool Success { get { return HasExited && ExitCode == 0; } }
