@@ -12,7 +12,8 @@
 
 #class
 
-#region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (21.03.2021) ---
+#region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (05.05.2021) ---
+
 
 /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -72,18 +73,6 @@ public string ReadLine(ConsoleColor? color = null) {
 	return Context.ReadLine(color);
 }
 
-// Запуск неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
-public ProcessResult Start(string program, string args = null, bool redirectOutput = false, Encoding encoding = null) {
-	Process process = new Process();
-	return __StartProcess(process, program, args, redirectOutput, encoding);
-}
-
-// Запуск контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится) 
-public ProcessResult StartManaged(string program, string args = null, bool redirectOutput = false, Encoding encoding = null) {
-	Process process = Context.CreateManagedProcess();
-	return __StartProcess(process, program, args, redirectOutput, encoding);
-}
-
 // Получение текстового лога
 public string GetLog() {
 	StringBuilder log = new StringBuilder();
@@ -110,6 +99,87 @@ public string GetHtmlLog() {
 	//log.Append("</div>");
 
 	return log.ToString();
+}
+
+
+/// --- РАБОТА С ПРОЦЕССАМИ ---
+
+// Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
+public ScriptProcess CreateProcess(string fileName, string args = null) {
+	CheckFileExists(fileName, false);
+	return new ScriptProcess(fileName, args);
+}
+
+// Создание контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится)
+public ScriptProcess CreateManagedProcess(string fileName, string args = null) {
+	ScriptProcess process = CreateProcess(fileName, args);
+	Context.RegisterProcess(process);
+	return process;
+}
+
+// Оболочка процесса с расширенными возможностями
+public class ScriptProcess : Process
+{
+	public ScriptProcess() : base() {
+
+	}
+
+	public ScriptProcess(string fileName) : base() {
+		StartInfo.FileName = fileName;
+	}
+
+	public ScriptProcess(string fileName, string arguments) : this(fileName) {
+		if (arguments != null) {
+			StartInfo.Arguments = arguments;
+		}
+	}
+
+
+	public ScriptProcess Hidden() {
+		StartInfo.CreateNoWindow = true;
+		StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+		return this;
+	}
+
+	public ScriptProcess RedirectOutput() {
+		StartInfo.UseShellExecute = false; // перенаправление ввода/вывода невозможно без выключенной опции 'UseShellExecute'
+		StartInfo.RedirectStandardOutput = true;
+		StartInfo.RedirectStandardError = true;
+		return this;
+	}
+
+	public ScriptProcess StartAndReturn() {
+		Start();
+		return this;
+	}
+
+	public ScriptProcess StartAndWaitForExit() {
+		Start();
+		WaitForExit();
+		return this;
+	}
+
+	public string GetOutputText(Encoding encoding) {
+		using (StreamReader reader = new StreamReader(StandardOutput.BaseStream, encoding)) {
+			return reader.ReadToEnd();
+		}
+	}
+
+	public string GetOutputText() {
+		return GetOutputText(Encoding.GetEncoding(866));
+	}
+
+	public string GetErrorText(Encoding encoding) {
+		using (StreamReader reader = new StreamReader(StandardError.BaseStream, encoding)) {
+			return reader.ReadToEnd();
+		}
+	}
+
+	public string GetErrorText() {
+		return GetErrorText(Encoding.GetEncoding(866));
+	}
+
+	public bool Success { get { return HasExited && ExitCode == 0; } }
 }
 
 
@@ -293,6 +363,17 @@ public static void ValidateIsNotBlank(string value, string message = null) {
 	ValidateIsTrue(!string.IsNullOrEmpty(value), message);
 }
 
+// Проверка процесса на корректное завершение, иначе Exception
+public static void ValidateProcess(Process process, int expectedExitCode = 0) {
+	process.WaitForExit();
+	if (process.HasExited && process.ExitCode != expectedExitCode) {
+		throw new Exception(string.Format("Ошибка выполнения процесса (код возврата: {0}): \"{1}\" {2}",
+			process.ExitCode,
+			process.StartInfo.FileName,
+			process.StartInfo.Arguments));
+	}
+}
+
 
 /// --- КРИПТОГРАФИЯ ---
 
@@ -427,44 +508,6 @@ public class SevenZipArgs
 
 
 /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
-
-// Результат выполнения процесса
-public class ProcessResult
-{
-	public int ExitCode { get; set; }
-	public string OutputText { get; set; }
-	public string ErrorText { get; set; }
-}
-
-private ProcessResult __StartProcess(Process process, string program, string args, bool redirectOutput, Encoding encoding) {
-	ProcessResult result = new ProcessResult();
-
-	CheckFileExists(program, false);
-	using (process) {
-		ProcessStartInfo startInfo = process.StartInfo;
-		startInfo.FileName = program;
-		startInfo.Arguments = args;
-		startInfo.CreateNoWindow = true;
-		startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-		if (redirectOutput) {
-			startInfo.UseShellExecute = false; // перенаправление ввода/вывода невозможно без выключенной опции 'UseShellExecute'
-			startInfo.RedirectStandardOutput = true;
-			startInfo.RedirectStandardError = true;
-		}
-
-		process.Start();
-		process.WaitForExit();
-		result.ExitCode = process.ExitCode;
-
-		if (redirectOutput) {
-			encoding = encoding ?? Encoding.GetEncoding(866);
-			result.OutputText = new StreamReader(process.StandardOutput.BaseStream, encoding).ReadToEnd();
-			result.ErrorText = new StreamReader(process.StandardError.BaseStream, encoding).ReadToEnd();
-		}
-		return result;
-	}
-}
 
 private static byte[] __PerformCryptography(byte[] data, ICryptoTransform cryptoTransform) {
 	using (MemoryStream ms = new MemoryStream())
