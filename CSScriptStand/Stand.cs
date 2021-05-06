@@ -187,16 +187,16 @@ namespace CSScriptStand
                 return this;
             }
 
-            public StreamReader GetOutputStream(Encoding encoding) {
+            public StreamReader GetStandardOutput(Encoding encoding) {
                 return new StreamReader(StandardOutput.BaseStream, encoding);
             }
 
-            public StreamReader GetOutputErrorStream(Encoding encoding) {
+            public StreamReader GetStandardError(Encoding encoding) {
                 return new StreamReader(StandardError.BaseStream, encoding);
             }
 
             public string GetOutputText(Encoding encoding) {
-                using (StreamReader reader = GetOutputStream(encoding)) {
+                using (StreamReader reader = GetStandardOutput(encoding)) {
                     return reader.ReadToEnd();
                 }
             }
@@ -206,7 +206,7 @@ namespace CSScriptStand
             }
 
             public string GetErrorText(Encoding encoding) {
-                using (StreamReader reader = GetOutputErrorStream(encoding)) {
+                using (StreamReader reader = GetStandardError(encoding)) {
                     return reader.ReadToEnd();
                 }
             }
