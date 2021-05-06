@@ -20,8 +20,8 @@ namespace CSScriptStand
         }
 
 
+        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (06.05.2021) ---
 
-        #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (05.05.2021) ---
 
         /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -41,6 +41,16 @@ namespace CSScriptStand
             Context.Write(value, color);
         }
 
+        // Вывод текста в стандартный выходной поток из другого потока
+        public void Write(StreamReader reader, ConsoleColor? color = null) {
+            char[] buffer = new char[1024];
+            while (!reader.EndOfStream) {
+                int readed = reader.Read(buffer, 0, buffer.Length);
+                string value = new string(buffer, 0, readed);
+                Write(value, color);
+            }
+        }
+
         // Вывод текста с переносом строки в стандартный выходной поток
         public void WriteLine(object value, ConsoleColor? color = null) {
             Context.WriteLine(value, color);
@@ -54,6 +64,16 @@ namespace CSScriptStand
         // Вывод текста в стандартный поток ошибок
         public void WriteError(object value) {
             Context.WriteError(value);
+        }
+
+        // Вывод текста в стандартный поток ошибок из другого потока 
+        public void WriteError(StreamReader reader) {
+            char[] buffer = new char[1024];
+            while (!reader.EndOfStream) {
+                int readed = reader.Read(buffer, 0, buffer.Length);
+                string value = new string(buffer, 0, readed);
+                WriteError(value);
+            }
         }
 
         // Вывод текста с переносом строки в стандартный поток ошибок
@@ -167,8 +187,16 @@ namespace CSScriptStand
                 return this;
             }
 
+            public StreamReader GetOutputStream(Encoding encoding) {
+                return new StreamReader(StandardOutput.BaseStream, encoding);
+            }
+
+            public StreamReader GetOutputErrorStream(Encoding encoding) {
+                return new StreamReader(StandardError.BaseStream, encoding);
+            }
+
             public string GetOutputText(Encoding encoding) {
-                using (StreamReader reader = new StreamReader(StandardOutput.BaseStream, encoding)) {
+                using (StreamReader reader = GetOutputStream(encoding)) {
                     return reader.ReadToEnd();
                 }
             }
@@ -178,7 +206,7 @@ namespace CSScriptStand
             }
 
             public string GetErrorText(Encoding encoding) {
-                using (StreamReader reader = new StreamReader(StandardError.BaseStream, encoding)) {
+                using (StreamReader reader = GetOutputErrorStream(encoding)) {
                     return reader.ReadToEnd();
                 }
             }
