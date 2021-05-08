@@ -1,0 +1,1 @@
+CSScript.exe -unreg
