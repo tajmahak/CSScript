@@ -13,12 +13,12 @@ namespace CSScriptStand
                 Pause = true
             };
 
-            ScriptContainer scriptContainer = new Stand(context);
-            scriptContainer.Start();
+            ScriptContainer stand = new Stand(context);
+            stand.Start();
 
             context.WriteLine();
             context.WriteLine("# Выполнено (" + context.ExitCode + ")",
-                context.ExitCode == 0 ? scriptContainer.Colors.Success : scriptContainer.Colors.Error);
+                context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error);
             Console.ReadKey();
         }
     }
