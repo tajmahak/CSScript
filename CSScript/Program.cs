@@ -152,8 +152,8 @@ namespace CSScript
         private void WriteStartInfo() {
             if (context.ScriptPath != null) {
                 context.WriteLine($"## {context.ScriptPath}", context.ColorScheme.Info);
-                context.WriteLine();
             }
+            context.WriteLine();
         }
 
         private void WriteException(Exception ex) {
