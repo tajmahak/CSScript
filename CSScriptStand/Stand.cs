@@ -13,11 +13,14 @@ namespace CSScriptStand
 {
     internal class Stand : CSScript.Core.ScriptContainer
     {
-        public Stand(CSScript.Core.IScriptContext env) : base(env) { }
+        public Stand(CSScript.Core.IScriptContext context) : base(context) { }
 
         public override void Start() {
 
+
+
         }
+
 
 
         #region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (06.05.2021) ---

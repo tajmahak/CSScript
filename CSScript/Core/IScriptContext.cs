@@ -17,11 +17,13 @@ namespace CSScript.Core
 
         int ExitCode { get; set; }
 
+        bool Hidden { get; }
+
         ColorScheme ColorScheme { get; }
 
-        ICollection<LogFragment> OutLog { get; }
+        IList<LogFragment> OutLog { get; }
 
-        ICollection<LogFragment> ErrorLog { get; }
+        IList<LogFragment> ErrorLog { get; }
 
         void Write(object value, ConsoleColor? color = null);
 

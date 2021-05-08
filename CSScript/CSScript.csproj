@@ -66,11 +66,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleContext.cs" />
     <Compile Include="Core\ColorScheme.cs" />
     <Compile Include="Core\IScriptContext.cs" />
     <Compile Include="Core\LogFragment.cs" />
     <Compile Include="Core\ScriptContainer.cs" />
-    <Compile Include="Core\ScriptContext.cs" />
     <Compile Include="Core\ScriptInfo.cs" />
     <Compile Include="Core\ScriptUtils.cs" />
     <Compile Include="Core\Validate.cs" />
@@ -89,7 +89,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="RegistryManager.cs" />
-    <Compile Include="ScriptRuntimeException.cs" />
+    <Compile Include="Scripts\HelpScript.cs" />
+    <Compile Include="Scripts\RegistrationScript.cs" />
+    <Compile Include="Scripts\UnregistrationScript.cs" />
+    <Compile Include="Core\ScriptExecutionContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resource.resx">

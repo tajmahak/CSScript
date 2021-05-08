@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CSScript.Core
 {
@@ -7,60 +8,57 @@ namespace CSScript.Core
     /// </summary>
     public class InputArguments
     {
-        public bool IsEmpty { get; set; }
-        public bool HideMode { get; set; }
-        public bool Pause { get; set; }
-        public bool RegisterMode { get; set; }
-        public bool UnregisterMode { get; set; }
-        public string LogPath { get; set; }
+        public WorkMode Mode { get; set; } = WorkMode.Help;
+        public bool Hidden { get; set; }
+        public bool ForcedPause { get; set; }
         public string ScriptPath { get; set; }
-        public List<string> ScriptArguments { get; private set; } = new List<string>();
+        public string[] ScriptArguments { get; private set; } = new string[0];
 
         public static InputArguments FromProgramArgs(string[] args) {
             InputArguments inputArguments = new InputArguments();
+            if (args.Length > 0) {
 
-            if (args.Length == 0) {
-                inputArguments.IsEmpty = true;
-            } else {
-                string currentArgument = null;
+                bool scriptArgsBlock = false;
+                List<string> scriptArgs = new List<string>();
                 for (int i = 0; i < args.Length; i++) {
                     string arg = args[i];
-                    string preparedArg = arg.Trim().ToLower();
 
-                    if (preparedArg == "-h" || preparedArg == "-hide") {
-                        inputArguments.HideMode = true;
-                        currentArgument = null;
+                    if (!scriptArgsBlock && arg == "-reg") {
+                        inputArguments.Mode = WorkMode.Register;
 
-                    } else if (preparedArg == "-l" || preparedArg == "-log") {
-                        inputArguments.LogPath = args[++i];
-                        currentArgument = null;
+                    } else if (!scriptArgsBlock && arg == "-unreg") {
+                        inputArguments.Mode = WorkMode.Unregister;
 
-                    } else if (preparedArg == "-p" || preparedArg == "-pause") {
-                        inputArguments.Pause = true;
-                        currentArgument = null;
+                    } else if (!scriptArgsBlock && arg == "-h") {
+                        inputArguments.Hidden = true;
 
-                    } else if (preparedArg == "-reg") {
-                        inputArguments.RegisterMode = true;
-                        currentArgument = null;
+                    } else if (!scriptArgsBlock && arg == "-p") {
+                        inputArguments.ForcedPause = true;
 
-                    } else if (preparedArg == "-unreg") {
-                        inputArguments.UnregisterMode = true;
-                        currentArgument = null;
+                    } else if (!scriptArgsBlock && arg == "-a") {
+                        inputArguments.Mode = WorkMode.Script;
+                        scriptArgsBlock = true;
 
-                    } else if (preparedArg == "-a" || preparedArg == "-arg") {
-                        currentArgument = "a";
-
+                    } else if (!scriptArgsBlock && !arg.StartsWith("-")) {
+                        inputArguments.Mode = WorkMode.Script;
+                        inputArguments.ScriptPath = arg;
+                    } else if (scriptArgsBlock) {
+                        scriptArgs.Add(arg);
                     } else {
-                        if (currentArgument == null && inputArguments.ScriptPath == null) {
-                            inputArguments.ScriptPath = arg;
-                        } else if (currentArgument == "a") {
-                            inputArguments.ScriptArguments.Add(arg);
-                        }
+                        throw new Exception("Строка аргументов не распознана: \"" + string.Join("\" \"", args) + "\"");
                     }
                 }
+                inputArguments.ScriptArguments = scriptArgs.ToArray();
             }
-
             return inputArguments;
+        }
+
+        public enum WorkMode
+        {
+            Help,
+            Script,
+            Register,
+            Unregister,
         }
     }
 }

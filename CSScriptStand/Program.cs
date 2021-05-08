@@ -1,39 +1,25 @@
-﻿using CSScript.Core;
+﻿using CSScript;
+using CSScript.Core;
 using System;
-using System.Diagnostics;
 
 namespace CSScriptStand
 {
     internal class Program
     {
         private static void Main(string[] args) {
-            ScriptContext scriptEnvironment = new ScriptContext(null, args);
-            scriptEnvironment.OutputLogFragmentAdded += (sender, message) => Write(message.Text, message.Color);
-            scriptEnvironment.ErrorLogFragmentAdded += (sender, message) => WriteError(message.Text, message.Color);
-            scriptEnvironment.ReadLineRequred += (sender, color) => {
-                Console.ForegroundColor = color;
-                return Console.ReadLine();
+            ConsoleContext context = new ConsoleContext {
+                ColorScheme = ColorScheme.Default,
+                Args = args,
+                Pause = true
             };
 
-            ScriptContainer scriptContainer = new Stand(scriptEnvironment);
+            ScriptContainer scriptContainer = new Stand(context);
             scriptContainer.Start();
 
-            scriptEnvironment.WriteLine();
-            scriptEnvironment.WriteLine("# Выполнено (" + scriptEnvironment.ExitCode + ")",
-                scriptEnvironment.ExitCode == 0 ? scriptContainer.Colors.Success : scriptContainer.Colors.Error);
+            context.WriteLine();
+            context.WriteLine("# Выполнено (" + context.ExitCode + ")",
+                context.ExitCode == 0 ? scriptContainer.Colors.Success : scriptContainer.Colors.Error);
             Console.ReadKey();
-        }
-
-        private static void Write(string text, ConsoleColor color) {
-            Debug.Write(text);
-            Console.ForegroundColor = color;
-            Console.Out.Write(text);
-        }
-
-        private static void WriteError(string text, ConsoleColor color) {
-            Debug.Write(text);
-            Console.ForegroundColor = color;
-            Console.Error.Write(text);
         }
     }
 }
