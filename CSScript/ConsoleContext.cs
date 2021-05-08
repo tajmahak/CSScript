@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace CSScript
 {
@@ -29,24 +30,23 @@ namespace CSScript
         public IList<LogFragment> ErrorLog => errorLog.AsReadOnly();
 
         public string ReadLine(ConsoleColor? color = null) {
-            color = color ?? ColorScheme.Foreground;
+            if (Hidden || Thread.CurrentThread.ThreadState != System.Threading.ThreadState.Running) {
+                return null;
+            }
             lock (outLog) {
-                if (Hidden) {
-                    return null;
-                } else {
-                    ConsoleColor prevColor = Console.ForegroundColor;
-                    if (color != prevColor) {
-                        Console.ForegroundColor = color.Value;
-                    }
-                    string line = Hidden ? null : Console.ReadLine();
-                    if (!string.IsNullOrEmpty(line)) {
-                        outLog.Add(new LogFragment(line, Console.ForegroundColor));
-                    }
-                    if (color != prevColor) {
-                        Console.ForegroundColor = prevColor;
-                    }
-                    return line;
+                color = color ?? ColorScheme.Foreground;
+                ConsoleColor prevColor = Console.ForegroundColor;
+                if (color != prevColor) {
+                    Console.ForegroundColor = color.Value;
                 }
+                string line = Hidden ? null : Console.ReadLine();
+                if (!string.IsNullOrEmpty(line)) {
+                    outLog.Add(new LogFragment(line, Console.ForegroundColor));
+                }
+                if (color != prevColor) {
+                    Console.ForegroundColor = prevColor;
+                }
+                return line;
             }
         }
 
@@ -97,7 +97,7 @@ namespace CSScript
         private void Write(object value, ConsoleColor? color, TextWriter writer, IList<LogFragment> log) {
             color = color ?? ColorScheme.Foreground;
             string strValue = value?.ToString();
-            if (!string.IsNullOrEmpty(strValue)) {
+            if (!string.IsNullOrEmpty(strValue) && Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running) {
                 lock (log) {
                     ConsoleColor prevColor = Console.ForegroundColor;
                     if (color != prevColor) {

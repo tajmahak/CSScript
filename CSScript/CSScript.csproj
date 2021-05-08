@@ -89,6 +89,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="RegistryManager.cs" />
+    <Compile Include="ProgramHandler.cs" />
     <Compile Include="Scripts\HelpScript.cs" />
     <Compile Include="Scripts\RegistrationScript.cs" />
     <Compile Include="Scripts\UnregistrationScript.cs" />
