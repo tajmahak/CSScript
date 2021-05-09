@@ -41,7 +41,7 @@ namespace CSScript
                 }
                 string line = Hidden ? null : Console.ReadLine();
                 if (!string.IsNullOrEmpty(line)) {
-                    outLog.Add(new LogFragment(line, Console.ForegroundColor));
+                    outLog.Add(new LogFragment(line, Console.ForegroundColor, false));
                 }
                 if (color != prevColor) {
                     Console.ForegroundColor = prevColor;
@@ -57,7 +57,7 @@ namespace CSScript
         }
 
         public void Write(object value, ConsoleColor? color = null) {
-            Write(value, color, Console.Out, outLog);
+            Write(value, color, Console.Out, false, outLog);
         }
 
         public void WriteLine(object value, ConsoleColor? color = null) {
@@ -69,7 +69,7 @@ namespace CSScript
         }
 
         public void WriteError(object value) {
-            Write(value, ColorScheme.Error, Console.Error, errorLog);
+            Write(value, ColorScheme.Error, Console.Error, true, errorLog);
         }
 
         public void WriteErrorLine(object value) {
@@ -94,7 +94,7 @@ namespace CSScript
         }
 
 
-        private void Write(object value, ConsoleColor? color, TextWriter writer, IList<LogFragment> log) {
+        private void Write(object value, ConsoleColor? color, TextWriter writer, bool error, IList<LogFragment> log) {
             color = color ?? ColorScheme.Foreground;
             string strValue = value?.ToString();
             if (!string.IsNullOrEmpty(strValue) && Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running) {
@@ -104,7 +104,7 @@ namespace CSScript
                         Console.ForegroundColor = color.Value;
                     }
                     writer.Write(strValue);
-                    log.Add(new LogFragment(strValue, Console.ForegroundColor));
+                    log.Add(new LogFragment(strValue, Console.ForegroundColor, error));
                     if (color != prevColor) {
                         Console.ForegroundColor = prevColor;
                     }

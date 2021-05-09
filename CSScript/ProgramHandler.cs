@@ -68,7 +68,7 @@ namespace CSScript
 
             } finally {
                 Environment.ExitCode = context.ExitCode;
-                
+
                 context.KillManagedProcesses();
 
                 context.WriteLine();
@@ -162,26 +162,22 @@ namespace CSScript
         }
 
         private void WriteException(Exception ex) {
-            context.WriteLine($"# Ошибка: {ex.Message}", context.ColorScheme.Error);
-            context.WriteLine($"# {ex.GetType().Name}:", ConsoleColor.Gray);
-            foreach (string stackTraceLine in ex.StackTrace.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)) {
-                context.WriteLine("#" + stackTraceLine, ConsoleColor.Gray);
-            }
-
+            context.WriteErrorLine($"# Ошибка ({ex.GetType().Name}): {ex.Message}");
+            // StartTrace бесполезен, т.к. не отображает вложенность исключения внутри скрипта
             if (ex.InnerException != null) {
-                context.WriteLine();
+                context.WriteErrorLine();
                 WriteException(ex.InnerException);
             }
         }
 
         private void WriteCompileErrors(CompilerResults compilerResults) {
-            context.WriteLine($"# Ошибок компиляции: {compilerResults.Errors.Count}", context.ColorScheme.Error);
+            context.WriteErrorLine($"# Ошибок компиляции: {compilerResults.Errors.Count}");
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
                 if (error.Line > 0) {
-                    context.WriteLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}", context.ColorScheme.Error);
+                    context.WriteErrorLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}");
                 } else {
-                    context.WriteLine($"# {errorNumber++}: {error.ErrorText}", context.ColorScheme.Error);
+                    context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
                 }
             }
         }
@@ -214,7 +210,7 @@ namespace CSScript
         }
 
         private void WriteAbort() {
-            context.WriteLine($"# Прервано", context.ColorScheme.Error);
+            context.WriteErrorLine($"# Прервано");
         }
 
         private void ReadKeyForExit() {

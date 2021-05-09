@@ -10,11 +10,11 @@ namespace CSScript.Core
     public class ScriptInfo
     {
         public string ScriptPath { get; }
-        public List<string> ImportList { get; private set; } = new List<string>();
-        public List<string> UsingList { get; private set; } = new List<string>();
-        public StringBuilder ProcedureBlock { get; private set; } = new StringBuilder();
-        public StringBuilder ClassBlock { get; private set; } = new StringBuilder();
-        public StringBuilder NamespaceBlock { get; private set; } = new StringBuilder();
+        public List<string> ImportList { get; } = new List<string>();
+        public List<string> UsingList { get; } = new List<string>();
+        public StringBuilder ProcedureBlock { get; } = new StringBuilder();
+        public StringBuilder ClassBlock { get; } = new StringBuilder();
+        public StringBuilder NamespaceBlock { get; } = new StringBuilder();
 
 
         public ScriptInfo(string scriptPath) {
@@ -63,9 +63,6 @@ namespace CSScript.Core
         }
 
 
-        /// <summary>
-        /// Представляет строку скрипта.
-        /// </summary>
         private class ScriptLine
         {
             public string SourceLine { get; }
