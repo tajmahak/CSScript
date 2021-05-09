@@ -67,6 +67,8 @@ namespace CSScript
                 WriteException(ex);
 
             } finally {
+                Environment.ExitCode = context.ExitCode;
+                
                 context.KillManagedProcesses();
 
                 context.WriteLine();
@@ -74,12 +76,9 @@ namespace CSScript
                     WriteAbort();
                 } else {
                     WriteExitCode();
-                }
-
-                Environment.ExitCode = context.ExitCode;
-
-                if (!context.Hidden && (context.Pause || forcedPause)) {
-                    ReadKeyForExit();
+                    if (!context.Hidden && (context.Pause || forcedPause)) {
+                        ReadKeyForExit();
+                    }
                 }
             }
         }
