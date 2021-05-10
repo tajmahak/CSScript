@@ -71,11 +71,9 @@ namespace CSScript
 
                 context.KillManagedProcesses();
 
-                context.WriteLine();
                 if (executionContext != null && executionContext.Aborted) {
                     WriteAbort();
                 } else {
-                    WriteExitCode();
                     if (!context.Hidden && (context.Pause || forcedPause)) {
                         ReadKeyForExit();
                     }
@@ -87,6 +85,7 @@ namespace CSScript
             executionContext?.Abort();
         }
 
+        // Используется для возможности выполнения скрипта из стенда
         public event Func<ConsoleContext, ScriptContainer> GetScriptContainerEvent;
 
 
@@ -139,9 +138,7 @@ namespace CSScript
                 return ScriptUtils.CreateScriptContainer(compiledScript, context);
 
             } else {
-                WriteCompileErrors(compiledScript);
-                context.WriteLine();
-                WriteSourceCode(ScriptUtils.CreateSourceCode(scriptInfo), compiledScript);
+                WriteCompileErrors(scriptInfo, compiledScript);
                 throw new Exception("Не удалось выполнить сборку скрипта.");
             }
         }
@@ -170,8 +167,7 @@ namespace CSScript
             }
         }
 
-        private void WriteCompileErrors(CompilerResults compilerResults) {
-            context.WriteErrorLine($"# Ошибок компиляции: {compilerResults.Errors.Count}");
+        private void WriteCompileErrors(ScriptInfo scriptInfo, CompilerResults compilerResults) {
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
                 if (error.Line > 0) {
@@ -180,33 +176,28 @@ namespace CSScript
                     context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
                 }
             }
-        }
 
-        private void WriteSourceCode(string sourceCode, CompilerResults compiledScript) {
+            context.WriteLine();
+
             HashSet<int> errorLines = new HashSet<int>();
-            foreach (CompilerError error in compiledScript.Errors) {
+            foreach (CompilerError error in compilerResults.Errors) {
                 errorLines.Add(error.Line);
             }
-
+            string sourceCode = ScriptUtils.CreateSourceCode(scriptInfo);
             string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++) {
                 string line = lines[i];
                 int lineNumber = i + 1;
 
-                context.Write(lineNumber.ToString().PadLeft(4) + ": ", context.ColorScheme.Foreground);
+                context.Write(lineNumber.ToString().PadLeft(4) + ": ", context.ColorScheme.Info);
                 if (errorLines.Contains(lineNumber)) {
                     context.WriteLine(line, context.ColorScheme.Error);
                 } else if (line.TrimStart().StartsWith("//")) {
                     context.WriteLine(line, ConsoleColor.Green);
                 } else {
-                    context.WriteLine(line, ConsoleColor.Cyan);
+                    context.WriteLine(line);
                 }
             }
-        }
-
-        private void WriteExitCode() {
-            ConsoleColor color = context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error;
-            context.WriteLine($"# Выполнено ({context.ExitCode})", color);
         }
 
         private void WriteAbort() {
