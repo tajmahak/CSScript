@@ -510,7 +510,7 @@ namespace CSScriptStand
                 smtp.Send(message);
                 return true;
             } catch (Exception ex) {
-                WriteError("Не удалось отправить сообщение: " + ex.Message);
+                WriteLine("Не удалось отправить сообщение: " + ex.Message, Colors.Error);
                 return false;
             }
         }
