@@ -12,7 +12,7 @@
 
 #class
 
-#region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (06.05.2021) ---
+#region --- utils --- СКРИПТОВЫЕ УТИЛИТЫ (10.05.2021) ---
 
 
 /// --- РАБОТА С КОНТЕКСТОМ ---
@@ -86,6 +86,50 @@ public void WriteTimeStamp() {
 // Вывод штампа даты и времени в стандартный поток ошибок
 public void WriteErrorTimeStamp() {
 	WriteError("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ");
+}
+
+// Вывод форматированной строки формата "... `COLOR:VALUE` ...", где:
+//  COLOR - цвет, поддерживаемый консолью;
+//  VALUE - значение, которое нужно вывести в указанном цвете.
+public void WriteFormatted(string helpText, ConsoleColor? color = null) {
+	string[] split = helpText.Split('`');
+	for (int i = 0; i < split.Length; i++) {
+		ConsoleColor? writeColor = color;
+		bool newBlock = i % 2 != 0;
+		string fragment = split[i];
+		if (newBlock) {
+			string[] fragmentBlock = DivideString(fragment, ":");
+			ValidateIsTrue(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
+			fragment = fragmentBlock[1];
+			switch (fragmentBlock[0].ToLowerInvariant()) {
+				case "black": writeColor = ConsoleColor.Black; break;
+				case "darkblue": writeColor = ConsoleColor.DarkBlue; break;
+				case "darkgreen": writeColor = ConsoleColor.DarkGreen; break;
+				case "darkcyan": writeColor = ConsoleColor.DarkCyan; break;
+				case "darkred": writeColor = ConsoleColor.DarkRed; break;
+				case "darkmagenta": writeColor = ConsoleColor.DarkMagenta; break;
+				case "darkyellow": writeColor = ConsoleColor.DarkYellow; break;
+				case "gray": writeColor = ConsoleColor.Gray; break;
+				case "darkgray": writeColor = ConsoleColor.DarkGray; break;
+				case "blue": writeColor = ConsoleColor.Blue; break;
+				case "green": writeColor = ConsoleColor.Green; break;
+				case "cyan": writeColor = ConsoleColor.Cyan; break;
+				case "red": writeColor = ConsoleColor.Red; break;
+				case "magenta": writeColor = ConsoleColor.Magenta; break;
+				case "yellow": writeColor = ConsoleColor.Yellow; break;
+				case "white": writeColor = ConsoleColor.White; break;
+				default: throw new Exception("Не удалось распознать идентификатор цвета '" + fragmentBlock[0] + "'.");
+			}
+		}
+		Write(fragment, writeColor);
+	}
+}
+
+// Вывод форматированной строки формата "... `COLOR:VALUE` ...", где:
+//  COLOR - цвет, поддерживаемый консолью;
+//  VALUE - значение, которое нужно вывести в указанном цвете.
+public void WriteFormattedLine(string heplLine, ConsoleColor? color = null) {
+	WriteFormatted(heplLine + Environment.NewLine, color);
 }
 
 // Чтение текста из входного потока
@@ -484,6 +528,14 @@ public static string DecryptString(string encrypt) {
 
 
 /// --- ПРОЧЕЕ ---
+
+// Разбиение строки на 2 части.
+public string[] DivideString(string value, string separator) {
+	int index = value.IndexOf(separator);
+	return index == -1 ?
+		(new string[] { value }) :
+		(new string[] { value.Remove(index), value.Substring(index + separator.Length) });
+}
 
 // Отправка электронного письма с использованием SMTP-сервера Mail.Ru
 public bool SendEmailFromMailRu(MailMessage message, string login, string password) {
