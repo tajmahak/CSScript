@@ -7,6 +7,8 @@ namespace CSScript
 {
     public static class RegistryManager
     {
+        public const string ScriptFileExtension = ".cssc";
+
         public static void RegisterFileAssociation() {
             RegisterFileAssociation(Registry.ClassesRoot);
             RegisterFileAssociation(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true));
@@ -57,7 +59,7 @@ namespace CSScript
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = executingAssembly.GetName().Name;
 
-            RegistryKey key = parentKey.CreateSubKey(".cssc");
+            RegistryKey key = parentKey.CreateSubKey(ScriptFileExtension);
             key.SetValue(string.Empty, assemblyName);
 
             key = parentKey.CreateSubKey(assemblyName + "\\DefaultIcon");
@@ -71,7 +73,7 @@ namespace CSScript
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = executingAssembly.GetName().Name;
 
-            parentKey.DeleteSubKeyTree(".cssc", false);
+            parentKey.DeleteSubKeyTree(ScriptFileExtension, false);
             parentKey.DeleteSubKeyTree(assemblyName, false);
         }
 

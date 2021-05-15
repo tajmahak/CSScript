@@ -21,7 +21,7 @@ namespace CSScript.Core
 
         public static ScriptInfo CreateScriptInfo(string scriptPath, ImportResolveHandler importResolver) {
             ScriptInfo mainScript = new ScriptInfo(scriptPath);
-            mainScript.UsingList.Add("System"); // добавление по умолчанию основного пространство имён
+            mainScript.UsingList.Add("System"); // добавление по умолчанию основного пространства имён
 
             AppendScript(mainScript, scriptPath, 0, importResolver);
 
@@ -32,6 +32,11 @@ namespace CSScript.Core
         }
 
         public static CompilerResults CompileScript(ScriptInfo scriptInfo) {
+            // Компиляция C# 6 с помощью Roslyn на Net Framework 4.5
+            // https://stackoverflow.com/questions/31639602/using-c-sharp-6-features-with-codedomprovider-roslyn
+            // https://www.nuget.org/packages/Microsoft.CodeDom.Providers.DotNetCompilerPlatform/
+            // CodeDomProvider objCodeCompiler = new Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider();
+
             string sourceCode = CreateSourceCode(scriptInfo);
             string[] referencedAssemblies = GetReferencedAssemblies(scriptInfo);
             using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
@@ -104,15 +109,20 @@ namespace CSScript.Core
             }
             code.Append(string.Join(", ", stringList) + ") {");
             code.AppendLine();
-            code.AppendLine(scriptInfo.ProcedureBlock.ToString());
+            code.AppendLine("// === init block ===");
+            code.AppendLine(scriptInfo.InitBlock.ToString().Trim());
+            code.AppendLine("// === procedure block ===");
+            code.AppendLine(scriptInfo.ProcedureBlock.ToString().Trim());
             code.AppendLine("}");
 
             code.AppendLine();
-            code.AppendLine(scriptInfo.ClassBlock.ToString());
+            code.AppendLine("// === class block ===");
+            code.AppendLine(scriptInfo.ClassBlock.ToString().Trim());
             code.AppendLine("}");
 
             code.AppendLine();
-            code.AppendLine(scriptInfo.NamespaceBlock.ToString());
+            code.AppendLine("// === namespace block ===");
+            code.AppendLine(scriptInfo.NamespaceBlock.ToString().Trim());
             code.AppendLine("}");
 
             return code.ToString();
@@ -148,6 +158,7 @@ namespace CSScript.Core
             if (level == 0) { // выполнение процедуры допустимо только в скрипте самого высокого уровня
                 mainScript.ProcedureBlock.AppendLine(script.ProcedureBlock.ToString());
             }
+            mainScript.InitBlock.AppendLine(script.InitBlock.ToString());
             mainScript.ClassBlock.AppendLine(script.ClassBlock.ToString());
             mainScript.NamespaceBlock.AppendLine(script.NamespaceBlock.ToString());
             mainScript.UsingList.AddRange(script.UsingList);
@@ -178,7 +189,22 @@ namespace CSScript.Core
 
         private static string[] GetReferencedAssemblies(ScriptInfo scriptContent) {
             List<string> importedAssemblies = new List<string> {
-                "System.dll", // библиотека для работы множества основных функций
+                // добавление зависимостей .NET Framework
+                "Microsoft.CSharp.dll",
+                "System.dll",
+                "System.Core.dll",
+                "System.Data.dll",
+                "System.Data.DataSetExtensions.dll",
+                "System.Data.Linq.dll",
+                "System.Drawing.dll",
+                "System.Drawing.Design.dll",
+                "System.Net.dll",
+                "System.Numerics.dll",
+                "System.Security.dll",
+                "System.Web.dll",
+                "System.Windows.Forms.dll",
+                "System.Xml.dll",
+                "System.Xml.Linq.dll",
             };
             importedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
             foreach (string importedAssemblyPath in scriptContent.ImportList) { // дополнительные библиотеки, указанные в #import

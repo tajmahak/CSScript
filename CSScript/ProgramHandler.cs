@@ -103,7 +103,7 @@ namespace CSScript
         }
 
         private string ResolveImportFilePath(string importFilePath, string workingDirectory) {
-            return Path.Combine(Settings.Default.ScriptLibDirectory, importFilePath);
+            return Path.Combine(Settings.Default.ScriptLibDirectory, importFilePath + RegistryManager.ScriptFileExtension);
         }
 
 

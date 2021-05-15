@@ -12,6 +12,7 @@ namespace CSScript.Core
         public string ScriptPath { get; }
         public List<string> ImportList { get; } = new List<string>();
         public List<string> UsingList { get; } = new List<string>();
+        public StringBuilder InitBlock { get; } = new StringBuilder();
         public StringBuilder ProcedureBlock { get; } = new StringBuilder();
         public StringBuilder ClassBlock { get; } = new StringBuilder();
         public StringBuilder NamespaceBlock { get; } = new StringBuilder();
@@ -39,6 +40,10 @@ namespace CSScript.Core
 
                         case "using":
                             UsingList.Add(scriptLine.OperatorValue);
+                            break;
+
+                        case "init":
+                            currentBlock = InitBlock;
                             break;
 
                         case "class":
@@ -76,6 +81,13 @@ namespace CSScript.Core
             }
 
             public static ScriptLine Parse(string line) {
+
+                // Идентификация исполняемого кода скрипта. В VisualStudio распознаётся как комментарий.
+                int executingScriptCodeStartIndex = line.LastIndexOf("/////");
+                if (executingScriptCodeStartIndex != -1) {
+                    line = line.Substring(executingScriptCodeStartIndex + "/////".Length);
+                }
+
                 ScriptLine scriptLine = new ScriptLine(line);
                 string trimLine = line.TrimStart();
                 if (trimLine.Length == 0) {
