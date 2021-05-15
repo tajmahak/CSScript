@@ -171,6 +171,7 @@ public static class __Utils /////
     }
 
 
+
     /// --- РАБОТА С ПРОЦЕССАМИ ---
 
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
@@ -217,6 +218,28 @@ public static class __Utils /////
             return true;
         }
         return false;
+    }
+
+    // Поиск файла по пути или маске
+    public static string FindFile(string path) {
+        if (File.Exists(path)) {
+            return path;
+        }
+        string[] files = FindFiles(path);
+        ValidateCondition(files.Length == 0, "По указанной маске '" + path + "' не найдено файлов.");
+        ValidateCondition(files.Length > 1, "По указанной маске '" + path + "' найдено несколько файлов.");
+        return files[0];
+    }
+
+    // Поиск файлов по пути или маске
+    public static string[] FindFiles(string path) {
+        string dir = Path.GetDirectoryName(path);
+        if (string.IsNullOrEmpty(dir)) {
+            dir = Environment.CurrentDirectory;
+        }
+        string mask = Path.GetFileName(path);
+        var files = Directory.GetFiles(dir, mask);
+        return files;
     }
 
     // Добавление префикса к имени файла
@@ -343,29 +366,30 @@ public static class __Utils /////
         return true;
     }
 
-    // Получение абсолютного пути к файлу/директории
-    public static string FullPath(string path) {
-        return Path.GetFullPath(path);
-    }
 
 
     /// --- ВАЛИДАЦИЯ ---
 
+    // В случае, если условие выполнено, вызывается Exception
+    public static void ValidateCondition(bool condition, string message = null) {
+        if (condition) {
+            throw message == null ? new Exception("Ошибка валидации.") : new Exception(message);
+        }
+    }
+
     // Проверка на выполнение условия, иначе Exception
     public static void ValidateIsTrue(bool condition, string message = null) {
-        if (!condition) {
-            throw message == null ? new Exception() : new Exception(message);
-        }
+        ValidateCondition(!condition, message);
     }
 
     // Проверка на не-null переменную, иначе Exception
     public static void ValidateIsNotNull(object obj, string message = null) {
-        ValidateIsTrue(obj != null, message);
+        ValidateCondition(obj == null, message);
     }
 
     // Проверка на непустую строку, иначе Exception
     public static void ValidateIsNotBlank(string value, string message = null) {
-        ValidateIsTrue(!string.IsNullOrEmpty(value), message);
+        ValidateCondition(string.IsNullOrEmpty(value), message);
     }
 
     // Проверка процесса на корректное завершение, иначе Exception
@@ -378,6 +402,7 @@ public static class __Utils /////
                 process.StartInfo.Arguments));
         }
     }
+
 
 
     /// --- ПРОЧЕЕ ---
@@ -404,6 +429,7 @@ public static class __Utils /////
             return false;
         }
     }
+
 
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
@@ -475,12 +501,19 @@ public class ScriptProcess : Process
     }
 
     public ScriptProcess StartAndReturn() {
+        if (!StartInfo.UseShellExecute) {
+            if (StartInfo.FileName.ToLowerInvariant().EndsWith(".py")) {
+                // System.ComponentModel.Win32Exception: "Указанный исполняемый файл не является действительным приложением для этой операционной системы."
+                StartInfo.Arguments = string.Format("\"{0}\" ", StartInfo.FileName) + StartInfo.Arguments;
+                StartInfo.FileName = "python";
+            }
+        }
         Start();
         return this;
     }
 
     public ScriptProcess StartAndWaitForExit() {
-        Start();
+        StartAndReturn();
         WaitForExit();
         return this;
     }
