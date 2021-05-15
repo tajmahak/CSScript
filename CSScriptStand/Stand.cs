@@ -13,10 +13,6 @@ namespace CSScriptStand
 {
     internal class Stand : CSScript.Core.ScriptContainer
     {
-        // true  - выполнение кода без перехвата исключений
-        // false - выполнение кода с помощью обработчика CSCript
-        public static readonly bool UseSimpleExecutor = true;
-
         public Stand(CSScript.Core.IScriptContext context) : base(context) {
             // Инициализация (в скрипте он внедняется в класс вместо неработающей конструкции using static)
             __Utils.context = Context;
