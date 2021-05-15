@@ -12,7 +12,7 @@ namespace CSScript.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -29,6 +29,40 @@ namespace CSScript.Properties {
         public string ScriptLibDirectory {
             get {
                 return ((string)(this["ScriptLibDirectory"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("CSScript.Core\r\nSystem\r\nSystem.Collections\r\nSystem.Collections.Generic\r\nSystem.Dia" +
+            "gnostics\r\nSystem.Drawing\r\nSystem.IO\r\nSystem.Net\r\nSystem.Net.Mail\r\nSystem.Runtime" +
+            ".InteropServices\r\nSystem.Security.Cryptography\r\nSystem.Text\r\nSystem.Xml")]
+        public string Usings {
+            get {
+                return ((string)(this["Usings"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"Microsoft.CSharp.dll
+System.dll
+System.Core.dll
+System.Data.dll
+System.Data.DataSetExtensions.dll
+System.Data.Linq.dll
+System.Drawing.dll
+System.Drawing.Design.dll
+System.Net.dll
+System.Numerics.dll
+System.Security.dll
+System.Web.dll
+System.Windows.Forms.dll
+System.Xml.dll
+System.Xml.Linq.dll")]
+        public string ReferencedAssemblies {
+            get {
+                return ((string)(this["ReferencedAssemblies"]));
             }
         }
     }

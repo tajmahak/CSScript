@@ -1,8 +1,7 @@
-/// ВЗАИМОДЕЙСТВИЕ С WINDOWS (15.05.2021)
+// utils.windows
+// ВЗАИМОДЕЙСТВИЕ С WINDOWS (15.05.2021)
+// ------------------------------------------------------------
 
-///// #using System;
-///// #using System.Runtime.InteropServices;
-/////
 ///// #namespace
 
 // Утилиты для взаимодействия с API Windows

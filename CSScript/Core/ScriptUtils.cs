@@ -19,9 +19,9 @@ namespace CSScript.Core
         public delegate string ImportResolveHandler(string importFilePath, string workingDirectory);
 
 
-        public static ScriptInfo CreateScriptInfo(string scriptPath, ImportResolveHandler importResolver) {
+        public static ScriptInfo CreateScriptInfo(string scriptPath, string[] baseUsingList, ImportResolveHandler importResolver) {
             ScriptInfo mainScript = new ScriptInfo(scriptPath);
-            mainScript.UsingList.Add("System"); // добавление по умолчанию основного пространства имён
+            mainScript.UsingList.AddRange(baseUsingList);
 
             AppendScript(mainScript, scriptPath, 0, importResolver);
 
@@ -31,14 +31,14 @@ namespace CSScript.Core
             return mainScript;
         }
 
-        public static CompilerResults CompileScript(ScriptInfo scriptInfo) {
+        public static CompilerResults CompileScript(ScriptInfo scriptInfo, string[] baseAssemblyList) {
             // Компиляция C# 6 с помощью Roslyn на Net Framework 4.5
             // https://stackoverflow.com/questions/31639602/using-c-sharp-6-features-with-codedomprovider-roslyn
             // https://www.nuget.org/packages/Microsoft.CodeDom.Providers.DotNetCompilerPlatform/
             // CodeDomProvider objCodeCompiler = new Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider();
 
             string sourceCode = CreateSourceCode(scriptInfo);
-            string[] referencedAssemblies = GetReferencedAssemblies(scriptInfo);
+            string[] referencedAssemblies = GetReferencedAssemblies(scriptInfo, baseAssemblyList);
             using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
                 CompilerParameters compileParameters = new CompilerParameters(referencedAssemblies) {
                     GenerateInMemory = true,
@@ -187,25 +187,9 @@ namespace CSScript.Core
             throw new FileNotFoundException("Файл '" + testFilePath + "' не найден.", testFilePath);
         }
 
-        private static string[] GetReferencedAssemblies(ScriptInfo scriptContent) {
-            List<string> importedAssemblies = new List<string> {
-                // добавление зависимостей .NET Framework
-                "Microsoft.CSharp.dll",
-                "System.dll",
-                "System.Core.dll",
-                "System.Data.dll",
-                "System.Data.DataSetExtensions.dll",
-                "System.Data.Linq.dll",
-                "System.Drawing.dll",
-                "System.Drawing.Design.dll",
-                "System.Net.dll",
-                "System.Numerics.dll",
-                "System.Security.dll",
-                "System.Web.dll",
-                "System.Windows.Forms.dll",
-                "System.Xml.dll",
-                "System.Xml.Linq.dll",
-            };
+        private static string[] GetReferencedAssemblies(ScriptInfo scriptContent, string[] baseList) {
+            List<string> importedAssemblies = new List<string>();
+            importedAssemblies.AddRange(baseList);
             importedAssemblies.Add(Assembly.GetExecutingAssembly().Location); // для взаимодействия с программой, запускающей скрипт
             foreach (string importedAssemblyPath in scriptContent.ImportList) { // дополнительные библиотеки, указанные в #import
                 importedAssemblies.Add(importedAssemblyPath);

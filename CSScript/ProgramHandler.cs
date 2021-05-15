@@ -131,8 +131,11 @@ namespace CSScript
         }
 
         private ScriptContainer CreateScriptContainer() {
-            ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(context.ScriptPath, ResolveImportFilePath);
-            CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo);
+            string[] baseUsingList = ParseList(Settings.Default.Usings);
+            string[] baseAssemblyList = ParseList(Settings.Default.ReferencedAssemblies);
+
+            ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(context.ScriptPath, baseUsingList, ResolveImportFilePath);
+            CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo, baseAssemblyList);
             if (compiledScript.Errors.Count == 0) {
                 importedAssemblies = ScriptUtils.GetImportedAssemblies(scriptInfo);
                 return ScriptUtils.CreateScriptContainer(compiledScript, context);
@@ -208,6 +211,10 @@ namespace CSScript
             Console.WriteLine();
             Console.Write("Для выхода нажмите любую клавишу...", context.ColorScheme.Info);
             Console.ReadKey();
+        }
+
+        private string[] ParseList(string line) {
+            return line.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }
