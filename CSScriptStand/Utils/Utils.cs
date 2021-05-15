@@ -1,5 +1,6 @@
 ﻿using CSScript.Core;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,23 +10,13 @@ using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 
-/// СКРИПТОВЫЕ УТИЛИТЫ (15.05.2021)
+// utils
+// СКРИПТОВЫЕ УТИЛИТЫ (15.05.2021)
+// ------------------------------------------------------------
 
-///// #using CSScript.Core;
-///// #using System;
-///// #using System.Collections.Generic;
-///// #using System.Diagnostics;
-///// #using System.Drawing;
-///// #using System.IO;
-///// #using System.Net;
-///// #using System.Net.Mail;
-///// #using System.Security.Cryptography;
-///// #using System.Text;
-///// 
 ///// #init
-/////
-///// context = Context;
-/////
+///// __InitUtils(Context);
+
 ///// #class
 
 public static class __Utils /////
@@ -35,8 +26,8 @@ public static class __Utils /////
 
     // Получение входящего аргумента по индексу
     public static T GetArgument<T>(int index, T defaultValue) {
-        if (context.Args.Length > index) {
-            string value = context.Args[index];
+        if (utilsContext.Args.Length > index) {
+            string value = utilsContext.Args[index];
             if (!string.IsNullOrEmpty(value)) {
                 return (T)Convert.ChangeType(value, typeof(T));
             }
@@ -46,7 +37,7 @@ public static class __Utils /////
 
     // Вывод текста в стандартный выходной поток
     public static void Write(object value, ConsoleColor? color = null) {
-        context.Write(value, color);
+        utilsContext.Write(value, color);
     }
 
     // Вывод текста в стандартный выходной поток из другого потока
@@ -61,17 +52,17 @@ public static class __Utils /////
 
     // Вывод текста с переносом строки в стандартный выходной поток
     public static void WriteLine(object value, ConsoleColor? color = null) {
-        context.WriteLine(value, color);
+        utilsContext.WriteLine(value, color);
     }
 
     // Вывод переноса строки в стандартный выходной поток
     public static void WriteLine() {
-        context.WriteLine();
+        utilsContext.WriteLine();
     }
 
     // Вывод текста в стандартный поток ошибок
     public static void WriteError(object value) {
-        context.WriteError(value);
+        utilsContext.WriteError(value);
     }
 
     // Вывод текста в стандартный поток ошибок из другого потока 
@@ -86,17 +77,17 @@ public static class __Utils /////
 
     // Вывод текста с переносом строки в стандартный поток ошибок
     public static void WriteErrorLine(object value) {
-        context.WriteErrorLine(value);
+        utilsContext.WriteErrorLine(value);
     }
 
     // Вывод переноса строки в стандартный поток ошибок
     public static void WriteErrorLine() {
-        context.WriteErrorLine();
+        utilsContext.WriteErrorLine();
     }
 
     // Вывод штампа даты и времени в стандартный выходной поток
     public static void WriteTimeStamp() {
-        Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", colors.Info);
+        Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", utilsColors.Info);
     }
 
     // Вывод штампа даты и времени в стандартный поток ошибок
@@ -150,13 +141,13 @@ public static class __Utils /////
 
     // Чтение текста из входного потока
     public static string ReadLine(ConsoleColor? color = null) {
-        return context.ReadLine(color);
+        return utilsContext.ReadLine(color);
     }
 
     // Получение текстового лога
     public static string GetLog() {
         StringBuilder log = new StringBuilder();
-        foreach (CSScript.Core.LogFragment logFragment in context.OutLog) {
+        foreach (CSScript.Core.LogFragment logFragment in utilsContext.OutLog) {
             log.Append(logFragment.Text);
         }
         return log.ToString();
@@ -167,8 +158,8 @@ public static class __Utils /////
         StringBuilder log = new StringBuilder();
         //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
         log.Append("<pre>");
-        foreach (CSScript.Core.LogFragment logFragment in context.OutLog) {
-            if (logFragment.Color != colors.Foreground) {
+        foreach (LogFragment logFragment in utilsContext.OutLog) {
+            if (logFragment.Color != utilsColors.Foreground) {
                 log.Append("<font color=\"" + ColorTranslator.ToHtml(__GetColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
             } else {
                 log.Append(logFragment.Text);
@@ -182,22 +173,52 @@ public static class __Utils /////
     }
 
 
-
     /// --- РАБОТА С ПРОЦЕССАМИ ---
 
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
-    public static ScriptProcess CreateProcess(string fileName, string args = null) {
+    public static ScriptProcess CreateProcess(string fileName, object args = null) {
         CheckFileExists(fileName, false);
-        return new ScriptProcess(fileName, args);
+        string stringArgs = args == null ? null : args.ToString();
+        return new ScriptProcess(fileName, stringArgs);
     }
 
     // Создание контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится)
-    public static ScriptProcess CreateManagedProcess(string fileName, string args = null) {
+    public static ScriptProcess CreateManagedProcess(string fileName, object args = null) {
         ScriptProcess process = CreateProcess(fileName, args);
-        context.RegisterProcess(process);
+        utilsContext.RegisterProcess(process);
         return process;
     }
 
+    // Запуск процесса с выводом потоков в консоль и ожиданием его завершения
+    public static int StartProcess(string fileName, object args = null, Encoding outputEncoding = null) {
+        ScriptProcess process = CreateManagedProcess(fileName, args);
+        process.RedirectOutput();
+        process.StartAndReturn();
+        if (outputEncoding == null) {
+            Write(process.GetOutput());
+            WriteError(process.GetError());
+        } else {
+            Write(process.GetOutput(outputEncoding), utilsColors.Info);
+            WriteError(process.GetError(outputEncoding));
+        }
+        process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    // Запуск процесса в отдельном окне и ожиданием его завершения
+    public static int StartNormalProcess(string fileName, object args = null) {
+        ScriptProcess process = CreateManagedProcess(fileName, args);
+        process.StartAndWaitForExit();
+        return process.ExitCode;
+    }
+
+    // Запуск скрытого процесса и ожидание его завершения
+    public static int StartHiddenProcess(string fileName, object args = null) {
+        ScriptProcess process = CreateManagedProcess(fileName, args);
+        process.Hidden();
+        process.StartAndWaitForExit();
+        return process.ExitCode;
+    }
 
 
     /// --- РАБОТА С ФАЙЛАМИ / ПАПКАМИ ---
@@ -232,24 +253,24 @@ public static class __Utils /////
     }
 
     // Поиск файла по пути или маске
-    public static string FindFile(string path) {
+    public static string FindFile(string path, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
         if (File.Exists(path)) {
             return path;
         }
-        string[] files = FindFiles(path);
+        string[] files = FindFiles(path, searchOption);
         ValidateCondition(files.Length == 0, "По указанной маске '" + path + "' не найдено файлов.");
         ValidateCondition(files.Length > 1, "По указанной маске '" + path + "' найдено несколько файлов.");
         return files[0];
     }
 
     // Поиск файлов по пути или маске
-    public static string[] FindFiles(string path) {
+    public static string[] FindFiles(string path, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
         string dir = Path.GetDirectoryName(path);
         if (string.IsNullOrEmpty(dir)) {
             dir = Environment.CurrentDirectory;
         }
         string mask = Path.GetFileName(path);
-        var files = Directory.GetFiles(dir, mask);
+        string[] files = Directory.GetFiles(dir, mask, searchOption);
         return files;
     }
 
@@ -310,7 +331,7 @@ public static class __Utils /////
                 deleted++;
             } catch {
                 string fileName = Path.GetFileName(file);
-                WriteLine("Не удалось удалить файл '" + fileName + "'", colors.Error);
+                WriteLine("Не удалось удалить файл '" + fileName + "'", utilsColors.Error);
             }
         }
         return deleted;
@@ -378,7 +399,6 @@ public static class __Utils /////
     }
 
 
-
     /// --- ВАЛИДАЦИЯ ---
 
     // В случае, если условие выполнено, вызывается Exception
@@ -398,9 +418,19 @@ public static class __Utils /////
         ValidateCondition(obj == null, message);
     }
 
-    // Проверка на непустую строку, иначе Exception
-    public static void ValidateIsNotBlank(string value, string message = null) {
+    // Проверка на заполненность строки, иначе Exception
+    public static void ValidateIsNotEmpty(string value, string message = null) {
         ValidateCondition(string.IsNullOrEmpty(value), message);
+    }
+
+    // Проверка на заполненность коллекции, иначе Exception
+    public static void ValidateIsNotEmpty(ICollection collection, string message = null) {
+        ValidateCondition(collection == null || collection.Count == 0, message);
+    }
+
+    // Проверка на заполненность строки символами, отличными от пробела, иначе Exception
+    public static void ValidateIsNotBlank(string value, string message = null) {
+        ValidateCondition(string.IsNullOrWhiteSpace(value), message);
     }
 
     // Проверка процесса на корректное завершение, иначе Exception
@@ -413,7 +443,6 @@ public static class __Utils /////
                 process.StartInfo.Arguments));
         }
     }
-
 
 
     /// --- ПРОЧЕЕ ---
@@ -436,11 +465,10 @@ public static class __Utils /////
             smtp.Send(message);
             return true;
         } catch (Exception ex) {
-            WriteLine("Не удалось отправить сообщение: " + ex.Message, colors.Error);
+            WriteLine("Не удалось отправить сообщение: " + ex.Message, utilsColors.Error);
             return false;
         }
     }
-
 
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
@@ -467,9 +495,12 @@ public static class __Utils /////
         }
     }
 
+    public static void __InitUtils(IScriptContext context) {
+        utilsContext = context;
+    }
 
-    public static IScriptContext context { get; set; }
-    private static ColorScheme colors { get { return context.ColorScheme; } }
+    private static IScriptContext utilsContext;
+    private static ColorScheme utilsColors { get { return utilsContext.ColorScheme; } }
 } /////
 
 ///// #namespace

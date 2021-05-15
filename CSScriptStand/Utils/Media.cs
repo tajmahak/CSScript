@@ -4,14 +4,10 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
-/// РАБОТА С МЕДИАФАЙЛАМИ (15.05.2021)
+// utils.media
+// РАБОТА С МЕДИАФАЙЛАМИ (15.05.2021)
+// ------------------------------------------------------------
 
-///// #using System;
-///// #using System.Collections.Generic;
-///// #using System.IO;
-///// #using System.Text;
-///// #using System.Xml;
-/////
 ///// #namespace
 
 // Общие утилиты для работы с медиа
@@ -64,10 +60,10 @@ public static class FFMpegUtils
         StringBuilder arg = new StringBuilder();
         int rotate;
         switch (angle) {
-            case RotationAngle._0: rotate = 1; break;
-            case RotationAngle._90: rotate = 6; break;
-            case RotationAngle._180: rotate = 3; break;
-            case RotationAngle._270: rotate = 8; break;
+            case RotationAngle._0: rotate = 0; break;
+            case RotationAngle._90: rotate = 90; break;
+            case RotationAngle._180: rotate = 180; break;
+            case RotationAngle._270: rotate = 270; break;
             default: throw new NotSupportedException("Неизвестный угол поворота изображения.");
         }
         arg.AppendFormat(" -i \"{0}\"", Path.GetFullPath(input));
@@ -111,7 +107,7 @@ public static class ImageMagickUtils
 public static class MediaInfoUtils
 {
     // Получение информации о файлах в формате XML
-    public static string GetXmlInfo(params string[] inputs) {
+    public static string GetXmlInfoArgs(params string[] inputs) {
         StringBuilder arg = new StringBuilder();
         arg.AppendFormat(" --Output=XML");
         foreach (string input in inputs) {
@@ -327,5 +323,47 @@ public static class MediaInfoUtils
         public string BitDepth { get { return GetValue("BitDepth"); } }
         public string Compression_Mode { get { return GetValue("Compression_Mode"); } }
         public string StreamSize { get { return GetValue("StreamSize"); } }
+    }
+}
+
+// Аргументы для работы с "youtube-dl"
+public class YoutubeDlArgs
+{
+    public string Url;
+    public string Format;
+    public string Output;
+    public bool NoPlaylist;
+    public string PlaylistItems;
+    public string FFMpegLocation;
+    public bool ListFormats;
+    public bool AddMetaData;
+
+    public override string ToString() {
+        StringBuilder args = new StringBuilder();
+        if (Url != null) {
+            args.Append(" \"" + Url + "\"");
+        }
+        if (ListFormats) {
+            args.Append(" --list-formats");
+        }
+        if (Format != null) {
+            args.Append(" --format \"" + Format + "\"");
+        }
+        if (Output != null) {
+            args.Append(" --output \"" + Output + "\"");
+        }
+        if (PlaylistItems != null) {
+            args.Append(" --playlist-items \"" + PlaylistItems + "\"");
+        }
+        if (NoPlaylist) {
+            args.Append(" --no-playlist");
+        }
+        if (AddMetaData) {
+            args.Append(" --add-metadata");
+        }
+        if (FFMpegLocation != null) {
+            args.Append(" --ffmpeg-location \"" + FFMpegLocation + "\"");
+        }
+        return args.Remove(0, 1).ToString();
     }
 }

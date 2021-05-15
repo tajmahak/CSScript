@@ -164,20 +164,21 @@ public static class __Utils /////
     /// --- РАБОТА С ПРОЦЕССАМИ ---
 
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
-    public static ScriptProcess CreateProcess(string fileName, string args = null) {
+    public static ScriptProcess CreateProcess(string fileName, object args = null) {
         CheckFileExists(fileName, false);
-        return new ScriptProcess(fileName, args);
+        string stringArgs = args == null ? null : args.ToString();
+        return new ScriptProcess(fileName, stringArgs);
     }
 
     // Создание контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится)
-    public static ScriptProcess CreateManagedProcess(string fileName, string args = null) {
+    public static ScriptProcess CreateManagedProcess(string fileName, object args = null) {
         ScriptProcess process = CreateProcess(fileName, args);
         utilsContext.RegisterProcess(process);
         return process;
     }
 
     // Запуск процесса с выводом потоков в консоль и ожиданием его завершения
-    public static int StartProcess(string fileName, string args = null, Encoding outputEncoding = null) {
+    public static int StartProcess(string fileName, object args = null, Encoding outputEncoding = null) {
         ScriptProcess process = CreateManagedProcess(fileName, args);
         process.RedirectOutput();
         process.StartAndReturn();
@@ -185,10 +186,25 @@ public static class __Utils /////
             Write(process.GetOutput());
             WriteError(process.GetError());
         } else {
-            Write(process.GetOutput(outputEncoding));
+            Write(process.GetOutput(outputEncoding), utilsColors.Info);
             WriteError(process.GetError(outputEncoding));
         }
         process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    // Запуск процесса в отдельном окне и ожиданием его завершения
+    public static int StartNormalProcess(string fileName, object args = null) {
+        ScriptProcess process = CreateManagedProcess(fileName, args);
+        process.StartAndWaitForExit();
+        return process.ExitCode;
+    }
+
+    // Запуск скрытого процесса и ожидание его завершения
+    public static int StartHiddenProcess(string fileName, object args = null) {
+        ScriptProcess process = CreateManagedProcess(fileName, args);
+        process.Hidden();
+        process.StartAndWaitForExit();
         return process.ExitCode;
     }
 

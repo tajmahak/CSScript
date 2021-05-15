@@ -3,13 +3,10 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-/// КРИПТОГРАФИЯ (15.05.2021)
+// utils.crypto
+// КРИПТОГРАФИЯ (15.05.2021)
+// ------------------------------------------------------------
 
-///// #using System;
-///// #using System.IO;
-///// #using System.Security.Cryptography;
-///// #using System.Text;
-/////
 ///// #namespace
 
 // Утилиты для работы с криптографией

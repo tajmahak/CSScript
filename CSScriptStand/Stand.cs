@@ -15,7 +15,7 @@ namespace CSScriptStand
     {
         public Stand(CSScript.Core.IScriptContext context) : base(context) {
             // Инициализация (в скрипте он внедняется в класс вместо неработающей конструкции using static)
-            __Utils.context = Context;
+            __InitUtils(Context);
         }
 
         public override void Start() {
