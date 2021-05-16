@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace CSScript.Core
+namespace CSScript
 {
-    public static class Validate
+    internal static class Validate
     {
         public static void IsTrue(bool condition, string message = null) {
             if (!condition) {

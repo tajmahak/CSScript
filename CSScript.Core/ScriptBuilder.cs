@@ -2,7 +2,6 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,10 +10,6 @@ namespace CSScript.Core
 {
     public class ScriptBuilder
     {
-        public string CompiledScriptNamespace { get; set; } = "CompiledScriptContainerNamespace";
-
-        public string CompiledScriptName { get; set; } = "CompiledScriptContainer";
-
         public StringBuilder InitBlock { get; private set; } = new StringBuilder();
 
         public StringBuilder ProcedureBlock { get; private set; } = new StringBuilder();
@@ -45,15 +40,15 @@ namespace CSScript.Core
                 srcCode.AppendLine("using " + usingItem + ";");
             }
             srcCode.AppendLine();
-            srcCode.AppendLine("namespace " + CompiledScriptNamespace + " {");
+            srcCode.AppendLine("namespace " + Constants.CompiledScriptNamespace + " {");
             srcCode.AppendLine();
-            srcCode.AppendLine("public class " + CompiledScriptName + " : " + scriptContainerType.FullName + " {");
+            srcCode.AppendLine("public class " + Constants.CompiledScriptName + " : " + scriptContainerType.FullName + " {");
 
             // Создание конструктора
             ConstructorInfo[] consructors = scriptContainerType.GetConstructors();
             Validate.IsTrue(consructors.Length == 1);
             srcCode.AppendLine();
-            srcCode.Append("public " + CompiledScriptName + "(");
+            srcCode.Append("public " + Constants.CompiledScriptName + "(");
             ConstructorInfo constructor = consructors[0];
             ParameterInfo[] constructorParams = constructor.GetParameters();
 
@@ -111,7 +106,8 @@ namespace CSScript.Core
             };
             CompilerParameters compilerParameters = new CompilerParameters(assemblies.ToArray()) {
                 GenerateInMemory = true,
-                GenerateExecutable = false
+                GenerateExecutable = false,
+                CompilerOptions = "/optimize",
             };
             return compilerParameters;
         }
@@ -130,17 +126,6 @@ namespace CSScript.Core
             using (CSharpCodeProvider provider = new CSharpCodeProvider()) {
                 return provider.CompileAssemblyFromSource(compilerParameters, sourceCode);
             }
-        }
-
-        public ScriptContainer CreateContainer(Assembly compiledAssembly, IScriptContext context) {
-            return (ScriptContainer)compiledAssembly.CreateInstance(
-                CompiledScriptNamespace + "." + CompiledScriptName,
-                false,
-                BindingFlags.Public | BindingFlags.Instance,
-                null,
-                new object[] { context },
-                CultureInfo.CurrentCulture,
-                null);
         }
     }
 }

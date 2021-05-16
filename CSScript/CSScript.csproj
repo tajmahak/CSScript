@@ -67,13 +67,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleScriptContext.cs" />
-    <Compile Include="Core\ColorScheme.cs" />
-    <Compile Include="Core\IScriptContext.cs" />
-    <Compile Include="Core\LogFragment.cs" />
-    <Compile Include="Core\ScriptBuilder.cs" />
-    <Compile Include="Core\ScriptParser.cs" />
-    <Compile Include="Core\ScriptContainer.cs" />
-    <Compile Include="Core\Validate.cs" />
     <Compile Include="InputArguments.cs" />
     <Compile Include="Native.cs" />
     <Compile Include="Program.cs" />
@@ -93,7 +86,7 @@
     <Compile Include="Scripts\HelpScript.cs" />
     <Compile Include="Scripts\RegistrationScript.cs" />
     <Compile Include="Scripts\UnregistrationScript.cs" />
-    <Compile Include="Core\ScriptThread.cs" />
+    <Compile Include="Validate.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resource.resx">
@@ -119,6 +112,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CSScript.Core\CSScript.Core.csproj">
+      <Project>{4ae0d062-7254-485b-ae7d-d915314cd1a7}</Project>
+      <Name>CSScript.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CSScript.ShellExtension\CSScript.ShellExtension.csproj">
       <Project>{b1cae04a-2f87-4b56-bfd9-29a20792fb92}</Project>
       <Name>CSScript.ShellExtension</Name>

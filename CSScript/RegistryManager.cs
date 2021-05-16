@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using CSScript.Core;
+using Microsoft.Win32;
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -7,16 +8,26 @@ namespace CSScript
 {
     internal static class RegistryManager
     {
-        public const string ScriptFileExtension = ".cssc";
-
         public static void RegisterFileAssociation() {
-            RegisterFileAssociation(Registry.ClassesRoot);
-            RegisterFileAssociation(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true));
+            RegistryKey rootKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true);
+            RegistryKey classesKey = Registry.ClassesRoot;
+
+            RegisterFileAssociation(rootKey, Constants.ScriptFileExtension);
+            RegisterFileAssociation(classesKey, Constants.ScriptFileExtension);
+
+            RegisterFileAssociation(rootKey, Constants.CompileScriptFileExtension);
+            RegisterFileAssociation(classesKey, Constants.CompileScriptFileExtension);
         }
 
         public static void UnregisterFileAssociation() {
-            UnregisterFileAssociation(Registry.ClassesRoot);
-            UnregisterFileAssociation(Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true));
+            RegistryKey rootKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes", true);
+            RegistryKey classesKey = Registry.ClassesRoot;
+
+            UnregisterFileAssociation(rootKey, Constants.ScriptFileExtension);
+            UnregisterFileAssociation(classesKey, Constants.ScriptFileExtension);
+
+            UnregisterFileAssociation(rootKey, Constants.CompileScriptFileExtension);
+            UnregisterFileAssociation(classesKey, Constants.CompileScriptFileExtension);
         }
 
         public static void RegisterShellExtension(Assembly extAssembly) {
@@ -55,11 +66,11 @@ namespace CSScript
         }
 
 
-        private static void RegisterFileAssociation(RegistryKey parentKey) {
+        private static void RegisterFileAssociation(RegistryKey parentKey, string extension) {
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = executingAssembly.GetName().Name;
 
-            RegistryKey key = parentKey.CreateSubKey(ScriptFileExtension);
+            RegistryKey key = parentKey.CreateSubKey(extension);
             key.SetValue(string.Empty, assemblyName);
 
             key = parentKey.CreateSubKey(assemblyName + "\\DefaultIcon");
@@ -69,11 +80,11 @@ namespace CSScript
             key.SetValue(string.Empty, $"\"{executingAssembly.Location}\" \"%1\" -a %*");
         }
 
-        private static void UnregisterFileAssociation(RegistryKey parentKey) {
+        private static void UnregisterFileAssociation(RegistryKey parentKey, string extension) {
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = executingAssembly.GetName().Name;
 
-            parentKey.DeleteSubKeyTree(ScriptFileExtension, false);
+            parentKey.DeleteSubKeyTree(extension, false);
             parentKey.DeleteSubKeyTree(assemblyName, false);
         }
 

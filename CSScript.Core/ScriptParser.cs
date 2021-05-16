@@ -77,7 +77,7 @@ namespace CSScript.Core
 
                     } else {
                         // Загрузка подключаемого скрипта из указанной папки с библиотеками
-                        importPath = Path.Combine(ScriptLibraryPath, import + RegistryManager.ScriptFileExtension);
+                        importPath = Path.Combine(ScriptLibraryPath, import + Constants.ScriptFileExtension);
                         Validate.IsTrue(File.Exists(importPath), string.Format(
                            "'{0}': не удалось найти скрипт '{1}'", scriptPath, import));
                         LoadScriptFile(importPath, true);
