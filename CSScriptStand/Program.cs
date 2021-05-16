@@ -15,25 +15,25 @@ namespace CSScriptStand
 
 
         private static void Main(string[] args) {
-            if (UseSimpleExecutor) {
-                ConsoleContext context = new ConsoleContext {
-                    ColorScheme = ColorScheme.Default,
-                    Args = args,
-                    Pause = true
-                };
+            ConsoleScriptContext context = new ConsoleScriptContext {
+                ColorScheme = ColorScheme.Default,
+                Args = args,
+                Pause = true
+            };
 
-                ScriptContainer stand = (ScriptContainer)Activator.CreateInstance(RunningContainer, context);
+            ScriptContainer stand = (ScriptContainer)Activator.CreateInstance(RunningContainer, context);
+
+            if (UseSimpleExecutor) {
                 stand.Start();
 
-                context.WriteLine();
-                context.WriteLine("# Выполнено (" + context.ExitCode + ")",
-                    context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error);
-                Console.ReadKey();
+                //context.WriteLine();
+                //context.WriteLine("# Выполнено (" + context.ExitCode + ")",
+                //    context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error);
+                //Console.ReadKey();
 
             } else {
-                ProgramHandler handler = new ProgramHandler();
-                handler.GetScriptContainerEvent += (context) => new Stand(context);
-                handler.Start(args);
+                CSScriptHandler handler = new CSScriptHandler();
+                handler.Start(stand);
             }
         }
     }

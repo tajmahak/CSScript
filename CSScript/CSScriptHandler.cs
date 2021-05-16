@@ -9,17 +9,21 @@ using System.Reflection;
 
 namespace CSScript
 {
-    public class ProgramHandler
+    public class CSScriptHandler
     {
-        private Dictionary<string, Assembly> importedAssemblies;
-        private ConsoleContext context;
-        private ScriptExecutionContext executionContext;
+        private ConsoleScriptContext context;
+        private ScriptThread scriptThread;
 
         public void Start(string[] args) {
+          
+        }
+
+        public void Start(ScriptContainer container) {
+
             bool forcedPause = false;
             try {
                 // Создание контекста программы для его передачи в исполняемый скрипт
-                context = new ConsoleContext {
+                context = new ConsoleScriptContext {
                     ColorScheme = ColorScheme.Default,
                     Pause = true
                 };
@@ -35,30 +39,41 @@ namespace CSScript
                     Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
                 }
 
-                // При запуске рабочая папка должна быть папкой с программой, для разрешения путей к импортируемым файлам.
-                Environment.CurrentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-                // Для остановки скрипта комбинацией Ctrl+C
-                Console.CancelKeyPress += Console_CancelKeyPress;
-
                 // При использовании в скрипте сторонних сборок, необходимо их разрешать вручную
-                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+                //AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
                 WriteHeader();
                 WriteStartInfo();
 
-                ScriptContainer script = GetScriptContainer(arguments);
+                if (ScriptContainer == null) {
+                    switch (arguments.Mode) {
+
+                        case InputArguments.WorkMode.Script:
+                            ScriptContainer = CreateScriptContainer(); break;
+
+                        case InputArguments.WorkMode.Help:
+                            ScriptContainer = new HelpScript(context); break;
+
+                        case InputArguments.WorkMode.Register:
+                            ScriptContainer = new RegistrationScript(context); break;
+
+                        case InputArguments.WorkMode.Unregister:
+                            ScriptContainer = new UnregistrationScript(context); break;
+
+                        default: throw new Exception("Неподдерживаемый режим работы.");
+                    }
+                }
 
                 if (context.ScriptPath != null) {
                     // Для использования в скрипте относительных путей к файлам
                     Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(context.ScriptPath));
                 }
 
-                executionContext = new ScriptExecutionContext(script);
-                executionContext.Start();
-                executionContext.Join();
-                if (executionContext.ThreadException != null) {
-                    throw executionContext.ThreadException;
+                scriptThread = new ScriptThread(ScriptContainer);
+                scriptThread.Start();
+                scriptThread.Join();
+                if (scriptThread.ThreadException != null) {
+                    throw scriptThread.ThreadException;
                 }
 
             } catch (Exception ex) {
@@ -71,7 +86,7 @@ namespace CSScript
 
                 context.KillManagedProcesses();
 
-                if (executionContext != null && executionContext.Aborted) {
+                if (scriptThread != null && scriptThread.Aborted) {
                     WriteAbort();
                 } else {
                     if (!context.Hidden && (context.Pause || forcedPause)) {
@@ -79,71 +94,41 @@ namespace CSScript
                     }
                 }
             }
+
+
         }
 
         public void Abort() {
-            executionContext?.Abort();
+            scriptThread?.Abort();
         }
 
-        // Используется для возможности выполнения скрипта из стенда
-        public event Func<ConsoleContext, ScriptContainer> GetScriptContainerEvent;
-
-
-        private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
-            Abort();
-            e.Cancel = true;
-        }
-
-        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            if (importedAssemblies != null) {
-                importedAssemblies.TryGetValue(args.Name, out Assembly assembly);
-                return assembly;
-            }
-            return null;
-        }
-
-        private string ResolveImportFilePath(string importFilePath, string workingDirectory) {
-            return Path.Combine(Settings.Default.ScriptLibDirectory, importFilePath + RegistryManager.ScriptFileExtension);
-        }
-
-
-        private ScriptContainer GetScriptContainer(InputArguments arguments) {
-            if (GetScriptContainerEvent != null) {
-                return GetScriptContainerEvent.Invoke(context);
-            }
-
-            switch (arguments.Mode) {
-
-                case InputArguments.WorkMode.Script:
-                    return CreateScriptContainer();
-
-                case InputArguments.WorkMode.Help:
-                    return new HelpScript(context);
-
-                case InputArguments.WorkMode.Register:
-                    return new RegistrationScript(context);
-
-                case InputArguments.WorkMode.Unregister:
-                    return new UnregistrationScript(context);
-
-                default: throw new Exception("Неподдерживаемый режим работы.");
-            }
-        }
 
         private ScriptContainer CreateScriptContainer() {
-            string[] baseUsingList = ParseList(Settings.Default.Usings);
-            string[] baseAssemblyList = ParseList(Settings.Default.ReferencedAssemblies);
 
-            ScriptInfo scriptInfo = ScriptUtils.CreateScriptInfo(context.ScriptPath, baseUsingList, ResolveImportFilePath);
-            CompilerResults compiledScript = ScriptUtils.CompileScript(scriptInfo, baseAssemblyList);
-            if (compiledScript.Errors.Count == 0) {
-                importedAssemblies = ScriptUtils.GetImportedAssemblies(scriptInfo);
-                return ScriptUtils.CreateScriptContainer(compiledScript, context);
+            ScriptParser parser = new ScriptParser {
+                ScriptLibraryPath = Settings.Default.ScriptLibDirectory
+            };
+            foreach (string usingItem in ParseList(Settings.Default.Usings)) {
+                parser.BaseUsings.Add(usingItem);
+            }
+            foreach (string importItem in ParseList(Settings.Default.Imports)) {
+                parser.BaseImports.Add(importItem);
+            }
+
+            ScriptBuilder builder = parser.ParseFromFile(context.ScriptPath);
+            CompilerResults compilerResults = builder.Compile();
+
+            if (compilerResults.Errors.Count == 0) {
+                return builder.CreateContainer(compilerResults.CompiledAssembly, context);
 
             } else {
-                WriteCompileErrors(scriptInfo, compiledScript);
+                WriteCompileErrors(builder, compilerResults);
                 throw new Exception("Не удалось выполнить сборку скрипта.");
             }
+        }
+
+        private string[] ParseList(string line) {
+            return line.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private void WriteHeader() {
@@ -170,7 +155,7 @@ namespace CSScript
             }
         }
 
-        private void WriteCompileErrors(ScriptInfo scriptInfo, CompilerResults compilerResults) {
+        private void WriteCompileErrors(ScriptBuilder builder, CompilerResults compilerResults) {
             int errorNumber = 1;
             foreach (CompilerError error in compilerResults.Errors) {
                 if (error.Line > 0) {
@@ -186,7 +171,7 @@ namespace CSScript
             foreach (CompilerError error in compilerResults.Errors) {
                 errorLines.Add(error.Line);
             }
-            string sourceCode = ScriptUtils.CreateSourceCode(scriptInfo);
+            string sourceCode = builder.GetSourceCode();
             string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++) {
                 string line = lines[i];
@@ -211,10 +196,6 @@ namespace CSScript
             Console.WriteLine();
             Console.Write("Для выхода нажмите любую клавишу...", context.ColorScheme.Info);
             Console.ReadKey();
-        }
-
-        private string[] ParseList(string line) {
-            return line.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

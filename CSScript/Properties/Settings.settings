@@ -20,7 +20,7 @@ System.Security.Cryptography
 System.Text
 System.Xml</Value>
     </Setting>
-    <Setting Name="ReferencedAssemblies" Type="System.String" Scope="Application">
+    <Setting Name="Imports" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Microsoft.CSharp.dll
 System.dll
 System.Core.dll

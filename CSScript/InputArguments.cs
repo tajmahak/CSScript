@@ -6,7 +6,7 @@ namespace CSScript.Core
     /// <summary>
     /// Представляет структурированные аргументы командной строки.
     /// </summary>
-    public class InputArguments
+    internal class InputArguments
     {
         public WorkMode Mode { get; set; } = WorkMode.Help;
         public bool Hidden { get; set; }

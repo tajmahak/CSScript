@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace CSScript
 {
-    public static class RegistryManager
+    internal static class RegistryManager
     {
         public const string ScriptFileExtension = ".cssc";
 

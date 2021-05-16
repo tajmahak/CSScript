@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace CSScript
 {
-    public class ConsoleContext : IScriptContext
+    public class ConsoleScriptContext : IScriptContext
     {
         private readonly List<LogFragment> outLog = new List<LogFragment>();
         private readonly List<LogFragment> errorLog = new List<LogFragment>();

@@ -6,6 +6,7 @@
     public abstract class ScriptContainer
     {
         public IScriptContext Context { get; }
+
         public ColorScheme Colors => Context.ColorScheme;
 
         public ScriptContainer(IScriptContext context) {

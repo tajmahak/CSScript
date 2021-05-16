@@ -60,9 +60,9 @@ System.Web.dll
 System.Windows.Forms.dll
 System.Xml.dll
 System.Xml.Linq.dll")]
-        public string ReferencedAssemblies {
+        public string Imports {
             get {
-                return ((string)(this["ReferencedAssemblies"]));
+                return ((string)(this["Imports"]));
             }
         }
     }

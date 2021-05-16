@@ -3,9 +3,9 @@ using System.Threading;
 
 namespace CSScript.Core
 {
-    public class ScriptExecutionContext
+    public class ScriptThread
     {
-        public ScriptExecutionContext(ScriptContainer container) {
+        public ScriptThread(ScriptContainer container) {
             Container = container;
         }
 
