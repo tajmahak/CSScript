@@ -34,7 +34,7 @@ namespace CSScript.Core
             return builder;
         }
 
-       
+
         private void AddImport(string import, string scriptPath) {
             scriptPath = Path.GetFullPath(scriptPath);
             string scriptDirectory = Path.GetDirectoryName(scriptPath);
