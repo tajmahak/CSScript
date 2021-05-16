@@ -10,7 +10,6 @@ namespace CSScript.Core
     {
         public WorkMode Mode { get; set; } = WorkMode.Help;
         public bool Hidden { get; set; }
-        public bool ForcedPause { get; set; }
         public string ScriptPath { get; set; }
         public string[] ScriptArguments { get; private set; } = new string[0];
 
@@ -31,9 +30,6 @@ namespace CSScript.Core
 
                     } else if (!scriptArgsBlock && arg == "-h") {
                         inputArguments.Hidden = true;
-
-                    } else if (!scriptArgsBlock && arg == "-p") {
-                        inputArguments.ForcedPause = true;
 
                     } else if (!scriptArgsBlock && arg == "-a") {
                         inputArguments.Mode = WorkMode.Script;

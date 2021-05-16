@@ -13,11 +13,11 @@ namespace CSScript.Core
 
         string[] Args { get; }
 
+        bool HiddenMode { get; }
+        
         bool Pause { get; set; }
-
+        
         int ExitCode { get; set; }
-
-        bool Hidden { get; }
 
         ColorScheme ColorScheme { get; }
 

@@ -9,32 +9,34 @@ namespace CSScriptStand
         // true  - выполнение кода без перехвата исключений
         // false - выполнение кода с помощью обработчика CSCript
         private static readonly bool UseSimpleExecutor = true;
-
-        // Запускаемый проект типа ScriptContainer
-        private static Type RunningContainer = typeof(Stand);
-
+        private static ConsoleScriptHandler handler;
 
         private static void Main(string[] args) {
             ConsoleScriptContext context = new ConsoleScriptContext {
-                ColorScheme = ColorScheme.Default,
                 Args = args,
-                Pause = true
             };
-
-            ScriptContainer stand = (ScriptContainer)Activator.CreateInstance(RunningContainer, context);
+            ScriptContainer stand = new Stand(context);
 
             if (UseSimpleExecutor) {
                 stand.Start();
 
-                //context.WriteLine();
-                //context.WriteLine("# Выполнено (" + context.ExitCode + ")",
-                //    context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error);
-                //Console.ReadKey();
+                if (context.Pause) {
+                    context.WriteLine();
+                    context.WriteLine("# Выполнено (" + context.ExitCode + ")",
+                        context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error);
+                    Console.ReadKey();
+                }
 
             } else {
-                CSScriptHandler handler = new CSScriptHandler();
-                handler.Start(stand);
+                handler = new ConsoleScriptHandler(stand);
+                Console.CancelKeyPress += Console_CancelKeyPress;
+                handler.Start();
             }
+        }
+
+        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
+            handler.Abort();
+            e.Cancel = true;
         }
     }
 }

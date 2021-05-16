@@ -17,20 +17,20 @@ namespace CSScript
 
         public string[] Args { get; set; }
 
-        public bool Pause { get; set; }
+        public bool Pause { get; set; } = true;
+
+        public bool HiddenMode { get; set; }
 
         public int ExitCode { get; set; }
 
-        public bool Hidden { get; set; }
-
-        public ColorScheme ColorScheme { get; set; }
+        public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
 
         public IList<LogFragment> OutLog => outLog.AsReadOnly();
 
         public IList<LogFragment> ErrorLog => errorLog.AsReadOnly();
 
         public string ReadLine(ConsoleColor? color = null) {
-            if (Hidden || Thread.CurrentThread.ThreadState != System.Threading.ThreadState.Running) {
+            if (HiddenMode || Thread.CurrentThread.ThreadState != System.Threading.ThreadState.Running) {
                 return null;
             }
             lock (outLog) {
@@ -39,7 +39,7 @@ namespace CSScript
                 if (color != prevColor) {
                     Console.ForegroundColor = color.Value;
                 }
-                string line = Hidden ? null : Console.ReadLine();
+                string line = HiddenMode ? null : Console.ReadLine();
                 if (!string.IsNullOrEmpty(line)) {
                     outLog.Add(new LogFragment(line, Console.ForegroundColor, false));
                 }

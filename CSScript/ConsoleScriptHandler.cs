@@ -1,6 +1,5 @@
 ﻿using CSScript.Core;
 using CSScript.Properties;
-using CSScript.Scripts;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -9,71 +8,59 @@ using System.Reflection;
 
 namespace CSScript
 {
-    public class CSScriptHandler
+    public class ConsoleScriptHandler
     {
-        private ConsoleScriptContext context;
-        private ScriptThread scriptThread;
+        private readonly ConsoleScriptContext context;
+        private ScriptContainer container;
+        private ScriptThread thread;
 
-        public void Start(string[] args) {
-          
+        public ConsoleScriptHandler(ConsoleScriptContext context) {
+            this.context = context;
         }
 
-        public void Start(ScriptContainer container) {
+        public ConsoleScriptHandler(ScriptContainer container) {
+            this.container = container;
+            context = (ConsoleScriptContext)container.Context;
+        }
 
-            bool forcedPause = false;
+        public void Start() {
             try {
-                // Создание контекста программы для его передачи в исполняемый скрипт
-                context = new ConsoleScriptContext {
-                    ColorScheme = ColorScheme.Default,
-                    Pause = true
-                };
-
-                InputArguments arguments = InputArguments.FromProgramArgs(args);
-                forcedPause = arguments.ForcedPause;
-                context.ScriptPath = arguments.ScriptPath;
-                context.Args = arguments.ScriptArguments;
-                context.Hidden = arguments.Hidden;
-
-                if (context.Hidden) {
-                    // Скрытие окна консоли во время исполнения программы
-                    Native.ShowWindow(Native.GetConsoleWindow(), Native.SW_HIDE);
-                }
-
-                // При использовании в скрипте сторонних сборок, необходимо их разрешать вручную
-                //AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-
                 WriteHeader();
                 WriteStartInfo();
 
-                if (ScriptContainer == null) {
-                    switch (arguments.Mode) {
+                if (container == null) {
+                    Validate.IsNotBlank(context.ScriptPath, "Не указан путь к запускаемому скрипту.");
 
-                        case InputArguments.WorkMode.Script:
-                            ScriptContainer = CreateScriptContainer(); break;
-
-                        case InputArguments.WorkMode.Help:
-                            ScriptContainer = new HelpScript(context); break;
-
-                        case InputArguments.WorkMode.Register:
-                            ScriptContainer = new RegistrationScript(context); break;
-
-                        case InputArguments.WorkMode.Unregister:
-                            ScriptContainer = new UnregistrationScript(context); break;
-
-                        default: throw new Exception("Неподдерживаемый режим работы.");
+                    ScriptParser parser = new ScriptParser {
+                        ScriptLibraryPath = Settings.Default.ScriptLibDirectory
+                    };
+                    foreach (string usingItem in ParseList(Settings.Default.Usings)) {
+                        parser.BaseUsings.Add(usingItem);
                     }
-                }
+                    foreach (string importItem in ParseList(Settings.Default.Imports)) {
+                        parser.BaseImports.Add(importItem);
+                    }
 
-                if (context.ScriptPath != null) {
+                    ScriptBuilder builder = parser.ParseFromFile(context.ScriptPath);
+                    CompilerResults compilerResults = builder.Compile();
+
+                    if (compilerResults.Errors.Count == 0) {
+                        container = builder.CreateContainer(compilerResults.CompiledAssembly, context);
+
+                    } else {
+                        WriteCompileErrors(builder, compilerResults);
+                        throw new Exception("Не удалось выполнить сборку скрипта.");
+                    }
+
                     // Для использования в скрипте относительных путей к файлам
                     Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(context.ScriptPath));
                 }
 
-                scriptThread = new ScriptThread(ScriptContainer);
-                scriptThread.Start();
-                scriptThread.Join();
-                if (scriptThread.ThreadException != null) {
-                    throw scriptThread.ThreadException;
+                thread = new ScriptThread(container);
+                thread.Start();
+                thread.Join();
+                if (thread.ThreadException != null) {
+                    throw thread.ThreadException;
                 }
 
             } catch (Exception ex) {
@@ -86,45 +73,18 @@ namespace CSScript
 
                 context.KillManagedProcesses();
 
-                if (scriptThread != null && scriptThread.Aborted) {
+                if (thread != null && thread.Aborted) {
                     WriteAbort();
                 } else {
-                    if (!context.Hidden && (context.Pause || forcedPause)) {
+                    if (!context.HiddenMode && context.Pause) {
                         ReadKeyForExit();
                     }
                 }
             }
-
-
         }
 
         public void Abort() {
-            scriptThread?.Abort();
-        }
-
-
-        private ScriptContainer CreateScriptContainer() {
-
-            ScriptParser parser = new ScriptParser {
-                ScriptLibraryPath = Settings.Default.ScriptLibDirectory
-            };
-            foreach (string usingItem in ParseList(Settings.Default.Usings)) {
-                parser.BaseUsings.Add(usingItem);
-            }
-            foreach (string importItem in ParseList(Settings.Default.Imports)) {
-                parser.BaseImports.Add(importItem);
-            }
-
-            ScriptBuilder builder = parser.ParseFromFile(context.ScriptPath);
-            CompilerResults compilerResults = builder.Compile();
-
-            if (compilerResults.Errors.Count == 0) {
-                return builder.CreateContainer(compilerResults.CompiledAssembly, context);
-
-            } else {
-                WriteCompileErrors(builder, compilerResults);
-                throw new Exception("Не удалось выполнить сборку скрипта.");
-            }
+            thread?.Abort();
         }
 
         private string[] ParseList(string line) {
