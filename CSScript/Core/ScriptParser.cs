@@ -84,7 +84,6 @@ namespace CSScript.Core
                     }
                 }
             }
-
         }
 
         private void LoadScriptFile(string scriptPath, bool imported) {
@@ -105,12 +104,12 @@ namespace CSScript.Core
                 string preparedLine = sourceCodeLine.TrimStart();
 
                 if (preparedLine.StartsWith("#import")) {
-                    string[] split = DivideString(preparedLine, " ");
+                    string[] split = SplitServiceLine(preparedLine, " ");
                     string import = split[1].Trim().TrimEnd(';');
                     imports.Add(import);
 
                 } else if (preparedLine.StartsWith("#using")) {
-                    string[] split = DivideString(preparedLine, " ");
+                    string[] split = SplitServiceLine(preparedLine, " ");
                     string usingItem = split[1].Trim().TrimEnd(';');
                     builder.AddUsing(usingItem);
 
@@ -135,11 +134,10 @@ namespace CSScript.Core
             }
         }
 
-        private static string[] DivideString(string value, string separator) {
+        private static string[] SplitServiceLine(string value, string separator) {
             int index = value.IndexOf(separator);
-            return index == -1 ?
-                (new string[] { value }) :
-                (new string[] { value.Remove(index), value.Substring(index + separator.Length) });
+            Validate.IsTrue(index != -1, "Некорректная строка: '" + value + "'");
+            return new string[] { value.Remove(index), value.Substring(index + separator.Length) };
         }
     }
 }
