@@ -1,4 +1,5 @@
 ﻿using CSScript.Core;
+using CSScript.Core.Manage;
 using CSScript.Properties;
 using System;
 using System.CodeDom.Compiler;
@@ -76,45 +77,32 @@ namespace CSScript
         private void LoadScriptContainer() {
             Validate.IsNotBlank(context.ScriptPath, "Не указан путь к запускаемому скрипту.");
 
-            if (Path.GetExtension(context.ScriptPath).ToLower() == Constants.ScriptFileExtension) {
-                // Обработка файла как текстового скрипта
+            ScriptBuilder builder = CreateScriptBuilder();
+            string compiledScriptPath = GetCompiledScriptPath(builder.GetSourceCode());
+            container = CreateScriptContainerFromAssembly(compiledScriptPath, true);
 
-                ScriptBuilder builder = CreateScriptBuilder();
-                string compiledScriptPath = GetCompiledScriptPath(builder.GetSourceCode());
-                container = CreateScriptContainerFromAssembly(compiledScriptPath, true);
+            if (container == null) {
+                // Компилирование скрипта из исходников
+                CompilerParameters parameters = builder.CreateCompilerParameters();
 
-                if (container == null) {
-                    // Компилирование скрипта из исходников
-                    CompilerParameters parameters = builder.CreateCompilerParameters();
-
-                    // Если неработоспособная сборка уже загружена в домен, перезаписать её невозиожно.
-                    if (!File.Exists(compiledScriptPath)) {
-                        parameters.OutputAssembly = compiledScriptPath;
-                        parameters.GenerateInMemory = false;
-                    }
-
-                    string compiledSctriptDirectory = Path.GetDirectoryName(compiledScriptPath);
-                    if (!Directory.Exists(compiledSctriptDirectory)) {
-                        Directory.CreateDirectory(compiledSctriptDirectory);
-                    }
-
-                    CompilerResults compilerResults = builder.Compile(parameters);
-                    if (compilerResults.Errors.Count > 0) {
-                        WriteCompileErrors(builder, compilerResults);
-                        throw new Exception("Не удалось выполнить сборку скрипта.");
-                    }
-                    container = ScriptContainerFactory.Create(compilerResults.CompiledAssembly, context);
+                // Если неработоспособная сборка уже загружена в домен, перезаписать её невозиожно.
+                if (!File.Exists(compiledScriptPath)) {
+                    parameters.OutputAssembly = compiledScriptPath;
+                    parameters.GenerateInMemory = false;
                 }
 
-            } else if (Path.GetExtension(context.ScriptPath).ToLower() == Constants.CompileScriptFileExtension) {
-                // Обработка файла как скомпилированного скрипта
-                container = CreateScriptContainerFromAssembly(context.ScriptPath, false);
+                string compiledSctriptDirectory = Path.GetDirectoryName(compiledScriptPath);
+                if (!Directory.Exists(compiledSctriptDirectory)) {
+                    Directory.CreateDirectory(compiledSctriptDirectory);
+                }
 
-            } else {
-                throw new NotSupportedException("Неподдерживаемый формат скрипта.");
+                CompilerResults compilerResults = builder.Compile(parameters);
+                if (compilerResults.Errors.Count > 0) {
+                    WriteCompileErrors(builder, compilerResults);
+                    throw new Exception("Не удалось выполнить сборку скрипта.");
+                }
+                container = ScriptContainerFactory.Create(compilerResults.CompiledAssembly, context);
             }
-
-            Validate.IsNotNull(container, "Не удалось выполнить инициализацию скрипта.");
         }
 
         private ScriptContainer CreateScriptContainerFromAssembly(string assemblyPath, bool createBrokenMark) {
@@ -240,7 +228,7 @@ namespace CSScript
             foreach (byte hashByte in hash) {
                 nameBuilder.Append(hashByte.ToString("x2"));
             }
-            nameBuilder.Append(Constants.CompileScriptFileExtension);
+            nameBuilder.Append(".dll");
 
             return Path.Combine(
                  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

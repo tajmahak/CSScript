@@ -1,4 +1,4 @@
-﻿namespace CSScript.Core
+﻿namespace CSScript.Core.Manage
 {
     public static class Constants
     {

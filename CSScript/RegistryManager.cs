@@ -1,4 +1,4 @@
-﻿using CSScript.Core;
+﻿using CSScript.Core.Manage;
 using Microsoft.Win32;
 using System;
 using System.Reflection;
@@ -14,9 +14,6 @@ namespace CSScript
 
             RegisterFileAssociation(rootKey, Constants.ScriptFileExtension);
             RegisterFileAssociation(classesKey, Constants.ScriptFileExtension);
-
-            RegisterFileAssociation(rootKey, Constants.CompileScriptFileExtension);
-            RegisterFileAssociation(classesKey, Constants.CompileScriptFileExtension);
         }
 
         public static void UnregisterFileAssociation() {
@@ -25,9 +22,6 @@ namespace CSScript
 
             UnregisterFileAssociation(rootKey, Constants.ScriptFileExtension);
             UnregisterFileAssociation(classesKey, Constants.ScriptFileExtension);
-
-            UnregisterFileAssociation(rootKey, Constants.CompileScriptFileExtension);
-            UnregisterFileAssociation(classesKey, Constants.CompileScriptFileExtension);
         }
 
         public static void RegisterShellExtension(Assembly extAssembly) {

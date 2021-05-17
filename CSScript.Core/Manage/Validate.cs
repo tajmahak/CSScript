@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CSScript.Core
+namespace CSScript.Core.Manage
 {
     internal static class Validate
     {

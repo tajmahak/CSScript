@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace CSScript.Core
+namespace CSScript.Core.Manage
 {
     public class ScriptParser
     {

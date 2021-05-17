@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace CSScript.Core
+namespace CSScript.Core.Manage
 {
     public class ScriptBuilder
     {

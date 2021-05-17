@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Reflection;
 
-namespace CSScript.Core
+namespace CSScript.Core.Manage
 {
     public static class ScriptContainerFactory
     {

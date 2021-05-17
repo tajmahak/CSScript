@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace CSScript.Core
+namespace CSScript.Core.Manage
 {
     public class ScriptThread
     {

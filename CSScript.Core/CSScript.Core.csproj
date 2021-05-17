@@ -47,16 +47,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ColorScheme.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Manage\Constants.cs" />
     <Compile Include="IScriptContext.cs" />
     <Compile Include="LogFragment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScriptBuilder.cs" />
+    <Compile Include="Manage\ScriptBuilder.cs" />
     <Compile Include="ScriptContainer.cs" />
-    <Compile Include="ScriptContainerFactory.cs" />
-    <Compile Include="ScriptParser.cs" />
-    <Compile Include="ScriptThread.cs" />
-    <Compile Include="Validate.cs" />
+    <Compile Include="Manage\ScriptContainerFactory.cs" />
+    <Compile Include="Manage\ScriptParser.cs" />
+    <Compile Include="Manage\ScriptThread.cs" />
+    <Compile Include="Manage\Validate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
