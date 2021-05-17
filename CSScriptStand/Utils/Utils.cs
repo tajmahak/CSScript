@@ -98,7 +98,7 @@ public static class __Utils /////
             string fragment = split[i];
             if (newBlock) {
                 string[] fragmentBlock = DivideString(fragment, ":");
-                Validate.ThrowIf(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
+                Validate.IsTrue(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
                 fragment = fragmentBlock[1];
                 switch (fragmentBlock[0].ToLowerInvariant()) {
                     case "black": writeColor = ConsoleColor.Black; break;
