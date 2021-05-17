@@ -1,12 +1,13 @@
 // utils
-// СКРИПТОВЫЕ УТИЛИТЫ (15.05.2021)
+// СКРИПТОВЫЕ УТИЛИТЫ (17.05.2021)
 // ------------------------------------------------------------
 
 ///// #init
-///// __InitUtils(Context);
+///// __Utils_Init(Context);
 
 ///// #class
 
+// Утилиты общей направленности
 public static class __Utils /////
 { /////
 
@@ -14,8 +15,8 @@ public static class __Utils /////
 
     // Получение входящего аргумента по индексу
     public static T GetArgument<T>(int index, T defaultValue) {
-        if (utilsContext.Args.Length > index) {
-            string value = utilsContext.Args[index];
+        if (__utils_Context.Args.Length > index) {
+            string value = __utils_Context.Args[index];
             if (!string.IsNullOrEmpty(value)) {
                 return (T)Convert.ChangeType(value, typeof(T));
             }
@@ -23,12 +24,10 @@ public static class __Utils /////
         return defaultValue;
     }
 
-    // Вывод текста в стандартный выходной поток
+    // Вывод текста в контекст
     public static void Write(object value, ConsoleColor? color = null) {
-        utilsContext.Write(value, color);
+        __utils_Context.Write(value, color);
     }
-
-    // Вывод текста в стандартный выходной поток из другого потока
     public static void Write(StreamReader reader, ConsoleColor? color = null) {
         char[] buffer = new char[1024];
         while (!reader.EndOfStream) {
@@ -38,22 +37,18 @@ public static class __Utils /////
         }
     }
 
-    // Вывод текста с переносом строки в стандартный выходной поток
+    // Вывод текста с переносом строки в контекст
     public static void WriteLine(object value, ConsoleColor? color = null) {
-        utilsContext.WriteLine(value, color);
+        __utils_Context.WriteLine(value, color);
     }
-
-    // Вывод переноса строки в стандартный выходной поток
     public static void WriteLine() {
-        utilsContext.WriteLine();
+        __utils_Context.WriteLine();
     }
 
-    // Вывод текста в стандартный поток ошибок
+    // Вывод текста ошибки в контекст
     public static void WriteError(object value) {
-        utilsContext.WriteError(value);
+        __utils_Context.WriteError(value);
     }
-
-    // Вывод текста в стандартный поток ошибок из другого потока 
     public static void WriteError(StreamReader reader) {
         char[] buffer = new char[1024];
         while (!reader.EndOfStream) {
@@ -63,19 +58,17 @@ public static class __Utils /////
         }
     }
 
-    // Вывод текста с переносом строки в стандартный поток ошибок
+    // Вывод текста ошибки с переносом строки в контекст
     public static void WriteErrorLine(object value) {
-        utilsContext.WriteErrorLine(value);
+        __utils_Context.WriteErrorLine(value);
     }
-
-    // Вывод переноса строки в стандартный поток ошибок
     public static void WriteErrorLine() {
-        utilsContext.WriteErrorLine();
+        __utils_Context.WriteErrorLine();
     }
 
     // Вывод штампа даты и времени в стандартный выходной поток
     public static void WriteTimeStamp() {
-        Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", utilsColors.Info);
+        Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", __utils_Context.ColorScheme.Info);
     }
 
     // Вывод штампа даты и времени в стандартный поток ошибок
@@ -94,7 +87,7 @@ public static class __Utils /////
             string fragment = split[i];
             if (newBlock) {
                 string[] fragmentBlock = DivideString(fragment, ":");
-                ValidateIsTrue(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
+                Validate.ThrowIf(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
                 fragment = fragmentBlock[1];
                 switch (fragmentBlock[0].ToLowerInvariant()) {
                     case "black": writeColor = ConsoleColor.Black; break;
@@ -129,13 +122,13 @@ public static class __Utils /////
 
     // Чтение текста из входного потока
     public static string ReadLine(ConsoleColor? color = null) {
-        return utilsContext.ReadLine(color);
+        return __utils_Context.ReadLine(color);
     }
 
     // Получение текстового лога
     public static string GetLog() {
         StringBuilder log = new StringBuilder();
-        foreach (CSScript.Core.LogFragment logFragment in utilsContext.OutLog) {
+        foreach (LogFragment logFragment in __utils_Context.OutLog) {
             log.Append(logFragment.Text);
         }
         return log.ToString();
@@ -146,9 +139,9 @@ public static class __Utils /////
         StringBuilder log = new StringBuilder();
         //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
         log.Append("<pre>");
-        foreach (LogFragment logFragment in utilsContext.OutLog) {
-            if (logFragment.Color != utilsColors.Foreground) {
-                log.Append("<font color=\"" + ColorTranslator.ToHtml(__GetColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
+        foreach (LogFragment logFragment in __utils_Context.OutLog) {
+            if (logFragment.Color != __utils_Context.ColorScheme.Foreground) {
+                log.Append("<font color=\"" + ColorTranslator.ToHtml(__Utils_ConvertColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
             } else {
                 log.Append(logFragment.Text);
             }
@@ -173,7 +166,7 @@ public static class __Utils /////
     // Создание контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится)
     public static ScriptProcess CreateManagedProcess(string fileName, object args = null) {
         ScriptProcess process = CreateProcess(fileName, args);
-        utilsContext.RegisterProcess(process);
+        __utils_Context.RegisterProcess(process);
         return process;
     }
 
@@ -186,7 +179,7 @@ public static class __Utils /////
             Write(process.GetOutput());
             WriteError(process.GetError());
         } else {
-            Write(process.GetOutput(outputEncoding), utilsColors.Info);
+            Write(process.GetOutput(outputEncoding), __utils_Context.ColorScheme.Info);
             WriteError(process.GetError(outputEncoding));
         }
         process.WaitForExit();
@@ -211,25 +204,6 @@ public static class __Utils /////
 
     /// --- РАБОТА С ФАЙЛАМИ / ПАПКАМИ ---
 
-    // Получение общего списка файлов. В качестве параметров могут быть пути к файлам и папкам (например из аргументов программы)
-    public static string[] GetFiles(params string[] fsObjects) {
-        List<string> files = new List<string>();
-        for (int i = 0; i < fsObjects.Length; i++) {
-            string fsObject = fsObjects[i];
-            fsObject = fsObject.Trim('\"');
-            if (!string.IsNullOrEmpty(fsObject)) {
-                if (File.Exists(fsObject)) {
-                    files.Add(fsObject);
-                } else if (Directory.Exists(fsObject)) {
-                    files.AddRange(Directory.GetFiles(fsObject, "*", SearchOption.AllDirectories));
-                } else {
-                    throw new Exception("Неизвестный файл/папка: '" + fsObject + "'");
-                }
-            }
-        }
-        return files.ToArray();
-    }
-
     // Создание папки
     public static bool CreateDirectory(string path, bool isFilePath = false) {
         string dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
@@ -240,26 +214,32 @@ public static class __Utils /////
         return false;
     }
 
-    // Поиск файла по пути или маске
-    public static string FindFile(string path, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        if (File.Exists(path)) {
-            return path;
+    // Поиск файлов по пути или маске
+    public static FileList GetFiles(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+        FileList fileList = new FileList();
+        if (File.Exists(searchMask)) {
+            fileList.Add(searchMask);
+
+        } else if (Directory.Exists(searchMask)) {
+            fileList.AddRange(Directory.GetFiles(searchMask, "*", searchOption));
+
+        } else {
+            string directoryPath = Path.GetDirectoryName(searchMask);
+            if (string.IsNullOrEmpty(directoryPath)) {
+                directoryPath = Environment.CurrentDirectory;
+            }
+            string fileMask = Path.GetFileName(searchMask);
+            fileList.AddRange(Directory.GetFiles(directoryPath, fileMask, searchOption));
         }
-        string[] files = FindFiles(path, searchOption);
-        ValidateCondition(files.Length == 0, "По указанной маске '" + path + "' не найдено файлов.");
-        ValidateCondition(files.Length > 1, "По указанной маске '" + path + "' найдено несколько файлов.");
-        return files[0];
+        return fileList;
     }
 
-    // Поиск файлов по пути или маске
-    public static string[] FindFiles(string path, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        string dir = Path.GetDirectoryName(path);
-        if (string.IsNullOrEmpty(dir)) {
-            dir = Environment.CurrentDirectory;
-        }
-        string mask = Path.GetFileName(path);
-        string[] files = Directory.GetFiles(dir, mask, searchOption);
-        return files;
+    // Поиск файла по пути или маске
+    public static string GetFile(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+        FileList files = GetFiles(searchMask, searchOption);
+        Validate.ThrowIf(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
+        Validate.ThrowIf(files.Count > 1, "По указанной маске '" + searchMask + "' найдено несколько файлов.");
+        return files[0];
     }
 
     // Добавление префикса к имени файла
@@ -279,62 +259,13 @@ public static class __Utils /////
     }
 
     // Переименование файла (без учёта расширения)
-    public static string RenameFile(string path, string newName) {
+    public static string NewFileName(string path, string newName, bool includeExtension = false) {
         string dirPath = Path.GetDirectoryName(path);
-        string ext = Path.GetExtension(path);
-        return dirPath + "\\" + newName + ext;
-    }
-
-    // Переименование файла (с учётом расширения)
-    public static string RenameFileAndExtension(string path, string newName) {
-        string dirPath = Path.GetDirectoryName(path);
-        return dirPath + "\\" + newName;
-    }
-
-    // Удаление списка файлов
-    public static int DeleteFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        if (Directory.Exists(path)) {
-            string[] files = Directory.GetFiles(path, searchPattern, searchOption);
-            foreach (string file in files) {
-                File.Delete(file);
-            }
-            return files.Length;
-        } else if (File.Exists(path)) {
-            File.Delete(path);
-            return 1;
-        }
-        return 0;
-    }
-
-    // Удаление старых файлов в папке (по дате изменения)
-    public static int DeleteOldFiles(string path, int remainCount, string searchPattern = null) {
-        int deleted = 0;
-        searchPattern = searchPattern ?? "*";
-        string[] files = Directory.GetFiles(path, searchPattern, SearchOption.TopDirectoryOnly);
-        SortFilesByDate(files, true);
-        for (int i = remainCount; i < files.Length; i++) {
-            string file = files[i];
-            try {
-                File.Delete(file);
-                deleted++;
-            } catch {
-                string fileName = Path.GetFileName(file);
-                WriteLine("Не удалось удалить файл '" + fileName + "'", utilsColors.Error);
-            }
-        }
-        return deleted;
-    }
-
-    // Сортировка файлов по дате изменения (по умолчанию старые файлы в начале массива)
-    public static void SortFilesByDate(string[] files, bool desc = false) {
-        Dictionary<string, DateTime> fileDates = new Dictionary<string, DateTime>();
-        foreach (string file in files) {
-            fileDates.Add(file, new FileInfo(file).LastWriteTime);
-        }
-        if (!desc) {
-            Array.Sort(files, (a, b) => fileDates[a].CompareTo(fileDates[b]));
+        if (includeExtension) {
+            string ext = Path.GetExtension(path);
+            return dirPath + "\\" + newName + ext;
         } else {
-            Array.Sort(files, (a, b) => fileDates[b].CompareTo(fileDates[a]));
+            return dirPath + "\\" + newName;
         }
     }
 
@@ -345,25 +276,9 @@ public static class __Utils /////
             // если операционной системе известен путь к файлу, в отличие от программы
             // (например программы из папки WINDOWS\system32)
             if (Path.IsPathRooted(filePath) || (checkRelativePath && !Path.IsPathRooted(filePath))) {
-                throw new Exception("Не удаётся найти '" + filePath + "'.");
+                throw new FileNotFoundException("Не удаётся найти '" + filePath + "'.", filePath);
             }
         }
-    }
-
-    // Вычисление MD5 хэша для файла
-    public static string GetMD5Hash(string filePath) {
-        CheckFileExists(filePath);
-        byte[] hash;
-        using (MD5 md5 = MD5.Create()) {
-            using (FileStream stream = File.OpenRead(filePath)) {
-                hash = md5.ComputeHash(stream);
-            }
-        }
-        StringBuilder hashString = new StringBuilder(hash.Length * 2);
-        for (int i = 0; i < hash.Length; i++) {
-            hashString.Append(hash[i].ToString("x2"));
-        }
-        return hashString.ToString();
     }
 
     // Сравнение содержимого файлов
@@ -377,8 +292,8 @@ public static class __Utils /////
             return false;
         }
 
-        string file1Hash = GetMD5Hash(file1Path);
-        string file2Hash = GetMD5Hash(file2Path);
+        string file1Hash = ToHex(__Utils_GetMD5HashFromFile(file1Path));
+        string file2Hash = ToHex(__Utils_GetMD5HashFromFile(file2Path));
         if (file1Hash != file2Hash) {
             return false;
         }
@@ -387,55 +302,9 @@ public static class __Utils /////
     }
 
 
-    /// --- ВАЛИДАЦИЯ ---
+    /// --- РАБОТА СО СТРОКАМИ ---
 
-    // В случае, если условие выполнено, вызывается Exception
-    public static void ValidateCondition(bool condition, string message = null) {
-        if (condition) {
-            throw message == null ? new Exception("Ошибка валидации.") : new Exception(message);
-        }
-    }
-
-    // Проверка на выполнение условия, иначе Exception
-    public static void ValidateIsTrue(bool condition, string message = null) {
-        ValidateCondition(!condition, message);
-    }
-
-    // Проверка на не-null переменную, иначе Exception
-    public static void ValidateIsNotNull(object obj, string message = null) {
-        ValidateCondition(obj == null, message);
-    }
-
-    // Проверка на заполненность строки, иначе Exception
-    public static void ValidateIsNotEmpty(string value, string message = null) {
-        ValidateCondition(string.IsNullOrEmpty(value), message);
-    }
-
-    // Проверка на заполненность коллекции, иначе Exception
-    public static void ValidateIsNotEmpty(ICollection collection, string message = null) {
-        ValidateCondition(collection == null || collection.Count == 0, message);
-    }
-
-    // Проверка на заполненность строки символами, отличными от пробела, иначе Exception
-    public static void ValidateIsNotBlank(string value, string message = null) {
-        ValidateCondition(string.IsNullOrWhiteSpace(value), message);
-    }
-
-    // Проверка процесса на корректное завершение, иначе Exception
-    public static void ValidateProcess(Process process, int expectedExitCode = 0) {
-        process.WaitForExit();
-        if (process.HasExited && process.ExitCode != expectedExitCode) {
-            throw new Exception(string.Format("Ошибка выполнения процесса (код возврата: {0}): \"{1}\" {2}",
-                process.ExitCode,
-                process.StartInfo.FileName,
-                process.StartInfo.Arguments));
-        }
-    }
-
-
-    /// --- ПРОЧЕЕ ---
-
-    // Разбиение строки на 2 части.
+    // Разбиение строки на 2 части по первому вхождению разделителя
     public static string[] DivideString(string value, string separator) {
         int index = value.IndexOf(separator);
         return index == -1 ?
@@ -443,25 +312,19 @@ public static class __Utils /////
             (new string[] { value.Remove(index), value.Substring(index + separator.Length) });
     }
 
-    // Отправка электронного письма с использованием SMTP-сервера Mail.Ru
-    public static bool SendEmailFromMailRu(MailMessage message, string login, string password) {
-        try {
-            SmtpClient smtp = new SmtpClient("smtp.mail.ru", 25) {
-                Credentials = new NetworkCredential(login, password),
-                EnableSsl = true
-            };
-            smtp.Send(message);
-            return true;
-        } catch (Exception ex) {
-            WriteLine("Не удалось отправить сообщение: " + ex.Message, utilsColors.Error);
-            return false;
+    // Получение HEX-строки из массива байт
+    public static string ToHex(byte[] data) {
+        StringBuilder hashString = new StringBuilder(data.Length * 2);
+        for (int i = 0; i < data.Length; i++) {
+            hashString.Append(data[i].ToString("x2"));
         }
+        return hashString.ToString();
     }
 
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
-    private static Color __GetColor(ConsoleColor consoleColor) {
+    private static Color __Utils_ConvertColor(ConsoleColor consoleColor) {
         switch (consoleColor) {
             case ConsoleColor.Black: return Color.Black;
             case ConsoleColor.DarkBlue: return Color.DarkBlue;
@@ -483,21 +346,132 @@ public static class __Utils /////
         }
     }
 
-    public static void __InitUtils(IScriptContext context) {
-        utilsContext = context;
+    private static byte[] __Utils_GetMD5HashFromFile(string filePath) {
+        using (MD5 md5 = MD5.Create()) {
+            using (FileStream stream = File.OpenRead(filePath)) {
+                return md5.ComputeHash(stream);
+            }
+        }
     }
 
-    private static IScriptContext utilsContext;
-    private static ColorScheme utilsColors { get { return utilsContext.ColorScheme; } }
+    public static void __Utils_Init(IScriptContext context) {
+        __utils_Context = context;
+    }
+    private static IScriptContext __utils_Context;
 } /////
 
 ///// #namespace
+
+// Работа со списком файлов
+public class FileList : List<string>
+{
+    public FileList() { }
+
+    public FileList(IEnumerable<string> collection) : base(collection) { }
+
+    // Удаление файлов
+    public FileList Delete(int startIndex = 0) {
+        for (int i = startIndex; i < Count; i++) {
+            string file = this[i];
+            File.Delete(file);
+            RemoveAt(i--);
+        }
+        return this;
+    }
+
+    // Удаление файла по индексу
+    public FileList DeleteAt(int index) {
+        File.Delete(this[index]);
+        RemoveAt(index);
+        return this;
+    }
+
+    // Удаление файлов. Если файл удалить невозможно, исключение не создаётся
+    public FileList TryDelete(int startIndex = 0) {
+        for (int i = startIndex; i < Count; i++) {
+            string file = this[i];
+            try {
+                File.Delete(file);
+                RemoveAt(i--);
+            } catch {
+            }
+        }
+        return this;
+    }
+
+    // Удаление файла по индексу. Если файл удалить невозможно, исключение не создаётся
+    public FileList TryDeleteAt(int index) {
+        try {
+            DeleteAt(index);
+        } catch {
+        }
+        return this;
+    }
+
+    // Сортировка файлов по дате изменения (по умолчанию старые файлы в начале массива)
+    public FileList SortFilesByWriteTime(bool desc = false) {
+        Dictionary<string, DateTime> fileDates = new Dictionary<string, DateTime>();
+        foreach (string file in this) {
+            fileDates.Add(file, new FileInfo(file).LastWriteTime);
+        }
+        if (!desc) {
+            Sort((a, b) => fileDates[a].CompareTo(fileDates[b]));
+        } else {
+            Sort((a, b) => fileDates[b].CompareTo(fileDates[a]));
+        }
+        return this;
+    }
+}
+
+// Валидация данных
+public static class Validate
+{
+    // В случае, если условие выполнено, вызывается Exception
+    public static void ThrowIf(bool condition, string message = null) {
+        if (condition) {
+            throw message == null ? new ValidationException() : new ValidationException(message);
+        }
+    }
+
+    // Проверка на выполнение условия, иначе Exception
+    public static void ValidateIsTrue(bool condition, string message = null) {
+        ThrowIf(!condition, message);
+    }
+
+    // Проверка на не-null переменную, иначе Exception
+    public static void ValidateIsNotNull(object obj, string message = null) {
+        ThrowIf(obj == null, message);
+    }
+
+    // Проверка на заполненность, иначе Exception
+    public static void ValidateIsNotEmpty(string value, string message = null) {
+        ThrowIf(string.IsNullOrEmpty(value), message);
+    }
+    public static void ValidateIsNotEmpty(ICollection collection, string message = null) {
+        ThrowIf(collection == null || collection.Count == 0, message);
+    }
+
+    // Проверка на заполненность строки символами, отличными от пробела, иначе Exception
+    public static void ValidateIsNotBlank(string value, string message = null) {
+        ThrowIf(string.IsNullOrWhiteSpace(value), message);
+    }
+
+    // Проверка процесса на корректное завершение, иначе Exception
+    public static void ValidateProcess(Process process, int expectedExitCode = 0) {
+        process.WaitForExit();
+        if (process.HasExited && process.ExitCode != expectedExitCode) {
+            throw new Exception(string.Format("Ошибка выполнения процесса (код возврата: {0}): \"{1}\" {2}",
+                process.ExitCode,
+                process.StartInfo.FileName,
+                process.StartInfo.Arguments));
+        }
+    }
+}
 
 // Оболочка процесса с расширенными возможностями
 public class ScriptProcess : Process
 {
     public ScriptProcess() : base() {
-
     }
 
     public ScriptProcess(string fileName) : base() {
@@ -510,13 +484,14 @@ public class ScriptProcess : Process
         }
     }
 
-
+    // Процесс должен быть запущен в скрытом режиме
     public ScriptProcess Hidden() {
         StartInfo.CreateNoWindow = true;
         StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
         return this;
     }
 
+    // Процесс должен быть запущен с перенаправлением вывода
     public ScriptProcess RedirectOutput() {
         StartInfo.UseShellExecute = false; // перенаправление ввода/вывода невозможно без выключенной опции 'UseShellExecute'
         StartInfo.RedirectStandardOutput = true;
@@ -524,12 +499,14 @@ public class ScriptProcess : Process
         return this;
     }
 
+    // Процесс должен быть запущен с перенаправлением ввода
     public ScriptProcess RedirectInput() {
         StartInfo.UseShellExecute = false; // перенаправление ввода/вывода невозможно без выключенной опции 'UseShellExecute'
         StartInfo.RedirectStandardInput = true;
         return this;
     }
 
+    // Запуск процесса (вместо стандартного Start)
     public ScriptProcess StartAndReturn() {
         if (!StartInfo.UseShellExecute) {
             if (StartInfo.FileName.ToLowerInvariant().EndsWith(".py")) {
@@ -542,46 +519,38 @@ public class ScriptProcess : Process
         return this;
     }
 
+    // Запуск процесса и ожидание его завершения
     public ScriptProcess StartAndWaitForExit() {
         StartAndReturn();
         WaitForExit();
         return this;
     }
 
-
+    // Возвращает выходной поток
     public StreamReader GetOutput(Encoding encoding) {
         return new StreamReader(StandardOutput.BaseStream, encoding);
     }
-
     public StreamReader GetOutput(int encodingCodepage) {
         return GetOutput(Encoding.GetEncoding(encodingCodepage));
     }
-
     public StreamReader GetOutput(string encodingName) {
         return GetOutput(Encoding.GetEncoding(encodingName));
     }
-
     public StreamReader GetOutput() {
         return StandardOutput;
     }
 
-
+    // Возврашает выходной поток ошибок
     public StreamReader GetError(Encoding encoding) {
         return new StreamReader(StandardError.BaseStream, encoding);
     }
-
     public StreamReader GetError(int encodingCodepage) {
         return GetError(Encoding.GetEncoding(encodingCodepage));
     }
-
     public StreamReader GetError(string encodingName) {
         return GetError(Encoding.GetEncoding(encodingName));
     }
-
     public StreamReader GetError() {
         return StandardError;
     }
-
-
-    public bool Success { get { return HasExited && ExitCode == 0; } }
 }

@@ -34,9 +34,20 @@ namespace CSScript.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("CSScript.Core\r\nSystem\r\nSystem.Collections\r\nSystem.Collections.Generic\r\nSystem.Dia" +
-            "gnostics\r\nSystem.Drawing\r\nSystem.IO\r\nSystem.Net\r\nSystem.Net.Mail\r\nSystem.Runtime" +
-            ".InteropServices\r\nSystem.Security.Cryptography\r\nSystem.Text\r\nSystem.Xml")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"CSScript.Core
+System
+System.Collections
+System.Collections.Generic
+System.ComponentModel.DataAnnotations
+System.Diagnostics
+System.Drawing
+System.IO
+System.Net
+System.Net.Mail
+System.Runtime.InteropServices
+System.Security.Cryptography
+System.Text
+System.Xml")]
         public string Usings {
             get {
                 return ((string)(this["Usings"]));
@@ -47,6 +58,7 @@ namespace CSScript.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute(@"Microsoft.CSharp.dll
 System.dll
+System.ComponentModel.DataAnnotations.dll
 System.Core.dll
 System.Data.dll
 System.Data.DataSetExtensions.dll

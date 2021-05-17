@@ -213,7 +213,7 @@ namespace CSScript
 
         private void ReadKeyForExit() {
             Console.WriteLine();
-            Console.Write("Для выхода нажмите любую клавишу...", context.ColorScheme.Info);
+            Console.Write($"Выполнено ({context.ExitCode}). Для выхода нажмите любую клавишу или закройте окно ...", context.ColorScheme.Info);
             Console.ReadKey();
         }
 
