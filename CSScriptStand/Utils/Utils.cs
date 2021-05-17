@@ -445,30 +445,30 @@ public static class Validate
     }
 
     // Проверка на выполнение условия, иначе Exception
-    public static void ValidateIsTrue(bool condition, string message = null) {
+    public static void IsTrue(bool condition, string message = null) {
         ThrowIf(!condition, message);
     }
 
     // Проверка на не-null переменную, иначе Exception
-    public static void ValidateIsNotNull(object obj, string message = null) {
+    public static void IsNotNull(object obj, string message = null) {
         ThrowIf(obj == null, message);
     }
 
     // Проверка на заполненность, иначе Exception
-    public static void ValidateIsNotEmpty(string value, string message = null) {
+    public static void IsNotEmpty(string value, string message = null) {
         ThrowIf(string.IsNullOrEmpty(value), message);
     }
-    public static void ValidateIsNotEmpty(ICollection collection, string message = null) {
+    public static void IsNotEmpty(ICollection collection, string message = null) {
         ThrowIf(collection == null || collection.Count == 0, message);
     }
 
     // Проверка на заполненность строки символами, отличными от пробела, иначе Exception
-    public static void ValidateIsNotBlank(string value, string message = null) {
+    public static void IsNotBlank(string value, string message = null) {
         ThrowIf(string.IsNullOrWhiteSpace(value), message);
     }
 
     // Проверка процесса на корректное завершение, иначе Exception
-    public static void ValidateProcess(Process process, int expectedExitCode = 0) {
+    public static void Process(Process process, int expectedExitCode = 0) {
         process.WaitForExit();
         if (process.HasExited && process.ExitCode != expectedExitCode) {
             throw new Exception(string.Format("Ошибка выполнения процесса (код возврата: {0}): \"{1}\" {2}",
