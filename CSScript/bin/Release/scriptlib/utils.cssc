@@ -233,6 +233,13 @@ public static class __Utils /////
         }
         return fileList;
     }
+    public static FileList GetFiles(IList<string> searchMasks, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+        FileList fileList = new FileList();
+        foreach (string searchMask in searchMasks) {
+            fileList.AddRange(GetFiles(searchMask, searchOption));
+        }
+        return fileList;
+    }
 
     // Поиск файла по пути или маске
     public static string GetFile(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
@@ -292,8 +299,8 @@ public static class __Utils /////
             return false;
         }
 
-        string file1Hash = ToHex(__Utils_GetMD5HashFromFile(file1Path));
-        string file2Hash = ToHex(__Utils_GetMD5HashFromFile(file2Path));
+        string file1Hash = ToHexString(__Utils_GetMD5HashFromFile(file1Path));
+        string file2Hash = ToHexString(__Utils_GetMD5HashFromFile(file2Path));
         if (file1Hash != file2Hash) {
             return false;
         }
@@ -313,7 +320,7 @@ public static class __Utils /////
     }
 
     // Получение HEX-строки из массива байт
-    public static string ToHex(byte[] data) {
+    public static string ToHexString(byte[] data) {
         StringBuilder hashString = new StringBuilder(data.Length * 2);
         for (int i = 0; i < data.Length; i++) {
             hashString.Append(data[i].ToString("x2"));
@@ -408,16 +415,26 @@ public class FileList : List<string>
         return this;
     }
 
+    // Сортировка файлов по полным путям
+    public FileList SortFiles(bool desc = false) {
+        if (desc) {
+            Sort((a, b) => string.Compare(a, b, true));
+        } else {
+            Sort((a, b) => string.Compare(b, a, true));
+        }
+        return this;
+    }
+
     // Сортировка файлов по дате изменения (по умолчанию старые файлы в начале массива)
     public FileList SortFilesByWriteTime(bool desc = false) {
         Dictionary<string, DateTime> fileDates = new Dictionary<string, DateTime>();
         foreach (string file in this) {
             fileDates.Add(file, new FileInfo(file).LastWriteTime);
         }
-        if (!desc) {
-            Sort((a, b) => fileDates[a].CompareTo(fileDates[b]));
-        } else {
+        if (desc) {
             Sort((a, b) => fileDates[b].CompareTo(fileDates[a]));
+        } else {
+            Sort((a, b) => fileDates[a].CompareTo(fileDates[b]));
         }
         return this;
     }
@@ -540,7 +557,7 @@ public class ScriptProcess : Process
         return StandardOutput;
     }
 
-    // Возврашает выходной поток ошибок
+    // Возвращает выходной поток ошибок
     public StreamReader GetError(Encoding encoding) {
         return new StreamReader(StandardError.BaseStream, encoding);
     }
