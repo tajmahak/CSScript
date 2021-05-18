@@ -79,6 +79,12 @@ namespace CSScript
 
             ScriptBuilder builder = CreateScriptBuilder();
             string compiledScriptPath = GetCompiledScriptPath(builder.GetSourceCode());
+            string compiledSctriptDirectory = Path.GetDirectoryName(compiledScriptPath);
+
+            if (!Directory.Exists(compiledSctriptDirectory)) {
+                Directory.CreateDirectory(compiledSctriptDirectory);
+            }
+
             container = CreateScriptContainerFromAssembly(compiledScriptPath, true);
 
             if (container == null) {
@@ -91,10 +97,7 @@ namespace CSScript
                     parameters.GenerateInMemory = false;
                 }
 
-                string compiledSctriptDirectory = Path.GetDirectoryName(compiledScriptPath);
-                if (!Directory.Exists(compiledSctriptDirectory)) {
-                    Directory.CreateDirectory(compiledSctriptDirectory);
-                }
+
 
                 CompilerResults compilerResults = builder.Compile(parameters);
                 if (compilerResults.Errors.Count > 0) {
