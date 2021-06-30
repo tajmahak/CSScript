@@ -21,9 +21,7 @@ namespace CSScript.Core
 
         ColorScheme ColorScheme { get; }
 
-        IList<LogFragment> OutLog { get; }
-
-        IList<LogFragment> ErrorLog { get; }
+        IList<LogFragment> Log { get; }
 
         void Write(object value, ConsoleColor? color = null);
 

@@ -58,7 +58,7 @@ namespace CSScript
             } finally {
                 Environment.ExitCode = context.ExitCode;
 
-                context.KillManagedProcesses();
+                context.KillRegisteredProcesses();
 
                 if (thread != null && thread.Aborted) {
                     WriteAbort();
@@ -97,8 +97,6 @@ namespace CSScript
                     parameters.GenerateInMemory = false;
                 }
 
-
-
                 CompilerResults compilerResults = builder.Compile(parameters);
                 if (compilerResults.Errors.Count > 0) {
                     WriteCompileErrors(builder, compilerResults);
@@ -126,7 +124,7 @@ namespace CSScript
                 }
 
             } else {
-                // Удаление неработоспособной сбоки скрипта, до загрузки её в домен
+                // Удаление неработоспособной сбоки скрипта, без попытки загрузки её в домен
                 File.Delete(assemblyPath);
                 File.Delete(brokenMakPath);
             }

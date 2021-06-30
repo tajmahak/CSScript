@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseScriptContext.cs" />
     <Compile Include="ColorScheme.cs" />
     <Compile Include="Manage\Constants.cs" />
     <Compile Include="IScriptContext.cs" />

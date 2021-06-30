@@ -1,114 +1,52 @@
 ﻿using CSScript.Core;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Text;
 
 namespace CSScript
 {
-    public class ConsoleScriptContext : IScriptContext
+    public class ConsoleScriptContext : BaseScriptContext
     {
-        private readonly List<LogFragment> outLog = new List<LogFragment>();
-        private readonly List<LogFragment> errorLog = new List<LogFragment>();
-        private readonly List<Process> managedProcesses = new List<Process>();
+        public override string OnReadLine(ConsoleColor color) {
 
-        public string ScriptPath { get; set; }
-
-        public string[] Args { get; set; }
-
-        public bool Pause { get; set; } = true;
-
-        public bool HiddenMode { get; set; }
-
-        public int ExitCode { get; set; }
-
-        public ColorScheme ColorScheme { get; set; } = ColorScheme.Default;
-
-        public IList<LogFragment> OutLog => outLog.AsReadOnly();
-
-        public IList<LogFragment> ErrorLog => errorLog.AsReadOnly();
-
-        public string ReadLine(ConsoleColor? color = null) {
-            if (HiddenMode || Thread.CurrentThread.ThreadState != System.Threading.ThreadState.Running) {
-                return null;
+            ConsoleColor prevColor = Console.ForegroundColor;
+            if (color != prevColor) {
+                Console.ForegroundColor = color;
             }
-            lock (outLog) {
-                color = color ?? ColorScheme.Foreground;
-                ConsoleColor prevColor = Console.ForegroundColor;
-                if (color != prevColor) {
-                    Console.ForegroundColor = color.Value;
-                }
-                string line = HiddenMode ? null : Console.ReadLine();
-                if (!string.IsNullOrEmpty(line)) {
-                    outLog.Add(new LogFragment(line, Console.ForegroundColor, false));
-                }
-                if (color != prevColor) {
-                    Console.ForegroundColor = prevColor;
-                }
-                return line;
+
+            // Стандартный входной поток обрабатывает только 256 символов
+            int READLINE_BUFFER_SIZE = 102400;
+            Stream inputStream = Console.OpenStandardInput(READLINE_BUFFER_SIZE);
+            byte[] bytes = new byte[READLINE_BUFFER_SIZE];
+            int outputLength = inputStream.Read(bytes, 0, READLINE_BUFFER_SIZE);
+            char[] chars = Encoding.UTF7.GetChars(bytes, 0, outputLength - Environment.NewLine.Length);
+
+            if (color != prevColor) {
+                Console.ForegroundColor = prevColor;
+            }
+
+            return new string(chars);
+        }
+
+        public override void OnWrite(string value, ConsoleColor color) {
+            ConsoleColor prevColor = Console.ForegroundColor;
+            if (color != prevColor) {
+                Console.ForegroundColor = color;
+            }
+            Console.Out.Write(value);
+            if (color != prevColor) {
+                Console.ForegroundColor = prevColor;
             }
         }
 
-        public void RegisterProcess(Process process) {
-            lock (managedProcesses) {
-                managedProcesses.Add(process);
+        public override void OnWriteError(string value, ConsoleColor color) {
+            ConsoleColor prevColor = Console.ForegroundColor;
+            if (color != prevColor) {
+                Console.ForegroundColor = color;
             }
-        }
-
-        public void Write(object value, ConsoleColor? color = null) {
-            Write(value, color, Console.Out, false, outLog);
-        }
-
-        public void WriteLine(object value, ConsoleColor? color = null) {
-            Write(value + Environment.NewLine, color);
-        }
-
-        public void WriteLine() {
-            Write(Environment.NewLine);
-        }
-
-        public void WriteError(object value) {
-            Write(value, ColorScheme.Error, Console.Error, true, errorLog);
-        }
-
-        public void WriteErrorLine(object value) {
-            WriteError(value + Environment.NewLine);
-        }
-
-        public void WriteErrorLine() {
-            WriteError(Environment.NewLine);
-        }
-
-
-        public void KillManagedProcesses() {
-            lock (managedProcesses) {
-                foreach (Process managedProcess in managedProcesses) {
-                    try {
-                        managedProcess.Kill();
-                    } catch {
-                    }
-                }
-                managedProcesses.Clear();
-            }
-        }
-
-
-        private void Write(object value, ConsoleColor? color, TextWriter writer, bool error, IList<LogFragment> log) {
-            color = color ?? ColorScheme.Foreground;
-            string strValue = value?.ToString();
-            if (!string.IsNullOrEmpty(strValue) && Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running) {
-                lock (log) {
-                    ConsoleColor prevColor = Console.ForegroundColor;
-                    if (color != prevColor) {
-                        Console.ForegroundColor = color.Value;
-                    }
-                    writer.Write(strValue);
-                    log.Add(new LogFragment(strValue, Console.ForegroundColor, error));
-                    if (color != prevColor) {
-                        Console.ForegroundColor = prevColor;
-                    }
-                }
+            Console.Error.Write(value);
+            if (color != prevColor) {
+                Console.ForegroundColor = prevColor;
             }
         }
     }

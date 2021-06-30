@@ -201,7 +201,7 @@
 │  .ExitCode: int
 │    - получает или задаёт код возврата скрипта;
 │
-│  .OutLog: IList&lt;LogFragment&gt;
+│  .Log: IList&lt;LogFragment&gt;
 │    - получает лог работы скрипта (стандартный выходной поток);
 │
 │  .ErrorLog: IList&lt;LogFragment&gt;
