@@ -329,20 +329,30 @@ public static class MediaInfoUtils
 // Аргументы для работы с "youtube-dl"
 public class YoutubeDlArgs
 {
-    public string Url;
-    public string Format;
-    public string Output;
-    public bool NoPlaylist;
-    public string PlaylistItems;
-    public string FFMpegLocation;
-    public bool ListFormats;
-    public bool AddMetaData;
+    public List<string> Urls { get; }
+    public string Format { get; set; }
+    public string Output { get; set; }
+    public bool NoPlaylist { get; set; }
+    public string PlaylistItems { get; set; }
+    public string FFMpegLocation { get; set; }
+    public bool ListFormats { get; set; }
+    public bool AddMetaData { get; set; }
+
+    public YoutubeDlArgs() {
+        Urls = new List<string>();
+    }
+
+    public YoutubeDlArgs AddUrls(string urls) {
+        string[] split = urls.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string url in split) {
+            Urls.Add(url);
+        }
+        return this;
+    }
 
     public override string ToString() {
         StringBuilder args = new StringBuilder();
-        if (Url != null) {
-            args.Append(" \"" + Url + "\"");
-        }
+
         if (ListFormats) {
             args.Append(" --list-formats");
         }
@@ -364,6 +374,10 @@ public class YoutubeDlArgs
         if (FFMpegLocation != null) {
             args.Append(" --ffmpeg-location \"" + FFMpegLocation + "\"");
         }
+        foreach (string url in Urls) {
+            args.Append(" \"" + url + "\"");
+        }
+
         return args.Remove(0, 1).ToString();
     }
 }
