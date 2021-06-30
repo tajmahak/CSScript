@@ -329,7 +329,7 @@ public static class MediaInfoUtils
 // Аргументы для работы с "youtube-dl"
 public class YoutubeDlArgs
 {
-    public List<string> Urls { get; }
+    public List<string> Urls { get; private set; }
     public string Format { get; set; }
     public string Output { get; set; }
     public bool NoPlaylist { get; set; }
