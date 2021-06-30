@@ -16,7 +16,8 @@ namespace CSScript
             ConsoleScriptContext context = new ConsoleScriptContext {
                 ScriptPath = arguments.ScriptPath,
                 Args = arguments.ScriptArguments,
-                HiddenMode = arguments.Hidden
+                HiddenMode = arguments.Hidden,
+                Pause = true,
             };
 
             if (arguments.Hidden) {

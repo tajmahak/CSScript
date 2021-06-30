@@ -42,56 +42,53 @@ public static class WindowsUtils
 
     [DllImport("shell32.dll", CharSet = CharSet.Auto, EntryPoint = "SHFileOperation")]
     private static extern int __SHFileOperation_x64(ref __SHFILEOPSTRUCT_x64 FileOp);
-}
 
+    private enum __FileOperationType : uint
+    {
+        FO_MOVE = 0x0001,
+        FO_COPY = 0x0002,
+        FO_DELETE = 0x0003,
+        FO_RENAME = 0x0004,
+    }
 
-/// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
+    [Flags]
+    private enum __FileOperationFlags : ushort
+    {
+        FOF_SILENT = 0x0004,
+        FOF_NOCONFIRMATION = 0x0010,
+        FOF_ALLOWUNDO = 0x0040,
+        FOF_SIMPLEPROGRESS = 0x0100,
+        FOF_NOERRORUI = 0x0400,
+        FOF_WANTNUKEWARNING = 0x4000,
+    }
 
-internal enum __FileOperationType : uint
-{
-    FO_MOVE = 0x0001,
-    FO_COPY = 0x0002,
-    FO_DELETE = 0x0003,
-    FO_RENAME = 0x0004,
-}
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 1)]
+    private struct __SHFILEOPSTRUCT_x86
+    {
+        public IntPtr hwnd;
+        [MarshalAs(UnmanagedType.U4)]
+        public __FileOperationType wFunc;
+        public string pFrom;
+        public string pTo;
+        public __FileOperationFlags fFlags;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fAnyOperationsAborted;
+        public IntPtr hNameMappings;
+        public string lpszProgressTitle;
+    }
 
-[Flags]
-internal enum __FileOperationFlags : ushort
-{
-    FOF_SILENT = 0x0004,
-    FOF_NOCONFIRMATION = 0x0010,
-    FOF_ALLOWUNDO = 0x0040,
-    FOF_SIMPLEPROGRESS = 0x0100,
-    FOF_NOERRORUI = 0x0400,
-    FOF_WANTNUKEWARNING = 0x4000,
-}
-
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 1)]
-internal struct __SHFILEOPSTRUCT_x86
-{
-    public IntPtr hwnd;
-    [MarshalAs(UnmanagedType.U4)]
-    public __FileOperationType wFunc;
-    public string pFrom;
-    public string pTo;
-    public __FileOperationFlags fFlags;
-    [MarshalAs(UnmanagedType.Bool)]
-    public bool fAnyOperationsAborted;
-    public IntPtr hNameMappings;
-    public string lpszProgressTitle;
-}
-
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-internal struct __SHFILEOPSTRUCT_x64
-{
-    public IntPtr hwnd;
-    [MarshalAs(UnmanagedType.U4)]
-    public __FileOperationType wFunc;
-    public string pFrom;
-    public string pTo;
-    public __FileOperationFlags fFlags;
-    [MarshalAs(UnmanagedType.Bool)]
-    public bool fAnyOperationsAborted;
-    public IntPtr hNameMappings;
-    public string lpszProgressTitle;
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct __SHFILEOPSTRUCT_x64
+    {
+        public IntPtr hwnd;
+        [MarshalAs(UnmanagedType.U4)]
+        public __FileOperationType wFunc;
+        public string pFrom;
+        public string pTo;
+        public __FileOperationFlags fFlags;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fAnyOperationsAborted;
+        public IntPtr hNameMappings;
+        public string lpszProgressTitle;
+    }
 }

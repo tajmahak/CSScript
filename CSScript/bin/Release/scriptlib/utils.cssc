@@ -128,7 +128,7 @@ public static class __Utils /////
     // Получение текстового лога
     public static string GetLog() {
         StringBuilder log = new StringBuilder();
-        foreach (LogFragment logFragment in __utils_Context.OutLog) {
+        foreach (LogFragment logFragment in __utils_Context.Log) {
             log.Append(logFragment.Text);
         }
         return log.ToString();
@@ -139,7 +139,7 @@ public static class __Utils /////
         StringBuilder log = new StringBuilder();
         //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
         log.Append("<pre>");
-        foreach (LogFragment logFragment in __utils_Context.OutLog) {
+        foreach (LogFragment logFragment in __utils_Context.Log) {
             if (logFragment.Color != __utils_Context.ColorScheme.Foreground) {
                 log.Append("<font color=\"" + ColorTranslator.ToHtml(__Utils_ConvertColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
             } else {
