@@ -336,11 +336,13 @@ public class YoutubeDlArgs
         Urls = new List<string>();
     }
 
-    public YoutubeDlArgs AddUrls(string urls) {
-        string[] split = urls.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (string url in split) {
-            Urls.Add(url);
-        }
+    public YoutubeDlArgs AddUrl(string url) {
+        Urls.Add(url);
+        return this;
+    }
+
+    public YoutubeDlArgs AddUrls(IEnumerable<string> urls) {
+        Urls.AddRange(urls);
         return this;
     }
 

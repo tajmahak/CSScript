@@ -20,6 +20,7 @@ namespace CSScript
             byte[] bytes = new byte[READLINE_BUFFER_SIZE];
             int outputLength = inputStream.Read(bytes, 0, READLINE_BUFFER_SIZE);
             char[] chars = Encoding.UTF7.GetChars(bytes, 0, outputLength - Environment.NewLine.Length);
+            inputStream.Dispose();
 
             if (color != prevColor) {
                 Console.ForegroundColor = prevColor;
