@@ -40,7 +40,7 @@ namespace CSScript.Core
 
         public void Write(object value, ConsoleColor? color = null) {
             string text = value?.ToString();
-            if (!string.IsNullOrEmpty(text) && Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running) {
+            if (!string.IsNullOrEmpty(text) && (Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running || Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Background)) {
                 color = color ?? ColorScheme.Foreground;
                 WriteLog(text, color.Value, false);
                 OnWrite(text, color.Value);
@@ -49,7 +49,7 @@ namespace CSScript.Core
 
         public void WriteError(object value) {
             string text = value?.ToString();
-            if (!string.IsNullOrEmpty(text) && Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running) {
+            if (!string.IsNullOrEmpty(text) && (Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Running || Thread.CurrentThread.ThreadState == System.Threading.ThreadState.Background)) {
                 WriteLog(text, ColorScheme.Error, true);
                 OnWriteError(text, ColorScheme.Error);
             }

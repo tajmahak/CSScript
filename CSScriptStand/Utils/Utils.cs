@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 // utils
-// СКРИПТОВЫЕ УТИЛИТЫ (02.07.2021)
+// СКРИПТОВЫЕ УТИЛИТЫ (03.07.2021)
 // ------------------------------------------------------------
 
 ///// #init
@@ -56,6 +56,15 @@ public static class __Utils /////
         __utils_Context.WriteLine();
     }
 
+    // Асинхронный вывод текста с переносом строки в контекст
+    public static void BeginWrite(StreamReader reader, ConsoleColor? color = null) {
+        Encoding encoding = reader.CurrentEncoding;
+        __Utils_BeginReadFromStream(reader.BaseStream, (data) => {
+            string value = encoding.GetString(data);
+            Write(value, color);
+        });
+    }
+
     // Вывод текста ошибки в контекст
     public static void WriteError(object value) {
         __utils_Context.WriteError(value);
@@ -75,6 +84,15 @@ public static class __Utils /////
     }
     public static void WriteErrorLine() {
         __utils_Context.WriteErrorLine();
+    }
+
+    // Асинхронный вывод текста с переносом строки в контекст
+    public static void BeginWriteError(StreamReader reader) {
+        Encoding encoding = reader.CurrentEncoding;
+        __Utils_BeginReadFromStream(reader.BaseStream, (data) => {
+            string value = encoding.GetString(data);
+            WriteError(value);
+        });
     }
 
     // Вывод штампа даты и времени в стандартный выходной поток
@@ -186,13 +204,10 @@ public static class __Utils /////
         ScriptProcess process = CreateManagedProcess(fileName, args);
         process.RedirectOutput();
         process.StartAndReturn();
-        if (outputEncoding == null) {
-            Write(process.GetOutput());
-            WriteError(process.GetError());
-        } else {
-            Write(process.GetOutput(outputEncoding), __utils_Context.ColorScheme.Info);
-            WriteError(process.GetError(outputEncoding));
-        }
+
+        BeginWrite(process.GetOutput(outputEncoding));
+        BeginWriteError(process.GetError(outputEncoding));
+
         process.WaitForExit();
         return process.ExitCode;
     }
@@ -371,6 +386,22 @@ public static class __Utils /////
             }
         }
     }
+
+    private static void __Utils_BeginReadFromStream(Stream stream, Action<byte[]> onRead) {
+        byte[] buffer = new byte[102400];
+        AsyncCallback callback = null;
+        callback = (asyncResult) => {
+            int readed = stream.EndRead(asyncResult);
+            if (readed > 0) {
+                byte[] data = new byte[readed];
+                Array.Copy(buffer, data, readed);
+                onRead(data);
+                stream.BeginRead(buffer, 0, buffer.Length, callback, null);
+            }
+        };
+        stream.BeginRead(buffer, 0, buffer.Length, callback, null);
+    }
+
 
     public static void __Utils_Init(IScriptContext context) {
         __utils_Context = context;
@@ -556,7 +587,7 @@ public class ScriptProcess : Process
 
     // Возвращает выходной поток
     public StreamReader GetOutput(Encoding encoding) {
-        return new StreamReader(StandardOutput.BaseStream, encoding);
+        return encoding == null ? StandardOutput : new StreamReader(StandardOutput.BaseStream, encoding);
     }
     public StreamReader GetOutput(int encodingCodepage) {
         return GetOutput(Encoding.GetEncoding(encodingCodepage));
@@ -570,7 +601,7 @@ public class ScriptProcess : Process
 
     // Возвращает выходной поток ошибок
     public StreamReader GetError(Encoding encoding) {
-        return new StreamReader(StandardError.BaseStream, encoding);
+        return encoding == null ? StandardError : new StreamReader(StandardError.BaseStream, encoding);
     }
     public StreamReader GetError(int encodingCodepage) {
         return GetError(Encoding.GetEncoding(encodingCodepage));
