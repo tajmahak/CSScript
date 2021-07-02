@@ -61,7 +61,6 @@
     <Compile Include="Stand.cs" />
     <Compile Include="Utils\Archive.cs" />
     <Compile Include="Utils\Crypto.cs" />
-    <Compile Include="Utils\Media.cs" />
     <Compile Include="Utils\Net.cs" />
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="Utils\Windows.cs" />
