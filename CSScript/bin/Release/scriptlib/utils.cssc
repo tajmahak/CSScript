@@ -1,5 +1,5 @@
 // utils
-// СКРИПТОВЫЕ УТИЛИТЫ (17.05.2021)
+// СКРИПТОВЫЕ УТИЛИТЫ (02.07.2021)
 // ------------------------------------------------------------
 
 ///// #init
@@ -569,5 +569,99 @@ public class ScriptProcess : Process
     }
     public StreamReader GetError() {
         return StandardError;
+    }
+}
+
+// Конструктор строки аргументов для выполнения программ
+public class ArgsBuilder
+{
+    private readonly StringBuilder builder = new StringBuilder();
+
+    public ArgsBuilder() {
+
+    }
+
+    public ArgsBuilder(string value) : this() {
+        Add(value);
+    }
+
+
+    public ArgsBuilder Add(string format, params object[] args) {
+        string value = string.Format(format, args);
+        value = value.Replace(Environment.NewLine, " ");
+        if (builder.Length > 0 && builder[builder.Length - 1] != ' ') {
+            builder.Append(' ');
+        }
+        builder.Append(value);
+        return this;
+    }
+
+    public ArgsBuilder Add(bool condition, string format, params object[] args) {
+        if (condition) {
+            Add(format, args);
+        }
+        return this;
+    }
+
+    public ArgsBuilder Add(IEnumerable<string> values) {
+        foreach (string value in values) {
+            Add(value);
+        }
+        return this;
+    }
+
+    public ArgsBuilder Add(bool condition, IEnumerable<string> values) {
+        if (condition) {
+            Add(values);
+        }
+        return this;
+    }
+
+    public ArgsBuilder AddQuote(string value) {
+        if (value.StartsWith("\"") && value.EndsWith("\"")) {
+            Add(value);
+        } else {
+            Add("\"{0}\"", value);
+        }
+        return this;
+    }
+
+    public ArgsBuilder AddQuote(bool condition, string value) {
+        if (condition) {
+            AddQuote(value);
+        }
+        return this;
+    }
+
+    public ArgsBuilder AddQuote(IEnumerable<string> values) {
+        foreach (string value in values) {
+            AddQuote(value);
+        }
+        return this;
+    }
+
+    public ArgsBuilder AddQuote(bool condition, IEnumerable<string> values) {
+        if (condition) {
+            AddQuote(values);
+        }
+        return this;
+    }
+
+    public ArgsBuilder AddQuote() {
+        Add("\"");
+        return this;
+    }
+
+    public ArgsBuilder Clone() {
+        return new ArgsBuilder(ToString());
+    }
+
+
+    public override string ToString() {
+        return builder.ToString();
+    }
+
+    public static implicit operator string(ArgsBuilder builder) {
+        return builder.ToString();
     }
 }
