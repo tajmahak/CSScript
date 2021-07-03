@@ -205,7 +205,7 @@ public static class __Utils /////
         process.RedirectOutput();
         process.StartAndReturn();
 
-        BeginWrite(process.GetOutput(outputEncoding));
+        BeginWrite(process.GetOutput(outputEncoding), __utils_Context.ColorScheme.Info);
         BeginWriteError(process.GetError(outputEncoding));
 
         process.WaitForExit();
