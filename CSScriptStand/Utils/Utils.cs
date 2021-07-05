@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 // utils
-// СКРИПТОВЫЕ УТИЛИТЫ (03.07.2021)
+// СКРИПТОВЫЕ УТИЛИТЫ (05.07.2021)
 // ------------------------------------------------------------
 
 ///// #init
@@ -187,7 +187,7 @@ public static class __Utils /////
 
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
     public static ScriptProcess CreateProcess(string fileName, object args = null) {
-        CheckFileExists(fileName, false);
+        Validate.FileExists(fileName, false);
         string stringArgs = args == null ? null : args.ToString();
         return new ScriptProcess(fileName, stringArgs);
     }
@@ -242,32 +242,14 @@ public static class __Utils /////
 
     // Поиск файлов по пути или маске
     public static FileList GetFiles(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        FileList fileList = new FileList();
-        if (File.Exists(searchMask)) {
-            fileList.Add(searchMask);
+        return new FileList().Append(searchMask, searchOption);
 
-        } else if (Directory.Exists(searchMask)) {
-            fileList.AddRange(Directory.GetFiles(searchMask, "*", searchOption));
-
-        } else {
-            string directoryPath = Path.GetDirectoryName(searchMask);
-            if (string.IsNullOrEmpty(directoryPath)) {
-                directoryPath = Environment.CurrentDirectory;
-            }
-            string fileMask = Path.GetFileName(searchMask);
-            fileList.AddRange(Directory.GetFiles(directoryPath, fileMask, searchOption));
-        }
-        return fileList;
     }
     public static FileList GetFiles(IList<string> searchMasks, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        FileList fileList = new FileList();
-        foreach (string searchMask in searchMasks) {
-            fileList.AddRange(GetFiles(searchMask, searchOption));
-        }
-        return fileList;
+        return new FileList().Append(searchMasks, searchOption);
     }
 
-    // Поиск файла по пути или маске
+    // Поиск файла по пути или маске. Исключение в случае, если файл не найден или найдено несколько файлов
     public static string GetFile(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
         FileList files = GetFiles(searchMask, searchOption);
         Validate.ThrowIf(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
@@ -275,8 +257,25 @@ public static class __Utils /////
         return files[0];
     }
 
+    // Копирование файла (с созданием директорий)
+    public static void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) {
+        Validate.FileExists(sourceFileName);
+        CreateDirectory(destFileName, true);
+        File.Copy(sourceFileName, destFileName, overwrite);
+    }
+
+    // Перемещение файла (с созданием директорий)
+    public static void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) {
+        Validate.FileExists(sourceFileName);
+        CreateDirectory(destFileName, true);
+        if (overwrite) {
+            File.Delete(destFileName);
+        }
+        File.Move(sourceFileName, destFileName);
+    }
+
     // Добавление префикса к имени файла
-    public static string AddNamePrefix(string path, string prefix) {
+    public static string AddFileNamePrefix(string path, string prefix) {
         string dirPath = Path.GetDirectoryName(path);
         string fileName = Path.GetFileNameWithoutExtension(path);
         string ext = Path.GetExtension(path);
@@ -284,14 +283,14 @@ public static class __Utils /////
     }
 
     // Добавление суффикса к имени файла
-    public static string AddNameSuffix(string path, string suffix) {
+    public static string AddFileNameSuffix(string path, string suffix) {
         string dirPath = Path.GetDirectoryName(path);
         string fileName = Path.GetFileNameWithoutExtension(path);
         string ext = Path.GetExtension(path);
         return dirPath + "\\" + fileName + suffix + ext;
     }
 
-    // Переименование файла (без учёта расширения)
+    // Получение нового имени файла
     public static string NewFileName(string path, string newName, bool includeExtension = false) {
         string dirPath = Path.GetDirectoryName(path);
         if (includeExtension) {
@@ -302,22 +301,10 @@ public static class __Utils /////
         }
     }
 
-    // Вывод исключения в случае, если файла не существует
-    public static void CheckFileExists(string filePath, bool checkRelativePath = true) {
-        if (!File.Exists(filePath)) {
-            // игнорирование коротких путей файлов используется в случае,
-            // если операционной системе известен путь к файлу, в отличие от программы
-            // (например программы из папки WINDOWS\system32)
-            if (Path.IsPathRooted(filePath) || (checkRelativePath && !Path.IsPathRooted(filePath))) {
-                throw new FileNotFoundException("Не удаётся найти '" + filePath + "'.", filePath);
-            }
-        }
-    }
-
     // Сравнение содержимого файлов
     public static bool CompareFiles(string file1Path, string file2Path) {
-        CheckFileExists(file1Path);
-        CheckFileExists(file2Path);
+        Validate.FileExists(file1Path);
+        Validate.FileExists(file2Path);
 
         long file1Length = new FileInfo(file1Path).Length;
         long file2Length = new FileInfo(file2Path).Length;
@@ -418,6 +405,33 @@ public class FileList : List<string>
 
     public FileList(IEnumerable<string> collection) : base(collection) { }
 
+    // Поиск файлов по пути или маске и добавление их в список
+    public FileList Append(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+        if (File.Exists(searchMask)) {
+            Add(searchMask);
+
+        } else if (Directory.Exists(searchMask)) {
+            AddRange(Directory.GetFiles(searchMask, "*", searchOption));
+
+        } else {
+            string directoryPath = Path.GetDirectoryName(searchMask);
+            if (string.IsNullOrEmpty(directoryPath)) {
+                directoryPath = Environment.CurrentDirectory;
+            }
+            string fileMask = Path.GetFileName(searchMask);
+            AddRange(Directory.GetFiles(directoryPath, fileMask, searchOption));
+        }
+        return this;
+    }
+
+    // Поиск файлов по пути или маске и добавление их в список
+    public FileList Append(IList<string> searchMasks, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+        foreach (string searchMask in searchMasks) {
+            AddRange(Append(searchMask, searchOption));
+        }
+        return this;
+    }
+
     // Удаление файлов
     public FileList Delete(int startIndex = 0) {
         for (int i = startIndex; i < Count; i++) {
@@ -480,6 +494,11 @@ public class FileList : List<string>
         }
         return this;
     }
+
+
+    public static implicit operator string[](FileList fileList) {
+        return fileList.ToArray();
+    }
 }
 
 // Валидация данных
@@ -523,6 +542,18 @@ public static class Validate
                 process.ExitCode,
                 process.StartInfo.FileName,
                 process.StartInfo.Arguments));
+        }
+    }
+
+    // Вывод исключения в случае, если файла не существует
+    public static void FileExists(string filePath, bool checkRelativePath = true) {
+        if (!File.Exists(filePath)) {
+            // игнорирование коротких путей файлов используется в случае,
+            // если операционной системе известен путь к файлу, в отличие от программы
+            // (например программы из папки WINDOWS\system32)
+            if (Path.IsPathRooted(filePath) || (checkRelativePath && !Path.IsPathRooted(filePath))) {
+                throw new FileNotFoundException("Не удаётся найти '" + filePath + "'.", filePath);
+            }
         }
     }
 }
