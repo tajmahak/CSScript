@@ -168,7 +168,7 @@ namespace CSScript
 
         private void WriteException(Exception ex) {
             context.WriteErrorLine($"# Ошибка ({ex.GetType().Name}): {ex.Message}");
-            // StartTrace бесполезен, т.к. не отображает вложенность исключения внутри скрипта
+            // StackTrace бесполезен, т.к. не отображает вложенность исключения внутри скрипта
             if (ex.InnerException != null) {
                 context.WriteErrorLine();
                 WriteException(ex.InnerException);
