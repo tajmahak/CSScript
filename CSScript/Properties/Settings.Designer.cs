@@ -42,6 +42,7 @@ System.ComponentModel.DataAnnotations
 System.Diagnostics
 System.Drawing
 System.IO
+System.Linq
 System.Net
 System.Net.Mail
 System.Runtime.InteropServices
