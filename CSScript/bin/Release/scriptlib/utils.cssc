@@ -1,5 +1,5 @@
 // utils
-// СКРИПТОВЫЕ УТИЛИТЫ (05.07.2021)
+// СКРИПТОВЫЕ УТИЛИТЫ (08.07.2021)
 // ------------------------------------------------------------
 
 ///// #init
@@ -230,17 +230,16 @@ public static class __Utils /////
     }
 
     // Поиск файлов по пути или маске
-    public static FileList GetFiles(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        return new FileList().Append(searchMask, searchOption);
-
+    public static FileList GetFiles(string searchMask, bool searchToAllDirectories = false) {
+        return new FileList().Append(searchMask, searchToAllDirectories);
     }
-    public static FileList GetFiles(IList<string> searchMasks, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        return new FileList().Append(searchMasks, searchOption);
+    public static FileList GetFiles(IList<string> searchMasks, bool searchToAllDirectories = false) {
+        return new FileList().Append(searchMasks, searchToAllDirectories);
     }
 
     // Поиск файла по пути или маске. Исключение в случае, если файл не найден или найдено несколько файлов
-    public static string GetFile(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-        FileList files = GetFiles(searchMask, searchOption);
+    public static string GetFile(string searchMask, bool searchToAllDirectories = false) {
+        FileList files = GetFiles(searchMask, searchToAllDirectories);
         Validate.ThrowIf(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
         Validate.ThrowIf(files.Count > 1, "По указанной маске '" + searchMask + "' найдено несколько файлов.");
         return files[0];
@@ -395,7 +394,8 @@ public class FileList : List<string>
     public FileList(IEnumerable<string> collection) : base(collection) { }
 
     // Поиск файлов по пути или маске и добавление их в список
-    public FileList Append(string searchMask, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+    public FileList Append(string searchMask, bool searchToAllDirectories = false) {
+        SearchOption searchOption = searchToAllDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         if (File.Exists(searchMask)) {
             Add(searchMask);
 
@@ -414,9 +414,9 @@ public class FileList : List<string>
     }
 
     // Поиск файлов по пути или маске и добавление их в список
-    public FileList Append(IList<string> searchMasks, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+    public FileList Append(IList<string> searchMasks, bool searchToAllDirectories = false) {
         foreach (string searchMask in searchMasks) {
-            AddRange(Append(searchMask, searchOption));
+            AddRange(Append(searchMask, searchToAllDirectories));
         }
         return this;
     }
