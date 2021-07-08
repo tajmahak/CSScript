@@ -8,6 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 // utils
 // СКРИПТОВЫЕ УТИЛИТЫ (08.07.2021)
@@ -23,6 +24,11 @@ public static class __Utils /////
 { /////
 
     /// --- РАБОТА С КОНТЕКСТОМ ---
+
+    // Установка режима ожидания действий со стороны пользователя
+    public static void Pause(bool pause = true) {
+        __utils_Context.Pause = pause;
+    }
 
     // Получение входящего аргумента по индексу
     public static T GetArgument<T>(int index, T defaultValue) {
@@ -96,13 +102,13 @@ public static class __Utils /////
     }
 
     // Вывод штампа даты и времени в стандартный выходной поток
-    public static void WriteTimeStamp() {
-        Write("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ", __utils_Context.ColorScheme.Info);
+    public static void WriteTimeStamp(string pattern = "[yyy.MM.dd HH:mm:ss]: ") {
+        Write(DateTime.Now.ToString(pattern), __utils_Context.ColorScheme.Info);
     }
 
     // Вывод штампа даты и времени в стандартный поток ошибок
-    public static void WriteErrorTimeStamp() {
-        WriteError("[" + DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss") + "]: ");
+    public static void WriteErrorTimeStamp(string pattern = "[yyy.MM.dd HH:mm:ss]: ") {
+        WriteError(DateTime.Now.ToString(pattern));
     }
 
     // Вывод форматированной строки формата "... `COLOR:VALUE` ...", где:
@@ -116,7 +122,7 @@ public static class __Utils /////
             string fragment = split[i];
             if (newBlock) {
                 string[] fragmentBlock = DivideString(fragment, ":");
-                Validate.IsTrue(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
+                Validate.True(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
                 fragment = fragmentBlock[1];
                 switch (fragmentBlock[0].ToLowerInvariant()) {
                     case "black": writeColor = ConsoleColor.Black; break;
@@ -251,8 +257,8 @@ public static class __Utils /////
     // Поиск файла по пути или маске. Исключение в случае, если файл не найден или найдено несколько файлов
     public static string GetFile(string searchMask, bool searchToAllDirectories = false) {
         FileList files = GetFiles(searchMask, searchToAllDirectories);
-        Validate.ThrowIf(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
-        Validate.ThrowIf(files.Count > 1, "По указанной маске '" + searchMask + "' найдено несколько файлов.");
+        Validate.Throw(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
+        Validate.Throw(files.Count > 1, "По указанной маске '" + searchMask + "' найдено несколько файлов.");
         return files[0];
     }
 
@@ -301,18 +307,18 @@ public static class __Utils /////
     }
 
     // Сравнение содержимого файлов
-    public static bool CompareFiles(string file1Path, string file2Path) {
-        Validate.FileExists(file1Path);
-        Validate.FileExists(file2Path);
+    public static bool CompareFiles(string path1, string path2) {
+        Validate.FileExists(path1);
+        Validate.FileExists(path2);
 
-        long file1Length = new FileInfo(file1Path).Length;
-        long file2Length = new FileInfo(file2Path).Length;
+        long file1Length = new FileInfo(path1).Length;
+        long file2Length = new FileInfo(path2).Length;
         if (file1Length != file2Length) {
             return false;
         }
 
-        string file1Hash = ToHexString(__Utils_GetMD5HashFromFile(file1Path));
-        string file2Hash = ToHexString(__Utils_GetMD5HashFromFile(file2Path));
+        string file1Hash = ToHexString(__Utils_GetMD5HashFromFile(path1));
+        string file2Hash = ToHexString(__Utils_GetMD5HashFromFile(path2));
         if (file1Hash != file2Hash) {
             return false;
         }
@@ -386,6 +392,84 @@ public static class __Utils /////
             }
         };
         stream.BeginRead(buffer, 0, buffer.Length, callback, null);
+    }
+
+
+    // --- УПРОЩЁННЫЕ КОНСТРУКЦИИ ---
+
+    public static bool Empty(object value) {
+        if (value == null) {
+            return true;
+        }
+        if (value is string) {
+            return string.IsNullOrEmpty((string)value);
+        }
+        if (value is IEnumerable) {
+            return (value as ICollection).Count == 0;
+        }
+        return false;
+    }
+
+    public static bool NotEmpty(object value) {
+        return !Empty(value);
+    }
+
+    public static bool Blank(object value) {
+        if (value is string) {
+            return string.IsNullOrWhiteSpace((string)value);
+        }
+        if (value is ICollection) {
+            return (value as ICollection).Count > 0;
+        }
+        return Empty(value);
+    }
+
+    public static bool NotBlank(object value) {
+        return !Blank(value);
+    }
+
+    public static bool Single(ICollection collection) {
+        return collection.Count == 1;
+    }
+
+    public static bool Exists(string path) {
+        if (File.Exists(path)) {
+            return true;
+        }
+        if (Directory.Exists(path)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static string[] Split(string value, params string[] separators) {
+        return value.Split(separators, StringSplitOptions.None);
+    }
+
+    public static string[] Split(string value, params char[] separators) {
+        return value.Split(separators, StringSplitOptions.None);
+    }
+
+    public static string[] CleanSplit(string value, params string[] separators) {
+        return value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public static string[] CleanSplit(string value, params char[] separators) {
+        return value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public static string[] ReadAllLines(string searchMask, bool searchToAllDirectories = false) {
+        string file = GetFile(searchMask, searchToAllDirectories);
+        return File.ReadAllLines(file, Encoding.UTF8);
+    }
+
+    public static string ReadAllText(string searchMask, bool searchToAllDirectories = false) {
+        string file = GetFile(searchMask, searchToAllDirectories);
+        return File.ReadAllText(file, Encoding.UTF8);
+    }
+
+    public static void Sleep(int ms) {
+        Thread.Sleep(ms);
     }
 
 
@@ -505,33 +589,33 @@ public class FileList : List<string>
 public static class Validate
 {
     // В случае, если условие выполнено, вызывается Exception
-    public static void ThrowIf(bool condition, string message = null) {
+    public static void Throw(bool condition, string message = null) {
         if (condition) {
             throw message == null ? new ValidationException() : new ValidationException(message);
         }
     }
 
     // Проверка на выполнение условия, иначе Exception
-    public static void IsTrue(bool condition, string message = null) {
-        ThrowIf(!condition, message);
+    public static void True(bool condition, string message = null) {
+        Throw(!condition, message);
     }
 
     // Проверка на не-null переменную, иначе Exception
-    public static void IsNotNull(object obj, string message = null) {
-        ThrowIf(obj == null, message);
+    public static void NotNull(object obj, string message = null) {
+        Throw(obj == null, message);
     }
 
     // Проверка на заполненность, иначе Exception
-    public static void IsNotEmpty(string value, string message = null) {
-        ThrowIf(string.IsNullOrEmpty(value), message);
+    public static void NotEmpty(string value, string message = null) {
+        Throw(string.IsNullOrEmpty(value), message);
     }
-    public static void IsNotEmpty(ICollection collection, string message = null) {
-        ThrowIf(collection == null || collection.Count == 0, message);
+    public static void NotEmpty(ICollection collection, string message = null) {
+        Throw(collection == null || collection.Count == 0, message);
     }
 
     // Проверка на заполненность строки символами, отличными от пробела, иначе Exception
-    public static void IsNotBlank(string value, string message = null) {
-        ThrowIf(string.IsNullOrWhiteSpace(value), message);
+    public static void NotBlank(string value, string message = null) {
+        Throw(string.IsNullOrWhiteSpace(value), message);
     }
 
     // Проверка процесса на корректное завершение, иначе Exception
