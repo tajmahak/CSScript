@@ -4,10 +4,12 @@ using CSScript.Properties;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace CSScript
 {
@@ -16,6 +18,7 @@ namespace CSScript
         private readonly ConsoleScriptContext context;
         private ScriptContainer container;
         private ScriptThread thread;
+        private readonly object threadLock = new object();
 
         public ConsoleScriptHandler(ConsoleScriptContext context) {
             this.context = context;
@@ -27,6 +30,7 @@ namespace CSScript
         }
 
         public void Start() {
+            Monitor.Enter(threadLock); // установка блокировки для возможности окончания работы принудительно остановленного процесса
             try {
                 WriteHeader();
                 WriteStartInfo();
@@ -50,6 +54,8 @@ namespace CSScript
                     throw thread.ThreadException;
                 }
 
+            } catch (ThreadAbortException) {
+
             } catch (Exception ex) {
                 context.ExitCode = 1;
                 context.WriteLine();
@@ -58,7 +64,7 @@ namespace CSScript
             } finally {
                 Environment.ExitCode = context.ExitCode;
 
-                context.KillRegisteredProcesses();
+                AbortRegisteredProcesses();
 
                 if (thread != null && thread.Aborted) {
                     WriteAbort();
@@ -67,12 +73,23 @@ namespace CSScript
                         ReadKeyForExit();
                     }
                 }
+
+                Monitor.Exit(threadLock);
             }
         }
 
         public void Abort() {
+            context.WriteError("# Прерывание выполнения...");
+
             thread?.Abort();
+
+            // Ожидание завершения остановленного потока
+            Monitor.Enter(threadLock);
+            Monitor.Exit(threadLock);
+
+            context.WriteError("# Прервано пользователем");
         }
+
 
         private void LoadScriptContainer() {
             Validate.IsNotBlank(context.ScriptPath, "Не указан путь к запускаемому скрипту.");
@@ -235,6 +252,18 @@ namespace CSScript
                  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "Temp\\CSScript",
                 nameBuilder.ToString());
+        }
+
+        private void AbortRegisteredProcesses() {
+            foreach (Process process in context.RegisteredProcesses) {
+                if (!process.HasExited) {
+                    if (process.MainWindowHandle != (IntPtr)0) {
+                        // если процесс не интегрирован в текущую консоль, он не будет остановлен с текущей консолью
+                        process.Kill();
+                    }
+                    process.WaitForExit();
+                }
+            }
         }
     }
 }

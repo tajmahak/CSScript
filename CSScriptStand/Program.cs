@@ -8,10 +8,11 @@ namespace CSScriptStand
     {
         // true  - выполнение кода без перехвата исключений
         // false - выполнение кода с помощью обработчика CSCript
-        private static readonly bool UseSimpleExecutor = true;
+        private static readonly bool UseSimpleExecutor = false;
         private static ConsoleScriptHandler handler;
 
         private static void Main(string[] args) {
+            Console.CancelKeyPress += Console_CancelKeyPress;
             ConsoleScriptContext context = new ConsoleScriptContext {
                 Args = args,
             };
@@ -29,13 +30,12 @@ namespace CSScriptStand
 
             } else {
                 handler = new ConsoleScriptHandler(stand);
-                Console.CancelKeyPress += Console_CancelKeyPress;
                 handler.Start();
             }
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
-            handler.Abort();
+            handler?.Abort();
             e.Cancel = true;
         }
     }

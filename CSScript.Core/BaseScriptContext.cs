@@ -25,6 +25,8 @@ namespace CSScript.Core
 
         public IList<LogFragment> Log => log.AsReadOnly();
 
+        public IList<Process> RegisteredProcesses => registeredProcesses.AsReadOnly();
+
 
         public string ReadLine(ConsoleColor? color = null) {
             if (HiddenMode || Thread.CurrentThread.ThreadState != System.Threading.ThreadState.Running) {
@@ -83,19 +85,6 @@ namespace CSScript.Core
         public abstract void OnWriteError(string value, ConsoleColor color);
 
         public abstract string OnReadLine(ConsoleColor color);
-
-
-        public void KillRegisteredProcesses() {
-            lock (registeredProcesses) {
-                foreach (Process registeredProcess in registeredProcesses) {
-                    try {
-                        registeredProcess.Kill();
-                    } catch {
-                    }
-                }
-                registeredProcesses.Clear();
-            }
-        }
 
 
         private void WriteLog(string text, ConsoleColor color, bool isError) {
