@@ -19,6 +19,7 @@ namespace CSScript
         private ScriptContainer container;
         private ScriptThread thread;
         private readonly object threadLock = new object();
+        private bool executed = false;
 
         public ConsoleScriptHandler(ConsoleScriptContext context) {
             this.context = context;
@@ -30,6 +31,7 @@ namespace CSScript
         }
 
         public void Start() {
+            executed = true;
             Monitor.Enter(threadLock); // установка блокировки для возможности окончания работы принудительно остановленного процесса
             try {
                 WriteHeader();
@@ -55,6 +57,7 @@ namespace CSScript
                 }
 
             } catch (ThreadAbortException) {
+                context.ExitCode = 1;
 
             } catch (Exception ex) {
                 context.ExitCode = 1;
@@ -67,11 +70,15 @@ namespace CSScript
                 AbortRegisteredProcesses();
 
                 if (thread != null && thread.Aborted) {
-                    WriteAbort();
-                } else {
-                    if (!context.HiddenMode && context.Pause) {
-                        ReadKeyForExit();
-                    }
+                    context.WriteErrorLine($"# Прервано");
+                    executed = false;
+
+                } else if (!context.HiddenMode && context.Pause) {
+                    executed = false;
+
+                    context.WriteLine();
+                    context.Write($"# Выполнено ({context.ExitCode}). Для выхода нажмите любую клавишу или закройте окно ...", context.ColorScheme.Info);
+                    Console.Read(); // при .ReadKey() не срабатывает комбинация Ctrl+C для остановки
                 }
 
                 Monitor.Exit(threadLock);
@@ -79,15 +86,17 @@ namespace CSScript
         }
 
         public void Abort() {
-            context.WriteError("# Прерывание выполнения...");
+            if (executed) {
+                context.WriteError("# Прерывание выполнения...");
 
-            thread?.Abort();
+                thread?.Abort();
 
-            // Ожидание завершения остановленного потока
-            Monitor.Enter(threadLock);
-            Monitor.Exit(threadLock);
+                // Ожидание завершения остановленного потока
+                Monitor.Enter(threadLock);
+                Monitor.Exit(threadLock);
 
-            context.WriteError("# Прервано пользователем");
+                context.WriteError("# Прервано пользователем");
+            }
         }
 
 
@@ -223,16 +232,6 @@ namespace CSScript
                     context.WriteLine(line);
                 }
             }
-        }
-
-        private void WriteAbort() {
-            context.WriteErrorLine($"# Прервано");
-        }
-
-        private void ReadKeyForExit() {
-            context.WriteLine();
-            context.Write($"# Выполнено ({context.ExitCode}). Для выхода нажмите любую клавишу или закройте окно ...", context.ColorScheme.Info);
-            Console.ReadKey();
         }
 
         private string GetCompiledScriptPath(string sourceCode) {
