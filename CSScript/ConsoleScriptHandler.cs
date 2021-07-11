@@ -6,6 +6,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -202,21 +203,13 @@ namespace CSScript
         }
 
         private void WriteCompileErrors(ScriptBuilder builder, CompilerResults compilerResults) {
-            int errorNumber = 1;
-            foreach (CompilerError error in compilerResults.Errors) {
-                if (error.Line > 0) {
-                    context.WriteErrorLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}");
-                } else {
-                    context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
-                }
-            }
-
-            context.WriteLine();
-
+            List<CompilerError> errors = new List<CompilerError>();
             HashSet<int> errorLines = new HashSet<int>();
             foreach (CompilerError error in compilerResults.Errors) {
+                errors.Add(error);
                 errorLines.Add(error.Line);
             }
+
             string sourceCode = builder.GetSourceCode();
             string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++) {
@@ -225,11 +218,23 @@ namespace CSScript
 
                 context.Write(lineNumber.ToString().PadLeft(4) + ": ", context.ColorScheme.Info);
                 if (errorLines.Contains(lineNumber)) {
-                    context.WriteLine(line, context.ColorScheme.Error);
+                    context.Write(line, context.ColorScheme.Error);
+                    string errorTexts = string.Join("; ", errors.FindAll(x => x.Line == lineNumber).Select(x => x.ErrorText));
+                    context.WriteLine(" // # Ошибка: " + errorTexts, context.ColorScheme.Info);
                 } else if (line.TrimStart().StartsWith("//")) {
                     context.WriteLine(line, ConsoleColor.Green);
                 } else {
                     context.WriteLine(line);
+                }
+            }
+
+            context.WriteLine();
+            int errorNumber = 1;
+            foreach (CompilerError error in compilerResults.Errors) {
+                if (error.Line > 0) {
+                    context.WriteErrorLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}");
+                } else {
+                    context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
                 }
             }
         }
