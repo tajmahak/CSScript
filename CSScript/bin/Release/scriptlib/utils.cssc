@@ -1,5 +1,5 @@
 // utils
-// СКРИПТОВЫЕ УТИЛИТЫ (08.07.2021)
+// СКРИПТОВЫЕ УТИЛИТЫ (14.07.2021)
 // ------------------------------------------------------------
 
 ///// #init
@@ -407,7 +407,7 @@ public static class __Utils /////
             return string.IsNullOrWhiteSpace((string)value);
         }
         if (value is ICollection) {
-            return (value as ICollection).Count > 0;
+            return (value as ICollection).Count == 0;
         }
         return Empty(value);
     }
