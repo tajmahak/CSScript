@@ -8,7 +8,7 @@ namespace CSScriptStand
     {
         // true  - выполнение кода без перехвата исключений
         // false - выполнение кода с помощью обработчика CSCript
-        private static readonly bool UseSimpleExecutor = false;
+        private static readonly bool UseSimpleExecutor = true;
         private static ConsoleScriptHandler handler;
 
         private static void Main(string[] args) {
