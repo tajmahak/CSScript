@@ -225,12 +225,12 @@ namespace CSScript
                         } else {
                             context.WriteLine(sourceCodeLine);
                         }
-
                     }
 
                 } else {
                     context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
                 }
+
                 if (errorIndex < compilerResults.Errors.Count - 1) {
                     context.WriteLine();
                 }
