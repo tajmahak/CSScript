@@ -2,10 +2,8 @@
 using CSScript.Core.Manage;
 using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -198,38 +196,43 @@ namespace CSScript
         }
 
         private void WriteCompileErrors(ScriptBuilder builder, CompilerResults compilerResults) {
-            List<CompilerError> errors = new List<CompilerError>();
-            HashSet<int> errorLines = new HashSet<int>();
-            foreach (CompilerError error in compilerResults.Errors) {
-                errors.Add(error);
-                errorLines.Add(error.Line);
-            }
-
             string sourceCode = builder.GetSourceCode();
-            string[] lines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++) {
-                string line = lines[i];
-                int lineNumber = i + 1;
-
-                context.Write(lineNumber.ToString().PadLeft(4) + ": ", context.ColorScheme.Info);
-                if (errorLines.Contains(lineNumber)) {
-                    context.Write(line, context.ColorScheme.Error);
-                    string errorTexts = string.Join("; ", errors.FindAll(x => x.Line == lineNumber).Select(x => x.ErrorText));
-                    context.WriteLine(" // # Ошибка: " + errorTexts, context.ColorScheme.Info);
-                } else if (line.TrimStart().StartsWith("//")) {
-                    context.WriteLine(line, ConsoleColor.Green);
-                } else {
-                    context.WriteLine(line);
-                }
-            }
-
-            context.WriteLine();
+            string[] sourceCodeLines = sourceCode.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            int pad = sourceCodeLines.Length.ToString().Length;
             int errorNumber = 1;
-            foreach (CompilerError error in compilerResults.Errors) {
+
+            for (int errorIndex = 0; errorIndex < compilerResults.Errors.Count; errorIndex++) {
+                CompilerError error = compilerResults.Errors[errorIndex];
                 if (error.Line > 0) {
                     context.WriteErrorLine($"# {errorNumber++} (cтрока {error.Line}): {error.ErrorText}");
+
+                    int lineIndex = error.Line - 1;
+                    int startIndex = lineIndex - 3;
+                    startIndex = startIndex < 0 ? 0 : startIndex;
+                    int endIndex = lineIndex + 3;
+                    endIndex = endIndex >= sourceCodeLines.Length ? sourceCodeLines.Length - 1 : endIndex;
+
+                    for (int i = startIndex; i <= endIndex; i++) {
+                        int lineNumber = i + 1;
+                        string sourceCodeLine = sourceCodeLines[i];
+
+                        context.Write(lineNumber.ToString().PadLeft(pad) + ": ", context.ColorScheme.Info);
+
+                        if (i == lineIndex) {
+                            context.WriteLine(sourceCodeLine, context.ColorScheme.Error);
+                        } else if (sourceCodeLine.TrimStart().StartsWith("//")) {
+                            context.WriteLine(sourceCodeLine, ConsoleColor.Green);
+                        } else {
+                            context.WriteLine(sourceCodeLine);
+                        }
+
+                    }
+
                 } else {
                     context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
+                }
+                if (errorIndex < compilerResults.Errors.Count - 1) {
+                    context.WriteLine();
                 }
             }
         }
