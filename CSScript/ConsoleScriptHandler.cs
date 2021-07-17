@@ -1,6 +1,5 @@
 ﻿using CSScript.Core;
 using CSScript.Core.Manage;
-using CSScript.Properties;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -163,19 +162,15 @@ namespace CSScript
                 ScriptLibraryPath = Settings.Default.ScriptLibDirectory
             };
 
-            foreach (string usingItem in ParseList(Settings.Default.Usings)) {
+            foreach (string usingItem in Settings.Default.Usings) {
                 parser.BaseUsings.Add(usingItem);
             }
 
-            foreach (string importItem in ParseList(Settings.Default.Imports)) {
+            foreach (string importItem in Settings.Default.Imports) {
                 parser.BaseImports.Add(importItem);
             }
 
             return parser.ParseFromFile(context.ScriptPath);
-        }
-
-        private string[] ParseList(string line) {
-            return line.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private void WriteHeader() {

@@ -1,14 +1,20 @@
 ﻿using CSScript.Core;
 using CSScript.Scripts;
 using System;
+using System.IO;
 
 namespace CSScript
 {
     internal class Program
     {
+        private const string ConfigFileName = "settings.ini";
+
         private static ConsoleScriptHandler handler;
 
         private static void Main(string[] args) {
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigFileName);
+            Settings.Default = Settings.FromFile(configPath);
+
             Console.CancelKeyPress += Console_CancelKeyPress;
 
             InputArguments arguments = InputArguments.FromProgramArgs(args);
