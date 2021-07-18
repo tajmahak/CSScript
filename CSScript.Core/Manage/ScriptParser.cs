@@ -12,11 +12,15 @@ namespace CSScript.Core.Manage
 
         public string ScriptLibraryPath { get; set; }
 
+
         private ScriptBuilder builder;
+
+        private readonly HashSet<string> importedScripts = new HashSet<string>();
 
 
         public ScriptBuilder ParseFromFile(string scriptPath) {
             builder = new ScriptBuilder();
+            importedScripts.Clear();
 
             // загрузка базовых using
             foreach (string usingItem in BaseUsings) {
@@ -87,6 +91,13 @@ namespace CSScript.Core.Manage
         }
 
         private void LoadScriptFile(string scriptPath, bool imported) {
+            scriptPath = Path.GetFullPath(scriptPath).ToLower();
+
+            if (imported && importedScripts.Contains(scriptPath)) {
+                return; // текущий скрипт уже импортирован
+            }
+            importedScripts.Add(scriptPath);
+
             string[] sourceCodeLines = File.ReadAllLines(scriptPath, Encoding.UTF8);
 
             HashSet<string> imports = new HashSet<string>();
