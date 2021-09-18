@@ -458,12 +458,12 @@ public static class __Utils /////
         return value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
     }
 
-    public static string[] ReadAllLines(string searchMask, bool searchToAllDirectories = false) {
+    public static string[] ReadLines(string searchMask, bool searchToAllDirectories = false) {
         string file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllLines(file, Encoding.UTF8);
     }
 
-    public static string ReadAllText(string searchMask, bool searchToAllDirectories = false) {
+    public static string ReadText(string searchMask, bool searchToAllDirectories = false) {
         string file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllText(file, Encoding.UTF8);
     }
