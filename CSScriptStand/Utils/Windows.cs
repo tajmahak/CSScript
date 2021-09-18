@@ -153,11 +153,11 @@ public class WinFormBuilder : Form
         return textBox;
     }
 
-    public TextBox AddMultiLineTextBox(int lines, string text = "") {
+    public TextBox AddMultiLineTextBox(int height, string text = "") {
         TextBox textBox = AddTextBox(text);
         textBox.Multiline = true;
         textBox.ShortcutsEnabled = true;
-        textBox.Height *= lines;
+        textBox.Height = height;
 
         return textBox;
     }
@@ -166,6 +166,7 @@ public class WinFormBuilder : Form
         Button button = new Button();
         button.Text = text;
         button.Width = panel.Width - panel.Padding.Left - panel.Padding.Right - 4;
+        button.AutoSize = true;
 
         panel.Controls.Add(button);
         return button;
