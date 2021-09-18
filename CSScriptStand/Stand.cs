@@ -9,6 +9,7 @@ using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using static __Utils;
 
 namespace CSScriptStand
