@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 // utils.windows
-// ВЗАИМОДЕЙСТВИЕ С WINDOWS (19.09.2021)
+// ВЗАИМОДЕЙСТВИЕ С WINDOWS
 // ------------------------------------------------------------
 
 ///// #namespace
@@ -127,6 +127,7 @@ public class WinFormBuilder : Form
         return new WinFormBuilder(width, height);
     }
 
+    public FlowLayoutPanel MainPanel { get; private set; }
 
     public Label AddLabel(string text = "", bool bold = false) {
         Label label = new Label();
@@ -136,7 +137,7 @@ public class WinFormBuilder : Form
             label.Font = new Font(Font, FontStyle.Bold);
         }
 
-        panel.Controls.Add(label);
+        MainPanel.Controls.Add(label);
         return label;
     }
 
@@ -148,8 +149,8 @@ public class WinFormBuilder : Form
         textBox.WordWrap = false;
         textBox.ScrollBars = ScrollBars.Both;
 
-        textBox.Width = panel.Width - panel.Padding.Left - panel.Padding.Right - 4;
-        panel.Controls.Add(textBox);
+        textBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
+        MainPanel.Controls.Add(textBox);
         return textBox;
     }
 
@@ -162,18 +163,21 @@ public class WinFormBuilder : Form
         return textBox;
     }
 
-    public Button AddButton(string text) {
+    public Button AddButton(string text, bool bold = false) {
         Button button = new Button();
         button.Text = text;
-        button.Width = panel.Width - panel.Padding.Left - panel.Padding.Right - 4;
+        button.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
         button.AutoSize = true;
+        if (bold) {
+            button.Font = new Font(Font, FontStyle.Bold);
+        }
 
-        panel.Controls.Add(button);
+        MainPanel.Controls.Add(button);
         return button;
     }
 
-    public Button AddOKButton(string text) {
-        Button button = AddButton(text);
+    public Button AddOKButton(string text, bool bold = false) {
+        Button button = AddButton(text, bold);
         button.Click += OKButton_Click;
         button.AutoSize = true;
         return button;
@@ -185,7 +189,7 @@ public class WinFormBuilder : Form
         checkBox.Text = text;
         checkBox.Checked = check;
 
-        panel.Controls.Add(checkBox);
+        MainPanel.Controls.Add(checkBox);
         return checkBox;
     }
 
@@ -195,14 +199,14 @@ public class WinFormBuilder : Form
         radioButton.Checked = check;
         radioButton.AutoSize = true;
 
-        panel.Controls.Add(radioButton);
+        MainPanel.Controls.Add(radioButton);
         return radioButton;
     }
 
     public ComboBox AddComboBox(object[] items = null, string text = null) {
         ComboBox comboBox = new ComboBox();
 
-        comboBox.Width = panel.Width - panel.Padding.Left - panel.Padding.Right - 4;
+        comboBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
         comboBox.Margin = new Padding(3, 3, 3, 10);
 
         if (items != null) {
@@ -212,26 +216,24 @@ public class WinFormBuilder : Form
             comboBox.Text = text;
         }
 
-        panel.Controls.Add(comboBox);
+        MainPanel.Controls.Add(comboBox);
         return comboBox;
     }
 
     public CheckedListBox AddCheckedListBox(int height, object[] items = null) {
         CheckedListBox checkedListBox = new CheckedListBox();
-        checkedListBox.Width = panel.Width - panel.Padding.Left - panel.Padding.Right - 4;
+        checkedListBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
         checkedListBox.CheckOnClick = true;
         checkedListBox.Height = height;
         if (items != null) {
             checkedListBox.Items.AddRange(items);
         }
-        panel.Controls.Add(checkedListBox);
+        MainPanel.Controls.Add(checkedListBox);
         return checkedListBox;
     }
 
 
     private static bool initVisualStyles;
-
-    private readonly FlowLayoutPanel panel;
 
     private WinFormBuilder(int width, int height) : base() {
         AutoScaleMode = AutoScaleMode.Dpi;
@@ -241,13 +243,13 @@ public class WinFormBuilder : Form
         FormBorderStyle = FormBorderStyle.FixedToolWindow;
         MaximizeBox = false;
 
-        panel = new FlowLayoutPanel();
-        panel.AutoScroll = true;
-        panel.Dock = DockStyle.Fill;
-        panel.WrapContents = false;
-        panel.FlowDirection = FlowDirection.TopDown;
-        panel.Padding = new Padding(10);
-        Controls.Add(panel);
+        MainPanel = new FlowLayoutPanel();
+        MainPanel.AutoScroll = true;
+        MainPanel.Dock = DockStyle.Fill;
+        MainPanel.WrapContents = false;
+        MainPanel.FlowDirection = FlowDirection.TopDown;
+        MainPanel.Padding = new Padding(10);
+        Controls.Add(MainPanel);
     }
 
     private void OKButton_Click(object sender, EventArgs e) {

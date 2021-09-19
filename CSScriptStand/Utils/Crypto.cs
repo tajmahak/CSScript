@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 // utils.crypto
-// КРИПТОГРАФИЯ (15.05.2021)
+// КРИПТОГРАФИЯ
 // ------------------------------------------------------------
 
 ///// #namespace
