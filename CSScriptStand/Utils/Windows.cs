@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 // utils.windows
-// ВЗАИМОДЕЙСТВИЕ С WINDOWS (18.09.2021)
+// ВЗАИМОДЕЙСТВИЕ С WINDOWS (19.09.2021)
 // ------------------------------------------------------------
 
 ///// #namespace
@@ -216,9 +216,11 @@ public class WinFormBuilder : Form
         return comboBox;
     }
 
-    public CheckedListBox AddCheckedListBox(object[] items = null) {
+    public CheckedListBox AddCheckedListBox(int height, object[] items = null) {
         CheckedListBox checkedListBox = new CheckedListBox();
         checkedListBox.Width = panel.Width - panel.Padding.Left - panel.Padding.Right - 4;
+        checkedListBox.CheckOnClick = true;
+        checkedListBox.Height = height;
         if (items != null) {
             checkedListBox.Items.AddRange(items);
         }
@@ -237,6 +239,7 @@ public class WinFormBuilder : Form
         ClientSize = new Size(width, height);
         Font = new Font("Segoe UI", 10.2F, FontStyle.Regular, GraphicsUnit.Point, 204);
         FormBorderStyle = FormBorderStyle.FixedToolWindow;
+        MaximizeBox = false;
 
         panel = new FlowLayoutPanel();
         panel.AutoScroll = true;
