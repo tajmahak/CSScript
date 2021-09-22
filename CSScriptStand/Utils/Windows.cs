@@ -232,6 +232,15 @@ public class WinFormBuilder : Form
         return checkedListBox;
     }
 
+    public NumericUpDown AddNumericUpDown(int value, int min = 0, int max = 100) {
+        NumericUpDown numericUpDown = new NumericUpDown();
+        numericUpDown.Minimum = min;
+        numericUpDown.Maximum = max;
+        numericUpDown.Value = value;
+
+        MainPanel.Controls.Add(numericUpDown);
+        return numericUpDown;
+    }
 
     private static bool initVisualStyles;
 

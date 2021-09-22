@@ -15,6 +15,7 @@ namespace CSScriptStand
             Console.CancelKeyPress += Console_CancelKeyPress;
             ConsoleScriptContext context = new ConsoleScriptContext {
                 Args = args,
+                Pause = true,
             };
             ScriptContainer stand = new Stand(context);
 
