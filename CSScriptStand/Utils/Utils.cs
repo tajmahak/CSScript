@@ -284,6 +284,9 @@ public static class __Utils /////
         string dirPath = Path.GetDirectoryName(path);
         string fileName = Path.GetFileNameWithoutExtension(path);
         string ext = Path.GetExtension(path);
+        if (Empty(dirPath)) {
+            return prefix + fileName + ext;
+        }
         return dirPath + "\\" + prefix + fileName + ext;
     }
 
@@ -292,6 +295,9 @@ public static class __Utils /////
         string dirPath = Path.GetDirectoryName(path);
         string fileName = Path.GetFileNameWithoutExtension(path);
         string ext = Path.GetExtension(path);
+        if (Empty(dirPath)) {
+            return fileName + suffix + ext;
+        }
         return dirPath + "\\" + fileName + suffix + ext;
     }
 
