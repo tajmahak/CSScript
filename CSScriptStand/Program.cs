@@ -26,7 +26,7 @@ namespace CSScriptStand
                     context.WriteLine();
                     context.WriteLine("# Выполнено (" + context.ExitCode + ")",
                         context.ExitCode == 0 ? context.ColorScheme.Success : context.ColorScheme.Error);
-                    Console.ReadKey();
+                    Console.Read(); // при .ReadKey() не срабатывает комбинация Ctrl+C для остановки
                 }
 
             } else {
