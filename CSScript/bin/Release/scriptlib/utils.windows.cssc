@@ -227,15 +227,21 @@ public class WinFormBuilder : Form
         return checkedListBox;
     }
 
+    public ListBox AddListBox(int height, object[] items = null) {
+        ListBox listBox = new ListBox();
+        listBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
+        listBox.Height = height;
+        if (items != null) {
+            listBox.Items.AddRange(items);
+        }
+        MainPanel.Controls.Add(listBox);
+        return listBox;
+    }
+
     public NumericUpDown AddNumericUpDown(int value, int min = 0, int max = 100) {
         NumericUpDown numericUpDown = new NumericUpDown();
-        if (Math.Min(min, max) == min) {
-            numericUpDown.Minimum = min;
-            numericUpDown.Maximum = max;
-        } else {
-            numericUpDown.Maximum = max;
-            numericUpDown.Minimum = min;
-        }
+        numericUpDown.Minimum = min;
+        numericUpDown.Maximum = max;
         numericUpDown.Value = value;
 
         MainPanel.Controls.Add(numericUpDown);

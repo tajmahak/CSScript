@@ -212,7 +212,7 @@ public static class __Utils /////
     // Запуск процесса с выводом потоков в консоль и ожиданием его завершения
     public static int StartProcess(string fileName, object args = null, Encoding outputEncoding = null) {
         ScriptProcess process = CreateManagedProcess(fileName, args);
-        return StartProcess(process);
+        return StartProcess(process, outputEncoding);
     }
     public static int StartProcess(ScriptProcess process, Encoding outputEncoding = null) {
         process.RedirectOutput();
@@ -386,6 +386,7 @@ public static class __Utils /////
         if (Exists(filePath)) {
             File.Delete(filePath);
         }
+        CreateDirectory(filePath, true);
         File.WriteAllText(filePath, xml, Encoding.UTF8);
     }
 
