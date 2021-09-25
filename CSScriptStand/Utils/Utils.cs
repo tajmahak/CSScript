@@ -8,7 +8,6 @@ using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 
 // utils
 // УТИЛИТЫ
@@ -242,6 +241,9 @@ public static class __Utils /////
     // Создание папки
     public static bool CreateDirectory(string path, bool isFilePath = false) {
         string dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
+        if (Empty(dirPath)) {
+            dirPath = Environment.CurrentDirectory;
+        }
         if (!Directory.Exists(dirPath)) {
             Directory.CreateDirectory(dirPath);
             return true;
@@ -282,37 +284,45 @@ public static class __Utils /////
         File.Move(sourceFileName, destFileName);
     }
 
-    // Добавление префикса к имени файла
+    // Получение пути с добавлением префикса к имени файла
     public static string AddFileNamePrefix(string path, string prefix) {
-        string dirPath = Path.GetDirectoryName(path);
-        string fileName = Path.GetFileNameWithoutExtension(path);
+        string dir = Path.GetDirectoryName(path);
+        string name = Path.GetFileNameWithoutExtension(path);
         string ext = Path.GetExtension(path);
-        if (Empty(dirPath)) {
-            return prefix + fileName + ext;
-        }
-        return dirPath + "\\" + prefix + fileName + ext;
+        return Empty(dir) ? prefix + name + ext : dir + "\\" + prefix + name + ext;
     }
 
-    // Добавление суффикса к имени файла
+    // Получение пути с добавлением суффикса к имени файла
     public static string AddFileNameSuffix(string path, string suffix) {
         string dirPath = Path.GetDirectoryName(path);
         string fileName = Path.GetFileNameWithoutExtension(path);
         string ext = Path.GetExtension(path);
-        if (Empty(dirPath)) {
-            return fileName + suffix + ext;
-        }
-        return dirPath + "\\" + fileName + suffix + ext;
+        return Empty(dirPath) ? fileName + suffix + ext : dirPath + "\\" + fileName + suffix + ext;
     }
 
-    // Получение нового имени файла
+    // Получение пути с новым именем файла
     public static string NewFileName(string path, string newName, bool includeExtension = false) {
-        string dirPath = Path.GetDirectoryName(path);
+        string dir = Path.GetDirectoryName(path);
+        bool emptyDir = Empty(dir);
         if (includeExtension) {
-            string ext = Path.GetExtension(path);
-            return dirPath + "\\" + newName + ext;
-        } else {
-            return dirPath + "\\" + newName;
+            return emptyDir ? newName : dir + '\\' + newName;
         }
+        string ext = Path.GetExtension(path);
+        return emptyDir ? newName + ext : dir + '\\' + newName + ext;
+    }
+
+    // Получение пути с новым именем директории
+    public static string NewDirectoryName(string path, string newDirectory) {
+        string name = Path.GetFileName(path);
+        return Empty(newDirectory) ? name : Path.Combine(newDirectory, name);
+    }
+
+    // Получение пути с новым расширением файла
+    public static string NewFileExtension(string path, string newExtension) {
+        string dir = Path.GetDirectoryName(path);
+        string name = Path.GetFileNameWithoutExtension(path);
+        string ext = Path.GetExtension(path);
+        return Empty(dir) ? name + newExtension : dir + '\\' + name + newExtension;
     }
 
     // Сравнение содержимого файлов
@@ -475,10 +485,6 @@ public static class __Utils /////
     public static string ReadText(string searchMask, bool searchToAllDirectories = false) {
         string file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllText(file, Encoding.UTF8);
-    }
-
-    public static void Sleep(int ms) {
-        Thread.Sleep(ms);
     }
 
 
