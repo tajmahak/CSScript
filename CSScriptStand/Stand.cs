@@ -1,12 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
-using System.Net.Mail;
-using System.Security.Cryptography;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
