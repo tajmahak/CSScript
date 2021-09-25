@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -107,7 +108,10 @@ namespace CSScript.Core.Manage
 
             HashSet<string> imports = new HashSet<string>();
 
-            StringBuilder currentBlock = builder.ProcedureBlock;
+            StringBuilder currentBlock = string.Equals(Path.GetExtension(scriptPath), ".cs", StringComparison.OrdinalIgnoreCase)
+                ? builder.SpaceBlock
+                : builder.ProcedureBlock;
+
             for (int i = 0; i < sourceCodeLines.Length; i++) {
                 string sourceCodeLine = sourceCodeLines[i];
 
@@ -137,6 +141,9 @@ namespace CSScript.Core.Manage
 
                 } else if (preparedLine.StartsWith("#namespace")) {
                     currentBlock = builder.NamespaceBlock;
+
+                } else if (preparedLine.StartsWith("#space")) {
+                    currentBlock = builder.SpaceBlock;
 
                 } else {
                     if (!imported || currentBlock != builder.ProcedureBlock) {

@@ -18,6 +18,7 @@ namespace CSScript.Core.Manage
 
         public StringBuilder NamespaceBlock { get; private set; } = new StringBuilder();
 
+        public StringBuilder SpaceBlock { get; private set; } = new StringBuilder();
 
         private readonly Type scriptContainerType = typeof(ScriptContainer);
 
@@ -96,6 +97,10 @@ namespace CSScript.Core.Manage
             srcCode.AppendLine("// === namespace block ===");
             srcCode.AppendLine(NamespaceBlock.ToString().Trim());
             srcCode.AppendLine("}");
+
+            srcCode.AppendLine();
+            srcCode.AppendLine("// === space block ===");
+            srcCode.AppendLine(SpaceBlock.ToString().Trim());
 
             return srcCode.ToString();
         }
