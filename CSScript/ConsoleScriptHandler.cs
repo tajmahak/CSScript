@@ -103,10 +103,10 @@ namespace CSScript
 
             ScriptBuilder builder = CreateScriptBuilder();
             string compiledScriptPath = GetCompiledScriptPath(builder.GetSourceCode());
-            string compiledSctriptDirectory = Path.GetDirectoryName(compiledScriptPath);
+            string compiledScriptDirectory = Path.GetDirectoryName(compiledScriptPath);
 
-            if (!Directory.Exists(compiledSctriptDirectory)) {
-                Directory.CreateDirectory(compiledSctriptDirectory);
+            if (!Directory.Exists(compiledScriptDirectory)) {
+                Directory.CreateDirectory(compiledScriptDirectory);
             }
 
             container = CreateScriptContainerFromAssembly(compiledScriptPath, true);

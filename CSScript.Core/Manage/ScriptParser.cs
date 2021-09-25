@@ -82,6 +82,11 @@ namespace CSScript.Core.Manage
                     } else {
                         // Загрузка подключаемого скрипта из указанной папки с библиотеками
                         importPath = Path.Combine(ScriptLibraryPath, import + Constants.ScriptFileExtension);
+                        if (!File.Exists(importPath)) {
+                            // Попытка загрузки скрипта с оригинальным расширением C#
+                            importPath = Path.Combine(ScriptLibraryPath, import + ".cs");
+                        }
+
                         Validate.IsTrue(File.Exists(importPath), string.Format(
                            "'{0}': не удалось найти скрипт '{1}'", scriptPath, import));
                         LoadScriptFile(importPath, true);
@@ -114,15 +119,15 @@ namespace CSScript.Core.Manage
 
                 string preparedLine = sourceCodeLine.TrimStart();
 
-                if (preparedLine.StartsWith("#import")) {
-                    string[] split = SplitServiceLine(preparedLine, " ");
-                    string import = split[1].Trim().TrimEnd(';');
-                    imports.Add(import);
-
-                } else if (preparedLine.StartsWith("#using")) {
+                if (preparedLine.StartsWith("#using") || (preparedLine.StartsWith("using") && preparedLine.EndsWith(";"))) {
                     string[] split = SplitServiceLine(preparedLine, " ");
                     string usingItem = split[1].Trim().TrimEnd(';');
                     builder.AddUsing(usingItem);
+
+                } else if (preparedLine.StartsWith("#import")) {
+                    string[] split = SplitServiceLine(preparedLine, " ");
+                    string import = split[1].Trim().TrimEnd(';');
+                    imports.Add(import);
 
                 } else if (preparedLine.StartsWith("#init")) {
                     currentBlock = builder.InitBlock;
