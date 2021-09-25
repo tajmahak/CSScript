@@ -196,6 +196,9 @@ public static class __Utils /////
     // Запуск процесса с выводом потоков в консоль и ожиданием его завершения
     public static int StartProcess(string fileName, object args = null, Encoding outputEncoding = null) {
         ScriptProcess process = CreateManagedProcess(fileName, args);
+        return StartProcess(process);
+    }
+    public static int StartProcess(ScriptProcess process, Encoding outputEncoding = null) {
         process.RedirectOutput();
         process.StartAndReturn();
 
