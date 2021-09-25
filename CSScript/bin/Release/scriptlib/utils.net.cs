@@ -1,9 +1,9 @@
+﻿using System.Net;
+using System.Net.Mail;
+
 // utils.net
 // РАБОТА С СЕТЬЮ
 // ------------------------------------------------------------
-
-///// #using System.Net;
-///// #using System.Net.Mail;
 
 ///// #namespace
 

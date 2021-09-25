@@ -7,8 +7,6 @@ using System.Windows.Forms;
 // ВЗАИМОДЕЙСТВИЕ С WINDOWS
 // ------------------------------------------------------------
 
-///// #using System.Runtime.InteropServices;
-
 ///// #namespace
 
 // Утилиты для взаимодействия с API Windows

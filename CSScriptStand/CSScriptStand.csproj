@@ -59,11 +59,11 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stand.cs" />
-    <Compile Include="Utils\Archive.cs" />
-    <Compile Include="Utils\Crypto.cs" />
-    <Compile Include="Utils\Net.cs" />
-    <Compile Include="Utils\Utils.cs" />
-    <Compile Include="Utils\Windows.cs" />
+    <Compile Include="Utils\utils.archive.cs" />
+    <Compile Include="Utils\utils.crypto.cs" />
+    <Compile Include="Utils\utils.net.cs" />
+    <Compile Include="Utils\utils.cs" />
+    <Compile Include="Utils\utils.windows.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
