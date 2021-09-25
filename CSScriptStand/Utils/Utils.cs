@@ -6,8 +6,11 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 
 // utils
 // УТИЛИТЫ
@@ -16,6 +19,8 @@ using System.Text;
 ///// #init
 ///// __Utils_Init(Context);
 
+///// #using System.Reflection
+///// #using System.Xml.Serialization;
 ///// #class
 
 // Утилиты общей направленности
@@ -366,6 +371,68 @@ public static class __Utils /////
     }
 
 
+    /// --- СЕРИАЛИЗАЦИЯ ---
+
+    public static T DeserializeFromFile<T>(string filePath) {
+        if (Exists(filePath)) {
+            string xml = ReadText(filePath);
+            return DeserializeFromXml<T>(xml);
+        }
+        return default(T);
+    }
+
+    public static void SerializeToFile(object obj, string filePath) {
+        string xml = SerializeToXml(obj);
+        if (Exists(filePath)) {
+            File.Delete(filePath);
+        }
+        File.WriteAllText(filePath, xml, Encoding.UTF8);
+    }
+
+    public static string SerializeToXml(object obj) {
+        XmlSerializer xmlSerializer = __Utils_GetXmlSerializer(obj.GetType());
+        string data;
+
+        using (StringWriter stringWriter = new StringWriter()) {
+            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings {
+                OmitXmlDeclaration = true,
+                Indent = true
+            };
+            using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, xmlWriterSettings)) {
+                xmlSerializer.Serialize(xmlWriter, obj);
+            }
+            data = stringWriter.ToString();
+        }
+
+        // костыль, чтобы сократить размер выходных данных
+        string[] splitData1 = DivideString(data, " ");
+        string[] splitData2 = DivideString(splitData1[1], ">");
+        data = splitData1[0] + ">" + splitData2[1];
+
+        return data;
+    }
+
+    public static T DeserializeFromXml<T>(string xml) {
+        XmlSerializer xmlSerializer = __Utils_GetXmlSerializer(typeof(T));
+        using (StringReader stringReader = new StringReader(xml)) {
+            T obj = (T)xmlSerializer.Deserialize(stringReader);
+
+            //  исправление многострочного string после десериализации XML
+            foreach (PropertyInfo property in obj.GetType().GetProperties()) {
+                if (property.PropertyType == typeof(string)) {
+                    string value = (string)property.GetValue(obj, null);
+                    if (value != null) {
+                        value = value.Replace("\n", Environment.NewLine);
+                        property.SetValue(obj, value, null);
+                    }
+                }
+            }
+
+            return obj;
+        }
+    }
+
+
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
     private static Color __Utils_ConvertColor(ConsoleColor consoleColor) {
@@ -413,6 +480,14 @@ public static class __Utils /////
         stream.BeginRead(buffer, 0, buffer.Length, callback, null);
     }
 
+    private static XmlSerializer __Utils_GetXmlSerializer(Type type) {
+        if (!__Utils_XmlSerializers.ContainsKey(type)) {
+            XmlSerializer xmlSerializer = new XmlSerializer(type);
+            __Utils_XmlSerializers.Add(type, xmlSerializer);
+        }
+        return __Utils_XmlSerializers[type];
+    }
+    private static readonly Dictionary<Type, XmlSerializer> __Utils_XmlSerializers = new Dictionary<Type, XmlSerializer>();
 
     // --- УПРОЩЁННЫЕ КОНСТРУКЦИИ ---
 
