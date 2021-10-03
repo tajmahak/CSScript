@@ -432,62 +432,6 @@ public static class __Utils /////
     }
 
 
-    /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
-
-    private static Color __Utils_ConvertColor(ConsoleColor consoleColor) {
-        switch (consoleColor) {
-            case ConsoleColor.Black: return Color.Black;
-            case ConsoleColor.DarkBlue: return Color.DarkBlue;
-            case ConsoleColor.DarkGreen: return Color.DarkGreen;
-            case ConsoleColor.DarkCyan: return Color.DarkCyan;
-            case ConsoleColor.DarkRed: return Color.DarkRed;
-            case ConsoleColor.DarkMagenta: return Color.DarkMagenta;
-            case ConsoleColor.DarkYellow: return Color.Orange;
-            case ConsoleColor.Gray: return Color.Gray;
-            case ConsoleColor.DarkGray: return Color.DarkGray;
-            case ConsoleColor.Blue: return Color.Blue;
-            case ConsoleColor.Green: return Color.Green;
-            case ConsoleColor.Cyan: return Color.Cyan;
-            case ConsoleColor.Red: return Color.Red;
-            case ConsoleColor.Magenta: return Color.Magenta;
-            case ConsoleColor.Yellow: return Color.Yellow;
-            case ConsoleColor.White: return Color.White;
-            default: throw new NotImplementedException();
-        }
-    }
-
-    private static byte[] __Utils_GetMD5HashFromFile(string filePath) {
-        using (MD5 md5 = MD5.Create()) {
-            using (FileStream stream = File.OpenRead(filePath)) {
-                return md5.ComputeHash(stream);
-            }
-        }
-    }
-
-    private static void __Utils_BeginReadFromStream(Stream stream, Action<byte[]> onRead) {
-        byte[] buffer = new byte[102400];
-        AsyncCallback callback = null;
-        callback = (asyncResult) => {
-            int readed = stream.EndRead(asyncResult);
-            if (readed > 0) {
-                byte[] data = new byte[readed];
-                Array.Copy(buffer, data, readed);
-                onRead(data);
-                stream.BeginRead(buffer, 0, buffer.Length, callback, null);
-            }
-        };
-        stream.BeginRead(buffer, 0, buffer.Length, callback, null);
-    }
-
-    private static XmlSerializer __Utils_GetXmlSerializer(Type type) {
-        if (!__Utils_XmlSerializers.ContainsKey(type)) {
-            XmlSerializer xmlSerializer = new XmlSerializer(type);
-            __Utils_XmlSerializers.Add(type, xmlSerializer);
-        }
-        return __Utils_XmlSerializers[type];
-    }
-    private static readonly Dictionary<Type, XmlSerializer> __Utils_XmlSerializers = new Dictionary<Type, XmlSerializer>();
-
     // --- УПРОЩЁННЫЕ КОНСТРУКЦИИ ---
 
     public static bool Empty(object value) {
@@ -562,6 +506,62 @@ public static class __Utils /////
     }
 
 
+    /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
+
+    private static Color __Utils_ConvertColor(ConsoleColor consoleColor) {
+        switch (consoleColor) {
+            case ConsoleColor.Black: return Color.Black;
+            case ConsoleColor.DarkBlue: return Color.DarkBlue;
+            case ConsoleColor.DarkGreen: return Color.DarkGreen;
+            case ConsoleColor.DarkCyan: return Color.DarkCyan;
+            case ConsoleColor.DarkRed: return Color.DarkRed;
+            case ConsoleColor.DarkMagenta: return Color.DarkMagenta;
+            case ConsoleColor.DarkYellow: return Color.Orange;
+            case ConsoleColor.Gray: return Color.Gray;
+            case ConsoleColor.DarkGray: return Color.DarkGray;
+            case ConsoleColor.Blue: return Color.Blue;
+            case ConsoleColor.Green: return Color.Green;
+            case ConsoleColor.Cyan: return Color.Cyan;
+            case ConsoleColor.Red: return Color.Red;
+            case ConsoleColor.Magenta: return Color.Magenta;
+            case ConsoleColor.Yellow: return Color.Yellow;
+            case ConsoleColor.White: return Color.White;
+            default: throw new NotImplementedException();
+        }
+    }
+
+    private static byte[] __Utils_GetMD5HashFromFile(string filePath) {
+        using (MD5 md5 = MD5.Create()) {
+            using (FileStream stream = File.OpenRead(filePath)) {
+                return md5.ComputeHash(stream);
+            }
+        }
+    }
+
+    private static void __Utils_BeginReadFromStream(Stream stream, Action<byte[]> onRead) {
+        byte[] buffer = new byte[102400];
+        AsyncCallback callback = null;
+        callback = (asyncResult) => {
+            int readed = stream.EndRead(asyncResult);
+            if (readed > 0) {
+                byte[] data = new byte[readed];
+                Array.Copy(buffer, data, readed);
+                onRead(data);
+                stream.BeginRead(buffer, 0, buffer.Length, callback, null);
+            }
+        };
+        stream.BeginRead(buffer, 0, buffer.Length, callback, null);
+    }
+
+    private static XmlSerializer __Utils_GetXmlSerializer(Type type) {
+        if (!__Utils_XmlSerializers.ContainsKey(type)) {
+            XmlSerializer xmlSerializer = new XmlSerializer(type);
+            __Utils_XmlSerializers.Add(type, xmlSerializer);
+        }
+        return __Utils_XmlSerializers[type];
+    }
+    private static readonly Dictionary<Type, XmlSerializer> __Utils_XmlSerializers = new Dictionary<Type, XmlSerializer>();
+
     public static void __Utils_Init(IScriptContext context) {
         __utils_Context = context;
     }
@@ -576,6 +576,7 @@ public class FileList : List<string>
     public FileList() { }
 
     public FileList(IEnumerable<string> collection) : base(collection) { }
+
 
     // Поиск файлов по пути или маске и добавление их в список
     public FileList Append(string searchMask, bool searchToAllDirectories = false) {
@@ -747,6 +748,7 @@ public class ScriptProcess : Process
         }
     }
 
+
     // Процесс должен быть запущен в скрытом режиме
     public ScriptProcess Hidden() {
         StartInfo.CreateNoWindow = true;
@@ -821,8 +823,6 @@ public class ScriptProcess : Process
 // Конструктор строки аргументов для выполнения программ
 public class ArgsBuilder
 {
-    private readonly StringBuilder builder = new StringBuilder();
-
     public ArgsBuilder() {
 
     }
@@ -910,4 +910,7 @@ public class ArgsBuilder
     public static implicit operator string(ArgsBuilder builder) {
         return builder.ToString();
     }
+
+
+    private readonly StringBuilder builder = new StringBuilder();
 }

@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Mail;
+using System.Text;
 
 // utils.net
 // РАБОТА С СЕТЬЮ
@@ -19,3 +21,21 @@ public static class NetUtils
         smtp.Send(message);
     }
 }
+
+public class ScriptWebClient : WebClient
+{
+    public CookieContainer CookieContainer { get; set; }
+
+    public ScriptWebClient() {
+        Encoding = Encoding.UTF8;
+        Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip, deflate");
+    }
+
+    protected override WebRequest GetWebRequest(Uri address) {
+        HttpWebRequest request = base.GetWebRequest(address) as HttpWebRequest;
+        request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+        request.CookieContainer = CookieContainer;
+        return request;
+    }
+}
+

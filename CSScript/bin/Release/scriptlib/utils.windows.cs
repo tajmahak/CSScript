@@ -7,9 +7,12 @@ using System.Windows.Forms;
 // ВЗАИМОДЕЙСТВИЕ С WINDOWS
 // ------------------------------------------------------------
 
+///// #init
+///// WindowsUtils.__WindowsUtils_Init();
+
 ///// #namespace
 
-// Утилиты для взаимодействия с API Windows
+// Утилиты для взаимодействия с Windows
 public static class WindowsUtils
 {
     // Перемещение файла в корзину Windows
@@ -25,6 +28,7 @@ public static class WindowsUtils
                     fFlags = __FileOperationFlags.FOF_ALLOWUNDO | flags
                 };
                 __SHFileOperation_x64(ref fs);
+
             } else {
                 __SHFILEOPSTRUCT_x86 fs = new __SHFILEOPSTRUCT_x86 {
                     wFunc = __FileOperationType.FO_DELETE,
@@ -34,6 +38,7 @@ public static class WindowsUtils
                 __SHFileOperation_x86(ref fs);
             }
             return true;
+
         } catch {
             return false;
         }
@@ -42,20 +47,20 @@ public static class WindowsUtils
     // Скрытие/отображениие текущего окна консоли
     public static void SetVisibleConsoleWindow(bool visible) {
         if (visible) {
-            ShowWindow(GetConsoleWindow(), SW_SHOW);
+            __ShowWindow(__GetConsoleWindow(), __SW_SHOW);
         } else {
-            ShowWindow(GetConsoleWindow(), SW_HIDE);
+            __ShowWindow(__GetConsoleWindow(), __SW_HIDE);
         }
     }
 
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
-    [DllImport("kernel32.dll")]
-    private static extern IntPtr GetConsoleWindow();
+    [DllImport("kernel32.dll", EntryPoint = "GetConsoleWindow")]
+    private static extern IntPtr __GetConsoleWindow();
 
-    [DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll", EntryPoint = "ShowWindow")]
+    private static extern bool __ShowWindow(IntPtr hWnd, int nCmdShow);
 
     [DllImport("shell32.dll", CharSet = CharSet.Auto, EntryPoint = "SHFileOperation")]
     private static extern int __SHFileOperation_x86(ref __SHFILEOPSTRUCT_x86 FileOp);
@@ -112,22 +117,37 @@ public static class WindowsUtils
         public string lpszProgressTitle;
     }
 
-    private const int SW_HIDE = 0;
-    private const int SW_SHOW = 5;
+    private const int __SW_HIDE = 0;
+    private const int __SW_SHOW = 5;
+
+    public static void __WindowsUtils_Init() {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+    }
 }
 
-public class WinFormBuilder : Form
+public class ScriptForm : Form
 {
-    public static WinFormBuilder Create(int width, int height) {
-        if (!initVisualStyles) {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            initVisualStyles = true;
-        }
-        return new WinFormBuilder(width, height);
+    public ScriptForm(int width, int height) : base() {
+        AutoScaleMode = AutoScaleMode.Dpi;
+        AutoScroll = true;
+        ClientSize = new Size(width, height);
+        Font = new Font("Segoe UI", 10.2F, FontStyle.Regular, GraphicsUnit.Point, 204);
+        FormBorderStyle = FormBorderStyle.FixedToolWindow;
+        MaximizeBox = false;
+
+        MainPanel = new FlowLayoutPanel();
+        MainPanel.AutoScroll = true;
+        MainPanel.Dock = DockStyle.Fill;
+        MainPanel.WrapContents = false;
+        MainPanel.FlowDirection = FlowDirection.TopDown;
+        MainPanel.Padding = new Padding(10);
+        Controls.Add(MainPanel);
     }
 
+
     public FlowLayoutPanel MainPanel { get; private set; }
+
 
     public Label AddLabel(string text = "", bool bold = false) {
         Label label = new Label();
@@ -253,24 +273,6 @@ public class WinFormBuilder : Form
         return numericUpDown;
     }
 
-    private static bool initVisualStyles;
-
-    private WinFormBuilder(int width, int height) : base() {
-        AutoScaleMode = AutoScaleMode.Dpi;
-        AutoScroll = true;
-        ClientSize = new Size(width, height);
-        Font = new Font("Segoe UI", 10.2F, FontStyle.Regular, GraphicsUnit.Point, 204);
-        FormBorderStyle = FormBorderStyle.FixedToolWindow;
-        MaximizeBox = false;
-
-        MainPanel = new FlowLayoutPanel();
-        MainPanel.AutoScroll = true;
-        MainPanel.Dock = DockStyle.Fill;
-        MainPanel.WrapContents = false;
-        MainPanel.FlowDirection = FlowDirection.TopDown;
-        MainPanel.Padding = new Padding(10);
-        Controls.Add(MainPanel);
-    }
 
     private void OKButton_Click(object sender, EventArgs e) {
         DialogResult = DialogResult.OK;
