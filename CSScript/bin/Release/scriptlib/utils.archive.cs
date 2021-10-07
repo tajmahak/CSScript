@@ -5,7 +5,7 @@ using System.Text;
 // АРХИВАЦИЯ
 // ------------------------------------------------------------
 
-///// #namespace
+//## #namespace
 
 // Аргументы для командной строки 7-Zip
 public class SevenZipArgs

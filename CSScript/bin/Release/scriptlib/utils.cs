@@ -16,14 +16,14 @@ using System.Xml.Serialization;
 // УТИЛИТЫ
 // ------------------------------------------------------------
 
-///// #init
-///// __Utils_Init(Context);
+//## #init
+//## Utils_Init(Context);
 
-///// #class
+//## #class
 
 // Утилиты общей направленности
-public static class __Utils /////
-{ /////
+public static class __Utils //##
+{ //##
 
     /// --- РАБОТА С КОНТЕКСТОМ ---
 
@@ -566,9 +566,9 @@ public static class __Utils /////
         __utils_Context = context;
     }
     private static IScriptContext __utils_Context;
-} /////
+} //##
 
-///// #namespace
+//## #namespace
 
 // Работа со списком файлов
 public class FileList : List<string>

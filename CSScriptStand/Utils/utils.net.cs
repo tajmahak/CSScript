@@ -7,7 +7,7 @@ using System.Text;
 // РАБОТА С СЕТЬЮ
 // ------------------------------------------------------------
 
-///// #namespace
+//## #namespace
 
 // Утилиты для работы с сетью
 public static class NetUtils

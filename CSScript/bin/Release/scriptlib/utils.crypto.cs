@@ -7,7 +7,7 @@ using System.Text;
 // КРИПТОГРАФИЯ
 // ------------------------------------------------------------
 
-///// #namespace
+//## #namespace
 
 // Утилиты для работы с криптографией
 public static class CryptoUtils

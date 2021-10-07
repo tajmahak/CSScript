@@ -116,9 +116,9 @@ namespace CSScript.Core.Manage
                 string sourceCodeLine = sourceCodeLines[i];
 
                 // Идентификация исполняемого кода скрипта. В VisualStudio распознаётся как комментарий.
-                int executingScriptCodeStartIndex = sourceCodeLine.LastIndexOf("/////");
+                int executingScriptCodeStartIndex = sourceCodeLine.LastIndexOf("//##");
                 if (executingScriptCodeStartIndex != -1) {
-                    sourceCodeLine = sourceCodeLine.Substring(executingScriptCodeStartIndex + "/////".Length);
+                    sourceCodeLine = sourceCodeLine.Substring(executingScriptCodeStartIndex + "//##".Length);
                 }
 
                 string preparedLine = sourceCodeLine.TrimStart();

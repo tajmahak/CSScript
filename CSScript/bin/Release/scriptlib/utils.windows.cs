@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -7,10 +8,10 @@ using System.Windows.Forms;
 // ВЗАИМОДЕЙСТВИЕ С WINDOWS
 // ------------------------------------------------------------
 
-///// #init
-///// WindowsUtils.__WindowsUtils_Init();
+//## #init
+//## WindowsUtils.__WindowsUtils_Init();
 
-///// #namespace
+//## #namespace
 
 // Утилиты для взаимодействия с Windows
 public static class WindowsUtils
@@ -129,12 +130,15 @@ public static class WindowsUtils
 public class ScriptForm : Form
 {
     public ScriptForm(int width, int height) : base() {
+        StartPosition = FormStartPosition.CenterScreen;
         AutoScaleMode = AutoScaleMode.Dpi;
         AutoScroll = true;
         ClientSize = new Size(width, height);
         Font = new Font("Segoe UI", 10.2F, FontStyle.Regular, GraphicsUnit.Point, 204);
+
         FormBorderStyle = FormBorderStyle.FixedToolWindow;
         MaximizeBox = false;
+        MinimizeBox = false;
 
         MainPanel = new FlowLayoutPanel();
         MainPanel.AutoScroll = true;
@@ -143,6 +147,15 @@ public class ScriptForm : Form
         MainPanel.FlowDirection = FlowDirection.TopDown;
         MainPanel.Padding = new Padding(10);
         Controls.Add(MainPanel);
+    }
+
+    public void SetIcon(string base64String) {
+        byte[] rawIcon = Convert.FromBase64String(base64String);
+        using (MemoryStream ms = new MemoryStream(rawIcon)) {
+            Icon = new Icon(ms);
+        }
+        ShowIcon = true;
+        FormBorderStyle = FormBorderStyle.FixedSingle;
     }
 
 
