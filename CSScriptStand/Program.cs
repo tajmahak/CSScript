@@ -11,6 +11,7 @@ namespace CSScriptStand
         private static readonly bool UseSimpleExecutor = true;
         private static ConsoleScriptHandler handler;
 
+        [STAThread]
         private static void Main(string[] args) {
             Console.CancelKeyPress += Console_CancelKeyPress;
             ConsoleScriptContext context = new ConsoleScriptContext {

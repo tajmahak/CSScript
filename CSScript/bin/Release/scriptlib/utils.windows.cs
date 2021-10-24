@@ -160,9 +160,13 @@ public class ScriptWindow : Window
         Icon = image;
     }
 
-    public TextBlock AddTextBlock(string text) {
+    public TextBlock AddTextBlock(string text = "", bool bold = false) {
         TextBlock textBlock = new TextBlock();
         textBlock.Text = text;
+        if (bold) {
+            textBlock.FontWeight = FontWeights.Bold;
+        }
+        textBlock.TextWrapping = TextWrapping.Wrap;
 
         mainPanel.Children.Add(textBlock);
         return textBlock;
@@ -252,6 +256,7 @@ public class ScriptWindow : Window
         CheckedListBox checkedListBox = new CheckedListBox();
         checkedListBox.Height = height;
         checkedListBox.Items = itemsSource;
+        checkedListBox.Margin = new Thickness(0, 0, 0, margin);
 
         mainPanel.Children.Add(checkedListBox);
         return checkedListBox;
