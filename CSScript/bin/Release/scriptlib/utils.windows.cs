@@ -1,15 +1,19 @@
 ﻿using System;
-using System.Drawing;
-using System.IO;
+using System.Collections;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 // utils.windows
 // ВЗАИМОДЕЙСТВИЕ С WINDOWS
 // ------------------------------------------------------------
 
-//## #init
-//## WindowsUtils.__WindowsUtils_Init();
+//## #import WPF/WindowsBase.dll
+//## #import WPF/PresentationCore.dll
+//## #import WPF/PresentationFramework.dll
+//## #import System.Xaml.dll
 
 //## #namespace
 
@@ -120,174 +124,183 @@ public static class WindowsUtils
 
     private const int __SW_HIDE = 0;
     private const int __SW_SHOW = 5;
-
-    public static void __WindowsUtils_Init() {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-    }
 }
 
-public class ScriptForm : Form
+public class ScriptWindow : Window
 {
-    public ScriptForm(int width, int height) : base() {
-        StartPosition = FormStartPosition.CenterScreen;
-        AutoScaleMode = AutoScaleMode.Dpi;
-        AutoScroll = true;
-        ClientSize = new Size(width, height);
-        Font = new Font("Segoe UI", 10.2F, FontStyle.Regular, GraphicsUnit.Point, 204);
+    private readonly StackPanel mainPanel;
+    private readonly double margin = 7.5;
+    private readonly double padding = 3;
 
-        FormBorderStyle = FormBorderStyle.FixedToolWindow;
-        MaximizeBox = false;
-        MinimizeBox = false;
+    public ScriptWindow(double width, double height, bool useScrollBar = false) {
+        Width = width;
+        Height = height;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        FontSize = 14;
+        Background = new SolidColorBrush(Color.FromArgb(255, 240, 240, 240));
 
-        MainPanel = new FlowLayoutPanel();
-        MainPanel.AutoScroll = true;
-        MainPanel.Dock = DockStyle.Fill;
-        MainPanel.WrapContents = false;
-        MainPanel.FlowDirection = FlowDirection.TopDown;
-        MainPanel.Padding = new Padding(10);
-        Controls.Add(MainPanel);
+        mainPanel = new StackPanel();
+        mainPanel.Margin = new Thickness(margin, margin, margin, 0);
+
+        if (useScrollBar) {
+            ScrollViewer scrollViewer = new ScrollViewer();
+            scrollViewer.Content = mainPanel;
+            Content = scrollViewer;
+
+        } else {
+            ResizeMode = ResizeMode.NoResize;
+            Content = mainPanel;
+        }
     }
 
-    public void SetIcon(string base64String) {
-        byte[] rawIcon = Convert.FromBase64String(base64String);
-        using (MemoryStream ms = new MemoryStream(rawIcon)) {
-            Icon = new Icon(ms);
-        }
-        ShowIcon = true;
-        FormBorderStyle = FormBorderStyle.FixedSingle;
+    public void SetIcon(string base64Image) {
+        byte[] rawImage = Convert.FromBase64String(base64Image);
+        ImageSourceConverter imageConverter = new ImageSourceConverter();
+        BitmapSource image = (BitmapSource)imageConverter.ConvertFrom(rawImage);
+        Icon = image;
     }
 
+    public TextBlock AddTextBlock(string text) {
+        TextBlock textBlock = new TextBlock();
+        textBlock.Text = text;
 
-    public FlowLayoutPanel MainPanel { get; private set; }
-
-
-    public Label AddLabel(string text = "", bool bold = false) {
-        Label label = new Label();
-        label.Text = text;
-        label.AutoSize = true;
-        if (bold) {
-            label.Font = new Font(Font, FontStyle.Bold);
-        }
-
-        MainPanel.Controls.Add(label);
-        return label;
+        mainPanel.Children.Add(textBlock);
+        return textBlock;
     }
 
     public TextBox AddTextBox(string text = "") {
         TextBox textBox = new TextBox();
-        if (text != null) {
-            textBox.Text = text;
-        }
-        textBox.WordWrap = false;
-        textBox.ScrollBars = ScrollBars.Both;
+        textBox.Text = text;
+        textBox.Margin = new Thickness(0, 0, 0, margin);
+        textBox.Padding = new Thickness(padding);
 
-        textBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
-        MainPanel.Controls.Add(textBox);
+        mainPanel.Children.Add(textBox);
         return textBox;
     }
 
-    public TextBox AddMultiLineTextBox(int height, string text = "") {
+    public TextBox AddMultiLineTextBox(double height, string text = "") {
         TextBox textBox = AddTextBox(text);
-        textBox.Multiline = true;
-        textBox.ShortcutsEnabled = true;
+
         textBox.Height = height;
+        textBox.TextWrapping = TextWrapping.NoWrap;
+        textBox.AcceptsReturn = true;
+        textBox.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+        textBox.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
 
         return textBox;
     }
 
-    public Button AddButton(string text, bool bold = false) {
-        Button button = new Button();
-        button.Text = text;
-        button.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
-        button.AutoSize = true;
-        if (bold) {
-            button.Font = new Font(Font, FontStyle.Bold);
-        }
-
-        MainPanel.Controls.Add(button);
-        return button;
-    }
-
-    public Button AddOKButton(string text, bool bold = false) {
-        Button button = AddButton(text, bold);
-        button.Click += OKButton_Click;
-        button.AutoSize = true;
-        return button;
-    }
-
-    public CheckBox AddCheckBox(string text, bool check = false) {
-        CheckBox checkBox = new CheckBox();
-        checkBox.AutoSize = true;
-        checkBox.Text = text;
-        checkBox.Checked = check;
-
-        MainPanel.Controls.Add(checkBox);
-        return checkBox;
-    }
-
-    public RadioButton AddRadioButton(string text, bool check = false) {
-        RadioButton radioButton = new RadioButton();
-        radioButton.Text = text;
-        radioButton.Checked = check;
-        radioButton.AutoSize = true;
-
-        MainPanel.Controls.Add(radioButton);
-        return radioButton;
-    }
-
-    public ComboBox AddComboBox(object[] items = null, string text = null) {
+    public ComboBox AddComboBox(IEnumerable itemsSource = null, string selectedItem = "") {
         ComboBox comboBox = new ComboBox();
+        comboBox.IsEditable = true;
+        comboBox.Margin = new Thickness(0, 0, 0, margin);
+        comboBox.Padding = new Thickness(padding);
 
-        comboBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
-        comboBox.Margin = new Padding(3, 3, 3, 10);
+        comboBox.ItemsSource = itemsSource;
+        comboBox.Text = selectedItem;
 
-        if (items != null) {
-            comboBox.Items.AddRange(items);
-        }
-        if (text != null) {
-            comboBox.Text = text;
-        }
-
-        MainPanel.Controls.Add(comboBox);
+        mainPanel.Children.Add(comboBox);
         return comboBox;
     }
 
-    public CheckedListBox AddCheckedListBox(int height, object[] items = null) {
-        CheckedListBox checkedListBox = new CheckedListBox();
-        checkedListBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
-        checkedListBox.CheckOnClick = true;
-        checkedListBox.Height = height;
-        if (items != null) {
-            checkedListBox.Items.AddRange(items);
-        }
-        MainPanel.Controls.Add(checkedListBox);
-        return checkedListBox;
+    public CheckBox AddCheckBox(string text, bool isChecked = false) {
+        CheckBox checkBox = new CheckBox();
+        checkBox.Content = text;
+        checkBox.Margin = new Thickness(0, 0, 0, margin);
+
+
+
+        mainPanel.Children.Add(checkBox);
+        return checkBox;
     }
 
-    public ListBox AddListBox(int height, object[] items = null) {
-        ListBox listBox = new ListBox();
-        listBox.Width = MainPanel.Width - MainPanel.Padding.Left - MainPanel.Padding.Right - 4;
-        listBox.Height = height;
-        if (items != null) {
-            listBox.Items.AddRange(items);
+    public RadioButton AddRadioButton(string text, bool isChecked) {
+        RadioButton radioButton = new RadioButton();
+        radioButton.Content = text;
+        radioButton.IsChecked = isChecked;
+        radioButton.Margin = new Thickness(0, 0, 0, margin);
+
+        mainPanel.Children.Add(radioButton);
+        return radioButton;
+    }
+
+    public Button AddButton(string text, bool boldFont = false) {
+        Button button = new Button();
+        button.Content = text;
+        button.Margin = new Thickness(0, 0, 0, margin);
+        button.Padding = new Thickness(padding);
+        if (boldFont) {
+            button.FontWeight = FontWeights.Bold;
         }
-        MainPanel.Controls.Add(listBox);
+
+        mainPanel.Children.Add(button);
+        return button;
+    }
+
+    public ListBox AddListBox(double height, IEnumerable itemsSource = null) {
+        ListBox listBox = new ListBox();
+        listBox.Height = height;
+        listBox.Margin = new Thickness(0, 0, 0, margin);
+
+        listBox.ItemsSource = itemsSource;
+
+        mainPanel.Children.Add(listBox);
         return listBox;
     }
 
-    public NumericUpDown AddNumericUpDown(int value, int min = 0, int max = 100) {
-        NumericUpDown numericUpDown = new NumericUpDown();
-        numericUpDown.Minimum = min;
-        numericUpDown.Maximum = max;
-        numericUpDown.Value = value;
+    public CheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
+        CheckedListBox checkedListBox = new CheckedListBox();
+        checkedListBox.Height = height;
+        checkedListBox.Items = itemsSource;
 
-        MainPanel.Controls.Add(numericUpDown);
-        return numericUpDown;
+        mainPanel.Children.Add(checkedListBox);
+        return checkedListBox;
     }
 
+    public Button AddOKButton(string text, bool boldFont = false) {
+        Button button = AddButton(text, boldFont);
+        button.Click += (sender, e) => DialogResult = true;
+        return button;
+    }
+}
 
-    private void OKButton_Click(object sender, EventArgs e) {
-        DialogResult = DialogResult.OK;
+public class CheckedListBox : ScrollViewer
+{
+    private readonly StackPanel _stackPanel;
+    private readonly double margin = 3;
+    private ICollection _items;
+
+    public CheckedListBox() {
+        Background = new SolidColorBrush(Colors.White);
+        _stackPanel = new StackPanel();
+        Content = _stackPanel;
+    }
+
+    public ICollection Items {
+        get {
+            return _items;
+        }
+        set {
+            _items = value;
+            _stackPanel.Children.Clear();
+            if (_items != null) {
+                foreach (object item in _items) {
+                    CheckBox checkBox = new CheckBox();
+                    checkBox.Content = item;
+                    checkBox.Margin = new Thickness(margin);
+                    _stackPanel.Children.Add(checkBox);
+                }
+            }
+        }
+    }
+
+    public void SetItemChecked(int index, bool isChecked) {
+        CheckBox checkBox = (CheckBox)_stackPanel.Children[index];
+        checkBox.IsChecked = isChecked;
+    }
+
+    public bool GetItemChecked(int index) {
+        CheckBox checkBox = (CheckBox)_stackPanel.Children[index];
+        return checkBox.IsChecked.Value;
     }
 }

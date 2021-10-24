@@ -21,6 +21,7 @@ namespace CSScript.Core.Manage
 
         public void Start() {
             Thread = new Thread(StartContainer);
+            Thread.TrySetApartmentState(ApartmentState.STA);
             Thread.Start();
         }
 

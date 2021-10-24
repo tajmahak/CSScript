@@ -11,6 +11,7 @@ namespace CSScript
 
         private static ConsoleScriptHandler handler;
 
+        [STAThread]
         private static void Main(string[] args) {
             string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigFileName);
             Settings.Default = Settings.FromFile(configPath);

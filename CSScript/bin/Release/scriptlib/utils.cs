@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -16,8 +15,10 @@ using System.Xml.Serialization;
 // УТИЛИТЫ
 // ------------------------------------------------------------
 
+//## #import System.ComponentModel.DataAnnotations.dll
+
 //## #init
-//## Utils_Init(Context);
+//## __Utils_Init(Context);
 
 //## #class
 
@@ -178,7 +179,7 @@ public static class __Utils //##
         log.Append("<pre>");
         foreach (LogFragment logFragment in __utils_Context.Log) {
             if (logFragment.Color != __utils_Context.ColorScheme.Foreground) {
-                log.Append("<font color=\"" + ColorTranslator.ToHtml(__Utils_ConvertColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
+                log.Append("<font color=\"" + System.Drawing.ColorTranslator.ToHtml(__Utils_ConvertColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
             } else {
                 log.Append(logFragment.Text);
             }
@@ -508,24 +509,24 @@ public static class __Utils //##
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
-    private static Color __Utils_ConvertColor(ConsoleColor consoleColor) {
+    private static System.Drawing.Color __Utils_ConvertColor(ConsoleColor consoleColor) {
         switch (consoleColor) {
-            case ConsoleColor.Black: return Color.Black;
-            case ConsoleColor.DarkBlue: return Color.DarkBlue;
-            case ConsoleColor.DarkGreen: return Color.DarkGreen;
-            case ConsoleColor.DarkCyan: return Color.DarkCyan;
-            case ConsoleColor.DarkRed: return Color.DarkRed;
-            case ConsoleColor.DarkMagenta: return Color.DarkMagenta;
-            case ConsoleColor.DarkYellow: return Color.Orange;
-            case ConsoleColor.Gray: return Color.Gray;
-            case ConsoleColor.DarkGray: return Color.DarkGray;
-            case ConsoleColor.Blue: return Color.Blue;
-            case ConsoleColor.Green: return Color.Green;
-            case ConsoleColor.Cyan: return Color.Cyan;
-            case ConsoleColor.Red: return Color.Red;
-            case ConsoleColor.Magenta: return Color.Magenta;
-            case ConsoleColor.Yellow: return Color.Yellow;
-            case ConsoleColor.White: return Color.White;
+            case ConsoleColor.Black: return System.Drawing.Color.Black;
+            case ConsoleColor.DarkBlue: return System.Drawing.Color.DarkBlue;
+            case ConsoleColor.DarkGreen: return System.Drawing.Color.DarkGreen;
+            case ConsoleColor.DarkCyan: return System.Drawing.Color.DarkCyan;
+            case ConsoleColor.DarkRed: return System.Drawing.Color.DarkRed;
+            case ConsoleColor.DarkMagenta: return System.Drawing.Color.DarkMagenta;
+            case ConsoleColor.DarkYellow: return System.Drawing.Color.Orange;
+            case ConsoleColor.Gray: return System.Drawing.Color.Gray;
+            case ConsoleColor.DarkGray: return System.Drawing.Color.DarkGray;
+            case ConsoleColor.Blue: return System.Drawing.Color.Blue;
+            case ConsoleColor.Green: return System.Drawing.Color.Green;
+            case ConsoleColor.Cyan: return System.Drawing.Color.Cyan;
+            case ConsoleColor.Red: return System.Drawing.Color.Red;
+            case ConsoleColor.Magenta: return System.Drawing.Color.Magenta;
+            case ConsoleColor.Yellow: return System.Drawing.Color.Yellow;
+            case ConsoleColor.White: return System.Drawing.Color.White;
             default: throw new NotImplementedException();
         }
     }
