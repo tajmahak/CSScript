@@ -20,15 +20,15 @@ namespace CSScript.Core.Manage
 
         public StringBuilder SpaceBlock { get; private set; } = new StringBuilder();
 
+        public readonly HashSet<string> AssemblyList = new HashSet<string>();
+       
         private readonly Type scriptContainerType = typeof(ScriptContainer);
-
-        private readonly HashSet<string> assemblyList = new HashSet<string>();
 
         private readonly HashSet<string> usingList = new HashSet<string>();
 
 
         public void AddAssembly(string assembly) {
-            assemblyList.Add(assembly);
+            AssemblyList.Add(assembly);
         }
 
         public void AddUsing(string usingItem) {
@@ -106,7 +106,7 @@ namespace CSScript.Core.Manage
         }
 
         public CompilerParameters CreateCompilerParameters() {
-            List<string> assemblies = new List<string>(assemblyList) {
+            List<string> assemblies = new List<string>(AssemblyList) {
                 scriptContainerType.Module.FullyQualifiedName
             };
             CompilerParameters compilerParameters = new CompilerParameters(assemblies.ToArray()) {

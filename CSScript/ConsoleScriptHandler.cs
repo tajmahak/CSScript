@@ -128,6 +128,15 @@ namespace CSScript
                 }
                 container = ScriptContainerFactory.Create(compilerResults.CompiledAssembly, context);
             }
+
+            // Загрузка в текущий домен информации о зависимых сборках скомпилированного скрипта
+            // (иначе ошибка разрешения сборки при запуске скрипта в случае, если файл сборки находится в произвольном пути)
+            foreach (var assemblyPath in builder.AssemblyList) {
+                if (File.Exists(assemblyPath)) {
+                    Assembly assembly = Assembly.LoadFrom(assemblyPath);
+                    AppDomain.CurrentDomain.Load(assembly.GetName());
+                }
+            }
         }
 
         private ScriptContainer CreateScriptContainerFromAssembly(string assemblyPath, bool createBrokenMark) {
