@@ -211,9 +211,9 @@ public class ScriptWindow : Window
         CheckBox checkBox = new CheckBox();
         checkBox.Content = text;
         checkBox.Margin = new Thickness(0, 0, 0, margin);
-
-
-
+       
+        checkBox.IsChecked = isChecked;
+       
         mainPanel.Children.Add(checkBox);
         return checkBox;
     }
