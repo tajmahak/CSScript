@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 // utils.windows
 // ВЗАИМОДЕЙСТВИЕ С WINDOWS
@@ -168,6 +170,38 @@ public class ScriptWindow : Window
         Icon = image;
     }
 
+    public void Invoke(Action action) {
+        Dispatcher.Invoke(action);
+    }
+
+    /// <summary>
+    /// Запуск асинхронной операции, при этом новая операция не запустится до завершения работы предыдущей.
+    /// </summary>
+    public bool BeginSingleInvoke(Action action, Action onCompletedAction = null) {
+        if (sigleTask != null) {
+            return false;
+        }
+        sigleTask = Task.Factory.StartNew(() => {
+            try {
+                action();
+            }
+            catch (Exception ex) {
+                Invoke(() => { MessageBox.Show(ex.Message, "", MessageBoxButton.OK, MessageBoxImage.Error); });
+            }
+            finally {
+                try {
+                    if (onCompletedAction != null) {
+                        onCompletedAction();
+                    }
+                }
+                finally {
+                    sigleTask = null;
+                }
+            }
+        });
+        return true;
+    }
+
     public TextBlock AddTextBlock(string text = "", bool bold = false) {
         return mainPanel.AddTextBlock(text, bold);
     }
@@ -200,7 +234,7 @@ public class ScriptWindow : Window
         return mainPanel.AddListBox(height, itemsSource);
     }
 
-    public CheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
+    public ScriptCheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
         return mainPanel.AddCheckedListBox(height, itemsSource);
     }
 
@@ -213,72 +247,7 @@ public class ScriptWindow : Window
     }
 
     private readonly ScriptStackPanel mainPanel;
-}
-
-public class CheckedListBox : ScrollViewer
-{
-    private readonly StackPanel panel;
-    private ICollection items;
-    private readonly ScriptWindow window;
-
-    public CheckedListBox(ScriptWindow window) {
-        this.window = window;
-        Background = new SolidColorBrush(Colors.White);
-        panel = new StackPanel();
-        Content = panel;
-    }
-
-    public ICollection Items {
-        get {
-            return items;
-        }
-
-        set {
-            items = value;
-            panel.Children.Clear();
-            if (items != null) {
-                foreach (object item in items) {
-                    CheckBox checkBox = new CheckBox {
-                        Content = item,
-                        Margin = new Thickness(window.ListMarginValue),
-                    };
-                    panel.Children.Add(checkBox);
-                }
-            }
-        }
-    }
-
-    public void SetItemChecked(int index, bool isChecked) {
-        CheckBox checkBox = (CheckBox)panel.Children[index];
-        checkBox.IsChecked = isChecked;
-    }
-
-    public bool GetItemChecked(int index) {
-        CheckBox checkBox = (CheckBox)panel.Children[index];
-        return checkBox.IsChecked.Value;
-    }
-}
-
-public class ScriptUniformGrid : UniformGrid
-{
-    private readonly ScriptStackPanel[] panels;
-    public ScriptUniformGrid(ScriptWindow window, int columnsCount) {
-        Columns = columnsCount;
-        Rows = 1;
-
-        panels = new ScriptStackPanel[columnsCount];
-        for (int c = 0; c < columnsCount; c++) {
-            ScriptStackPanel panel = new ScriptStackPanel(window);
-            panels[c] = panel;
-            Children.Add(panel);
-        }
-    }
-
-    public ScriptStackPanel this[int columnIndex] {
-        get {
-            return panels[columnIndex];
-        }
-    }
+    private Task sigleTask;
 }
 
 public class ScriptStackPanel : StackPanel
@@ -409,8 +378,8 @@ public class ScriptStackPanel : StackPanel
         return listBox;
     }
 
-    public CheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
-        CheckedListBox checkedListBox = new CheckedListBox(window) {
+    public ScriptCheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
+        ScriptCheckedListBox checkedListBox = new ScriptCheckedListBox(window) {
             Height = height,
             Items = itemsSource
         };
@@ -434,5 +403,71 @@ public class ScriptStackPanel : StackPanel
 
         Children.Add(grid);
         return grid;
+    }
+}
+
+public class ScriptCheckedListBox : ScrollViewer
+{
+    private readonly StackPanel panel;
+    private ICollection items;
+    private readonly ScriptWindow window;
+
+    public ScriptCheckedListBox(ScriptWindow window) {
+        this.window = window;
+        Background = new SolidColorBrush(Colors.White);
+        panel = new StackPanel();
+        Content = panel;
+    }
+
+    public ICollection Items {
+        get {
+            return items;
+        }
+
+        set {
+            items = value;
+            panel.Children.Clear();
+            if (items != null) {
+                foreach (object item in items) {
+                    CheckBox checkBox = new CheckBox {
+                        Content = item,
+                        Margin = new Thickness(window.ListMarginValue),
+                    };
+                    panel.Children.Add(checkBox);
+                }
+            }
+        }
+    }
+
+    public void SetItemChecked(int index, bool isChecked) {
+        CheckBox checkBox = (CheckBox)panel.Children[index];
+        checkBox.IsChecked = isChecked;
+    }
+
+    public bool GetItemChecked(int index) {
+        CheckBox checkBox = (CheckBox)panel.Children[index];
+        return checkBox.IsChecked.Value;
+    }
+}
+
+public class ScriptUniformGrid : UniformGrid
+{
+    private readonly ScriptStackPanel[] panels;
+    public ScriptUniformGrid(ScriptWindow window, int columnsCount) {
+        Columns = columnsCount;
+        Rows = 1;
+
+        panels = new ScriptStackPanel[columnsCount];
+        for (int c = 0; c < columnsCount; c++) {
+            ScriptStackPanel panel = new ScriptStackPanel(window);
+            panels[c] = panel;
+            Children.Add(panel);
+        }
+    }
+
+    public ScriptStackPanel this[int columnIndex] {
+        get {
+            return panels[columnIndex];
+        }
     }
 }
