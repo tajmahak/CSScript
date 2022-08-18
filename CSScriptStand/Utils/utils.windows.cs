@@ -3,6 +3,7 @@ using System.Collections;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -34,7 +35,8 @@ public static class WindowsUtils
                 };
                 __SHFileOperation_x64(ref fs);
 
-            } else {
+            }
+            else {
                 __SHFILEOPSTRUCT_x86 fs = new __SHFILEOPSTRUCT_x86 {
                     wFunc = __FileOperationType.FO_DELETE,
                     pFrom = path + '\0' + '\0',
@@ -44,7 +46,8 @@ public static class WindowsUtils
             }
             return true;
 
-        } catch {
+        }
+        catch {
             return false;
         }
     }
@@ -53,7 +56,8 @@ public static class WindowsUtils
     public static void SetVisibleConsoleWindow(bool visible) {
         if (visible) {
             __ShowWindow(__GetConsoleWindow(), __SW_SHOW);
-        } else {
+        }
+        else {
             __ShowWindow(__GetConsoleWindow(), __SW_HIDE);
         }
     }
@@ -128,9 +132,12 @@ public static class WindowsUtils
 
 public class ScriptWindow : Window
 {
-    private readonly StackPanel mainPanel;
-    private readonly double margin = 7.5;
-    private readonly double padding = 3;
+    public double MarginValue = 7.5;
+
+    public double PaddingValue = 3;
+
+    public double ListMarginValue = 7.5;
+
 
     public ScriptWindow(double width, double height, bool useScrollBar = false) {
         Width = width;
@@ -139,15 +146,16 @@ public class ScriptWindow : Window
         FontSize = 14;
         Background = new SolidColorBrush(Color.FromArgb(255, 240, 240, 240));
 
-        mainPanel = new StackPanel();
-        mainPanel.Margin = new Thickness(margin, margin, margin, 0);
+        mainPanel = new ScriptStackPanel(this);
 
         if (useScrollBar) {
-            ScrollViewer scrollViewer = new ScrollViewer();
-            scrollViewer.Content = mainPanel;
+            ScrollViewer scrollViewer = new ScrollViewer {
+                Content = mainPanel
+            };
             Content = scrollViewer;
 
-        } else {
+        }
+        else {
             ResizeMode = ResizeMode.NoResize;
             Content = mainPanel;
         }
@@ -161,24 +169,158 @@ public class ScriptWindow : Window
     }
 
     public TextBlock AddTextBlock(string text = "", bool bold = false) {
-        TextBlock textBlock = new TextBlock();
-        textBlock.Text = text;
+        return mainPanel.AddTextBlock(text, bold);
+    }
+
+    public TextBox AddTextBox(string text = "") {
+        return mainPanel.AddTextBox(text);
+    }
+
+    public TextBox AddMultiLineTextBox(double height, string text = "") {
+        return mainPanel.AddMultiLineTextBox(height, text);
+    }
+
+    public ComboBox AddComboBox(IEnumerable itemsSource = null, string selectedItem = "") {
+        return mainPanel.AddComboBox(itemsSource, selectedItem);
+    }
+
+    public CheckBox AddCheckBox(string text, bool isChecked = false) {
+        return mainPanel.AddCheckBox(text, isChecked);
+    }
+
+    public RadioButton AddRadioButton(string text, bool isChecked = false) {
+        return mainPanel.AddRadioButton(text, isChecked);
+    }
+
+    public Button AddButton(string text, bool boldFont = false) {
+        return mainPanel.AddButton(text, boldFont);
+    }
+
+    public ListBox AddListBox(double height, IEnumerable itemsSource = null) {
+        return mainPanel.AddListBox(height, itemsSource);
+    }
+
+    public CheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
+        return mainPanel.AddCheckedListBox(height, itemsSource);
+    }
+
+    public Button AddOKButton(string text, bool boldFont = false) {
+        return mainPanel.AddOKButton(text, boldFont);
+    }
+
+    public ScriptUniformGrid AddGrid(int columnsCount = 2) {
+        return mainPanel.AddGrid(columnsCount);
+    }
+
+    private readonly ScriptStackPanel mainPanel;
+}
+
+public class CheckedListBox : ScrollViewer
+{
+    private readonly StackPanel panel;
+    private ICollection items;
+    private readonly ScriptWindow window;
+
+    public CheckedListBox(ScriptWindow window) {
+        this.window = window;
+        Background = new SolidColorBrush(Colors.White);
+        panel = new StackPanel();
+        Content = panel;
+    }
+
+    public ICollection Items {
+        get {
+            return items;
+        }
+
+        set {
+            items = value;
+            panel.Children.Clear();
+            if (items != null) {
+                foreach (object item in items) {
+                    CheckBox checkBox = new CheckBox {
+                        Content = item,
+                        Margin = new Thickness(window.ListMarginValue),
+                    };
+                    panel.Children.Add(checkBox);
+                }
+            }
+        }
+    }
+
+    public void SetItemChecked(int index, bool isChecked) {
+        CheckBox checkBox = (CheckBox)panel.Children[index];
+        checkBox.IsChecked = isChecked;
+    }
+
+    public bool GetItemChecked(int index) {
+        CheckBox checkBox = (CheckBox)panel.Children[index];
+        return checkBox.IsChecked.Value;
+    }
+}
+
+public class ScriptUniformGrid : UniformGrid
+{
+    private readonly ScriptStackPanel[] panels;
+    public ScriptUniformGrid(ScriptWindow window, int columnsCount) {
+        Columns = columnsCount;
+        Rows = 1;
+
+        panels = new ScriptStackPanel[columnsCount];
+        for (int c = 0; c < columnsCount; c++) {
+            ScriptStackPanel panel = new ScriptStackPanel(window);
+            panels[c] = panel;
+            Children.Add(panel);
+        }
+    }
+
+    public ScriptStackPanel this[int columnIndex] {
+        get {
+            return panels[columnIndex];
+        }
+    }
+}
+
+public class ScriptStackPanel : StackPanel
+{
+    private readonly ScriptWindow window;
+    public ScriptStackPanel(ScriptWindow window) {
+        this.window = window;
+    }
+
+    private UIElement Last() {
+        // LINQ почему-то не срабатывает
+        return Children.Count == 0 ? null : Children[Children.Count - 1];
+    }
+
+
+    public TextBlock AddTextBlock(string text = "", bool bold = false) {
+        TextBlock textBlock = new TextBlock {
+            Text = text
+        };
         if (bold) {
             textBlock.FontWeight = FontWeights.Bold;
         }
         textBlock.TextWrapping = TextWrapping.Wrap;
 
-        mainPanel.Children.Add(textBlock);
+        double topMargin = 0;
+        textBlock.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        textBlock.Padding = new Thickness(window.PaddingValue);
+
+        Children.Add(textBlock);
         return textBlock;
     }
 
     public TextBox AddTextBox(string text = "") {
-        TextBox textBox = new TextBox();
-        textBox.Text = text;
-        textBox.Margin = new Thickness(0, 0, 0, margin);
-        textBox.Padding = new Thickness(padding);
+        TextBox textBox = new TextBox {
+            Text = text,
+        };
 
-        mainPanel.Children.Add(textBox);
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        textBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        textBox.Padding = new Thickness(window.PaddingValue);
+
+        Children.Add(textBox);
         return textBox;
     }
 
@@ -195,117 +337,102 @@ public class ScriptWindow : Window
     }
 
     public ComboBox AddComboBox(IEnumerable itemsSource = null, string selectedItem = "") {
-        ComboBox comboBox = new ComboBox();
-        comboBox.IsEditable = true;
-        comboBox.Margin = new Thickness(0, 0, 0, margin);
-        comboBox.Padding = new Thickness(padding);
+        ComboBox comboBox = new ComboBox {
+            IsEditable = true,
+            ItemsSource = itemsSource,
+            Text = selectedItem
+        };
 
-        comboBox.ItemsSource = itemsSource;
-        comboBox.Text = selectedItem;
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        comboBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        comboBox.Padding = new Thickness(window.PaddingValue);
 
-        mainPanel.Children.Add(comboBox);
+        Children.Add(comboBox);
         return comboBox;
     }
 
     public CheckBox AddCheckBox(string text, bool isChecked = false) {
-        CheckBox checkBox = new CheckBox();
-        checkBox.Content = text;
-        checkBox.Margin = new Thickness(0, 0, 0, margin);
-       
-        checkBox.IsChecked = isChecked;
-       
-        mainPanel.Children.Add(checkBox);
+        CheckBox checkBox = new CheckBox {
+            Content = text,
+            IsChecked = isChecked
+        };
+
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        checkBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        //checkBox.Padding = new Thickness(window.PaddingValue);
+
+        Children.Add(checkBox);
         return checkBox;
     }
 
-    public RadioButton AddRadioButton(string text, bool isChecked) {
-        RadioButton radioButton = new RadioButton();
-        radioButton.Content = text;
-        radioButton.IsChecked = isChecked;
-        radioButton.Margin = new Thickness(0, 0, 0, margin);
+    public RadioButton AddRadioButton(string text, bool isChecked = false) {
+        RadioButton radioButton = new RadioButton {
+            Content = text,
+            IsChecked = isChecked
+        };
 
-        mainPanel.Children.Add(radioButton);
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        radioButton.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        //radioButton.Padding = new Thickness(window.PaddingValue);
+
+        Children.Add(radioButton);
         return radioButton;
     }
 
     public Button AddButton(string text, bool boldFont = false) {
-        Button button = new Button();
-        button.Content = text;
-        button.Margin = new Thickness(0, 0, 0, margin);
-        button.Padding = new Thickness(padding);
+        Button button = new Button {
+            Content = text,
+        };
         if (boldFont) {
             button.FontWeight = FontWeights.Bold;
         }
 
-        mainPanel.Children.Add(button);
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        button.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        button.Padding = new Thickness(window.PaddingValue);
+
+        Children.Add(button);
         return button;
     }
 
     public ListBox AddListBox(double height, IEnumerable itemsSource = null) {
-        ListBox listBox = new ListBox();
-        listBox.Height = height;
-        listBox.Margin = new Thickness(0, 0, 0, margin);
+        ListBox listBox = new ListBox {
+            Height = height,
+            ItemsSource = itemsSource
+        };
 
-        listBox.ItemsSource = itemsSource;
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        listBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        listBox.Padding = new Thickness(window.PaddingValue);
 
-        mainPanel.Children.Add(listBox);
+        Children.Add(listBox);
         return listBox;
     }
 
     public CheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
-        CheckedListBox checkedListBox = new CheckedListBox();
-        checkedListBox.Height = height;
-        checkedListBox.Items = itemsSource;
-        checkedListBox.Margin = new Thickness(0, 0, 0, margin);
+        CheckedListBox checkedListBox = new CheckedListBox(window) {
+            Height = height,
+            Items = itemsSource
+        };
 
-        mainPanel.Children.Add(checkedListBox);
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        checkedListBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        checkedListBox.Padding = new Thickness(window.PaddingValue);
+
+        Children.Add(checkedListBox);
         return checkedListBox;
     }
 
     public Button AddOKButton(string text, bool boldFont = false) {
         Button button = AddButton(text, boldFont);
-        button.Click += (sender, e) => DialogResult = true;
+        button.Click += (sender, e) => window.DialogResult = true;
         return button;
     }
-}
 
-public class CheckedListBox : ScrollViewer
-{
-    private readonly StackPanel _stackPanel;
-    private readonly double margin = 3;
-    private ICollection _items;
+    public ScriptUniformGrid AddGrid(int columnsCount = 2) {
+        ScriptUniformGrid grid = new ScriptUniformGrid(window, columnsCount);
 
-    public CheckedListBox() {
-        Background = new SolidColorBrush(Colors.White);
-        _stackPanel = new StackPanel();
-        Content = _stackPanel;
-    }
-
-    public ICollection Items {
-        get {
-            return _items;
-        }
-        set {
-            _items = value;
-            _stackPanel.Children.Clear();
-            if (_items != null) {
-                foreach (object item in _items) {
-                    CheckBox checkBox = new CheckBox();
-                    checkBox.Content = item;
-                    checkBox.Margin = new Thickness(margin);
-                    _stackPanel.Children.Add(checkBox);
-                }
-            }
-        }
-    }
-
-    public void SetItemChecked(int index, bool isChecked) {
-        CheckBox checkBox = (CheckBox)_stackPanel.Children[index];
-        checkBox.IsChecked = isChecked;
-    }
-
-    public bool GetItemChecked(int index) {
-        CheckBox checkBox = (CheckBox)_stackPanel.Children[index];
-        return checkBox.IsChecked.Value;
+        Children.Add(grid);
+        return grid;
     }
 }
