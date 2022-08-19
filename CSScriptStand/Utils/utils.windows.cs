@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -134,41 +136,49 @@ public static class WindowsUtils
 
 public class ScriptWindow : Window
 {
-    public double MarginValue = 7.5;
+    public double MarginValue;
 
-    public double PaddingValue = 3;
+    public double PaddingValue;
 
-    public double ListMarginValue = 7.5;
-
-
-    public ScriptWindow(double width, double height, bool useScrollBar = false) {
+    public ScriptWindow(double width, double height) {
         Width = width;
         Height = height;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        FontSize = 14;
         Background = new SolidColorBrush(Color.FromArgb(255, 240, 240, 240));
+        ResizeMode = ResizeMode.NoResize;
+        SetFont(14);
 
         mainPanel = new ScriptStackPanel(this);
-
-        if (useScrollBar) {
-            ScrollViewer scrollViewer = new ScrollViewer {
-                Content = mainPanel
-            };
-            Content = scrollViewer;
-
-        }
-        else {
-            ResizeMode = ResizeMode.NoResize;
-            Content = mainPanel;
-        }
+        Content = mainPanel;
     }
 
-    public void SetIcon(string base64Image) {
+    public ScriptWindow SetScrollable() {
+        ScrollViewer scrollViewer = new ScrollViewer {
+            Content = mainPanel
+        };
+        Content = scrollViewer;
+        ResizeMode = ResizeMode.CanResize;
+
+        return this;
+    }
+
+    public ScriptWindow SetFont(double fontSize) {
+        FontSize = fontSize;
+        MarginValue = fontSize / 2;
+        PaddingValue = fontSize / 5;
+
+        return this;
+    }
+
+    public ScriptWindow SetIcon(string base64Image) {
         byte[] rawImage = Convert.FromBase64String(base64Image);
         ImageSourceConverter imageConverter = new ImageSourceConverter();
         BitmapSource image = (BitmapSource)imageConverter.ConvertFrom(rawImage);
         Icon = image;
+
+        return this;
     }
+
 
     public void Invoke(Action action) {
         Dispatcher.Invoke(action);
@@ -201,6 +211,7 @@ public class ScriptWindow : Window
         });
         return true;
     }
+
 
     public TextBlock AddTextBlock(string text = "", bool bold = false) {
         return mainPanel.AddTextBlock(text, bold);
@@ -244,6 +255,10 @@ public class ScriptWindow : Window
 
     public ScriptUniformGrid AddGrid(int columnsCount = 2) {
         return mainPanel.AddGrid(columnsCount);
+    }
+
+    public ScriptListView AddListView(double height, IEnumerable itemsSource, IEnumerable<ScriptListViewColumn> columns) {
+        return mainPanel.AddListView(height, itemsSource, columns);
     }
 
     private readonly ScriptStackPanel mainPanel;
@@ -404,6 +419,36 @@ public class ScriptStackPanel : StackPanel
         Children.Add(grid);
         return grid;
     }
+
+    public ScriptListView AddListView(double height, IEnumerable itemsSource, IEnumerable<ScriptListViewColumn> columns) {
+        ScriptListView listView = new ScriptListView {
+            Height = height,
+            ItemsSource = itemsSource
+        };
+
+        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        listView.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
+        listView.Padding = new Thickness(window.PaddingValue);
+
+        GridView gridView = new GridView {
+            AllowsColumnReorder = true
+        };
+        foreach (ScriptListViewColumn column in columns) {
+            GridViewColumn gridViewColumn = new GridViewColumn {
+                DisplayMemberBinding = new Binding(column.Binding),
+                Header = column.Header,
+            };
+            if (column.Width.HasValue) {
+                gridViewColumn.Width = column.Width.Value;
+            }
+            gridView.Columns.Add(gridViewColumn);
+        }
+
+        listView.View = gridView;
+
+        Children.Add(listView);
+        return listView;
+    }
 }
 
 public class ScriptCheckedListBox : ScrollViewer
@@ -423,7 +468,6 @@ public class ScriptCheckedListBox : ScrollViewer
         get {
             return items;
         }
-
         set {
             items = value;
             panel.Children.Clear();
@@ -431,7 +475,7 @@ public class ScriptCheckedListBox : ScrollViewer
                 foreach (object item in items) {
                     CheckBox checkBox = new CheckBox {
                         Content = item,
-                        Margin = new Thickness(window.ListMarginValue),
+                        Margin = new Thickness(window.PaddingValue),
                     };
                     panel.Children.Add(checkBox);
                 }
@@ -470,4 +514,41 @@ public class ScriptUniformGrid : UniformGrid
             return panels[columnIndex];
         }
     }
+
+    public void SetScrollable(int index, double height) {
+        Children.RemoveAt(index);
+        ScrollViewer scrollViewer = new ScrollViewer {
+            Height = height,
+            Content = panels[index]
+        };
+        Children.Insert(index, scrollViewer);
+    }
+}
+
+public class ScriptListView : ListView
+{
+    //// Не доработано
+    //public ScriptListView SetMultiselect() {
+    //    SelectionMode = SelectionMode.Multiple;
+
+    //    ItemContainerStyle = new Style(typeof(ListBoxItem));
+    //    ItemContainerStyle.Setters.Add(new EventSetter(MouseEnterEvent, new MouseEventHandler((sender, e) => {
+    //        if (e.LeftButton == MouseButtonState.Pressed) {
+    //            ListBoxItem lbi = sender as ListBoxItem;
+    //            lbi.IsSelected = true;
+    //            lbi.Focus();
+    //            SelectedItems.Add(lbi);
+    //        }
+    //    })));
+    //    return this;
+    //}
+}
+
+public class ScriptListViewColumn
+{
+    public string Header { get; set; }
+
+    public string Binding { get; set; }
+
+    public double? Width { get; set; }
 }
