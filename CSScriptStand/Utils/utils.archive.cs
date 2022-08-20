@@ -27,7 +27,7 @@ public class SevenZipArgs
     }
 
     public override string ToString() {
-        StringBuilder args = new StringBuilder();
+        var args = new StringBuilder();
         args.AppendFormat(" a"); // Добавление файлов в архив. Если архивного файла не существует, создает его
         args.AppendFormat(" -y"); // Утвердительно ответить на все вопросы, которые может запросить система.
         args.AppendFormat(" -mx{0}", CompressionLevel);
@@ -73,7 +73,7 @@ public class WinRarArgs
     }
 
     public override string ToString() {
-        StringBuilder args = new StringBuilder();
+        var args = new StringBuilder();
         args.AppendFormat(" a");
         if (Sfx) {
             args.AppendFormat(" -sfx");
@@ -93,7 +93,7 @@ public class WinRarArgs
         if (Output != null) {
             args.AppendFormat(" \"{0}\"", Output);
         }
-        foreach (string input in Input) {
+        foreach (var input in Input) {
             args.AppendFormat(" \"{0}\"", input);
         }
         return args.Remove(0, 1).ToString();

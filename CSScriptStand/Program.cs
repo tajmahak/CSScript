@@ -14,7 +14,7 @@ namespace CSScriptStand
         [STAThread]
         private static void Main(string[] args) {
             Console.CancelKeyPress += Console_CancelKeyPress;
-            ConsoleScriptContext context = new ConsoleScriptContext {
+            var context = new ConsoleScriptContext {
                 Args = args,
                 Pause = true,
             };
@@ -30,7 +30,8 @@ namespace CSScriptStand
                     Console.Read(); // при .ReadKey() не срабатывает комбинация Ctrl+C для остановки
                 }
 
-            } else {
+            }
+            else {
                 handler = new ConsoleScriptHandler(stand);
                 handler.Start();
             }
