@@ -14,7 +14,7 @@ public static class NetUtils
 {
     // Отправка электронного письма с использованием SMTP-сервера Mail.Ru
     public static void SendEmailFromMailRu(MailMessage message, string login, string password) {
-        var smtp = new SmtpClient("smtp.mail.ru", 25) {
+        SmtpClient smtp = new SmtpClient("smtp.mail.ru", 25) {
             Credentials = new NetworkCredential(login, password),
             EnableSsl = true
         };
@@ -32,7 +32,7 @@ public class ScriptWebClient : WebClient
     }
 
     protected override WebRequest GetWebRequest(Uri address) {
-        var request = base.GetWebRequest(address) as HttpWebRequest;
+        HttpWebRequest request = base.GetWebRequest(address) as HttpWebRequest;
         request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
         request.CookieContainer = CookieContainer;
         return request;

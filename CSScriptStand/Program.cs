@@ -14,7 +14,7 @@ namespace CSScriptStand
         [STAThread]
         private static void Main(string[] args) {
             Console.CancelKeyPress += Console_CancelKeyPress;
-            var context = new ConsoleScriptContext {
+            ConsoleScriptContext context = new ConsoleScriptContext {
                 Args = args,
                 Pause = true,
             };

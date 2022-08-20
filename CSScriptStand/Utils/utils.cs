@@ -35,7 +35,7 @@ public static class __Utils //##
     // Получение входящего аргумента по индексу
     public static T GetArgument<T>(int index, T defaultValue) {
         if (__utils_Context.Args.Length > index) {
-            var value = __utils_Context.Args[index];
+            string value = __utils_Context.Args[index];
             if (!string.IsNullOrEmpty(value)) {
                 return (T)Convert.ChangeType(value, typeof(T));
             }
@@ -48,10 +48,10 @@ public static class __Utils //##
         __utils_Context.Write(value, color);
     }
     public static void Write(StreamReader reader, ConsoleColor? color = null) {
-        var buffer = new char[1024];
+        char[] buffer = new char[1024];
         while (!reader.EndOfStream) {
-            var readed = reader.Read(buffer, 0, buffer.Length);
-            var value = new string(buffer, 0, readed);
+            int readed = reader.Read(buffer, 0, buffer.Length);
+            string value = new string(buffer, 0, readed);
             Write(value, color);
         }
     }
@@ -66,9 +66,9 @@ public static class __Utils //##
 
     // Асинхронный вывод текста с переносом строки в контекст
     public static void BeginWrite(StreamReader reader, ConsoleColor? color = null) {
-        var encoding = reader.CurrentEncoding;
+        Encoding encoding = reader.CurrentEncoding;
         __Utils_BeginReadFromStream(reader.BaseStream, (data) => {
-            var value = encoding.GetString(data);
+            string value = encoding.GetString(data);
             Write(value, color);
         });
     }
@@ -78,10 +78,10 @@ public static class __Utils //##
         __utils_Context.WriteError(value);
     }
     public static void WriteError(StreamReader reader) {
-        var buffer = new char[1024];
+        char[] buffer = new char[1024];
         while (!reader.EndOfStream) {
-            var readed = reader.Read(buffer, 0, buffer.Length);
-            var value = new string(buffer, 0, readed);
+            int readed = reader.Read(buffer, 0, buffer.Length);
+            string value = new string(buffer, 0, readed);
             WriteError(value);
         }
     }
@@ -96,9 +96,9 @@ public static class __Utils //##
 
     // Асинхронный вывод текста с переносом строки в контекст
     public static void BeginWriteError(StreamReader reader) {
-        var encoding = reader.CurrentEncoding;
+        Encoding encoding = reader.CurrentEncoding;
         __Utils_BeginReadFromStream(reader.BaseStream, (data) => {
-            var value = encoding.GetString(data);
+            string value = encoding.GetString(data);
             WriteError(value);
         });
     }
@@ -117,13 +117,13 @@ public static class __Utils //##
     //  COLOR - цвет, поддерживаемый консолью;
     //  VALUE - значение, которое нужно вывести в указанном цвете.
     public static void WriteFormatted(string helpText, ConsoleColor? color = null) {
-        var split = helpText.Split('`');
-        for (var i = 0; i < split.Length; i++) {
-            var writeColor = color;
-            var newBlock = i % 2 != 0;
-            var fragment = split[i];
+        string[] split = helpText.Split('`');
+        for (int i = 0; i < split.Length; i++) {
+            ConsoleColor? writeColor = color;
+            bool newBlock = i % 2 != 0;
+            string fragment = split[i];
             if (newBlock) {
-                var fragmentBlock = DivideString(fragment, ":");
+                string[] fragmentBlock = DivideString(fragment, ":");
                 Validate.True(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
                 fragment = fragmentBlock[1];
                 switch (fragmentBlock[0].ToLowerInvariant()) {
@@ -197,8 +197,8 @@ public static class __Utils //##
 
     // Получение текстового лога
     public static string GetLog() {
-        var log = new StringBuilder();
-        foreach (var logFragment in __utils_Context.Log) {
+        StringBuilder log = new StringBuilder();
+        foreach (LogFragment logFragment in __utils_Context.Log) {
             log.Append(logFragment.Text);
         }
         return log.ToString();
@@ -206,10 +206,10 @@ public static class __Utils //##
 
     // Получение лога в формате HTML (для отправки по E-Mail)
     public static string GetHtmlLog() {
-        var log = new StringBuilder();
+        StringBuilder log = new StringBuilder();
         //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
         log.Append("<pre>");
-        foreach (var logFragment in __utils_Context.Log) {
+        foreach (LogFragment logFragment in __utils_Context.Log) {
             if (logFragment.Color != __utils_Context.ColorScheme.Foreground) {
                 log.Append("<font color=\"" + System.Drawing.ColorTranslator.ToHtml(__Utils_ConvertColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
             }
@@ -230,20 +230,20 @@ public static class __Utils //##
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
     public static ScriptProcess CreateProcess(string fileName, object args = null) {
         Validate.FileExists(fileName, false);
-        var stringArgs = args == null ? null : args.ToString();
+        string stringArgs = args == null ? null : args.ToString();
         return new ScriptProcess(fileName, stringArgs);
     }
 
     // Создание контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится)
     public static ScriptProcess CreateManagedProcess(string fileName, object args = null) {
-        var process = CreateProcess(fileName, args);
+        ScriptProcess process = CreateProcess(fileName, args);
         __utils_Context.RegisterProcess(process);
         return process;
     }
 
     // Запуск процесса с выводом потоков в консоль и ожиданием его завершения
     public static int StartProcess(string fileName, object args = null, Encoding outputEncoding = null) {
-        var process = CreateManagedProcess(fileName, args);
+        ScriptProcess process = CreateManagedProcess(fileName, args);
         return StartProcess(process, outputEncoding);
     }
     public static int StartProcess(ScriptProcess process, Encoding outputEncoding = null) {
@@ -259,14 +259,14 @@ public static class __Utils //##
 
     // Запуск процесса в отдельном окне и ожиданием его завершения
     public static int StartNormalProcess(string fileName, object args = null) {
-        var process = CreateManagedProcess(fileName, args);
+        ScriptProcess process = CreateManagedProcess(fileName, args);
         process.StartAndWaitForExit();
         return process.ExitCode;
     }
 
     // Запуск скрытого процесса и ожидание его завершения
     public static int StartHiddenProcess(string fileName, object args = null) {
-        var process = CreateManagedProcess(fileName, args);
+        ScriptProcess process = CreateManagedProcess(fileName, args);
         process.Hidden();
         process.StartAndWaitForExit();
         return process.ExitCode;
@@ -277,7 +277,7 @@ public static class __Utils //##
 
     // Создание папки
     public static bool CreateDirectory(string path, bool isFilePath = false) {
-        var dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
+        string dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
         if (Empty(dirPath)) {
             dirPath = Environment.CurrentDirectory;
         }
@@ -298,7 +298,7 @@ public static class __Utils //##
 
     // Поиск файла по пути или маске. Исключение в случае, если файл не найден или найдено несколько файлов
     public static string GetFile(string searchMask, bool searchToAllDirectories = false) {
-        var files = GetFiles(searchMask, searchToAllDirectories);
+        FileList files = GetFiles(searchMask, searchToAllDirectories);
         Validate.Throw(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
         Validate.Throw(files.Count > 1, "По указанной маске '" + searchMask + "' найдено несколько файлов.");
         return files[0];
@@ -323,42 +323,42 @@ public static class __Utils //##
 
     // Получение пути с добавлением префикса к имени файла
     public static string AddFileNamePrefix(string path, string prefix) {
-        var dir = Path.GetDirectoryName(path);
-        var name = Path.GetFileNameWithoutExtension(path);
-        var ext = Path.GetExtension(path);
+        string dir = Path.GetDirectoryName(path);
+        string name = Path.GetFileNameWithoutExtension(path);
+        string ext = Path.GetExtension(path);
         return Empty(dir) ? prefix + name + ext : dir + "\\" + prefix + name + ext;
     }
 
     // Получение пути с добавлением суффикса к имени файла
     public static string AddFileNameSuffix(string path, string suffix) {
-        var dirPath = Path.GetDirectoryName(path);
-        var fileName = Path.GetFileNameWithoutExtension(path);
-        var ext = Path.GetExtension(path);
+        string dirPath = Path.GetDirectoryName(path);
+        string fileName = Path.GetFileNameWithoutExtension(path);
+        string ext = Path.GetExtension(path);
         return Empty(dirPath) ? fileName + suffix + ext : dirPath + "\\" + fileName + suffix + ext;
     }
 
     // Получение пути с новым именем файла
     public static string NewFileName(string path, string newName, bool includeExtension = false) {
-        var dir = Path.GetDirectoryName(path);
-        var emptyDir = Empty(dir);
+        string dir = Path.GetDirectoryName(path);
+        bool emptyDir = Empty(dir);
         if (includeExtension) {
             return emptyDir ? newName : dir + '\\' + newName;
         }
-        var ext = Path.GetExtension(path);
+        string ext = Path.GetExtension(path);
         return emptyDir ? newName + ext : dir + '\\' + newName + ext;
     }
 
     // Получение пути с новым именем директории
     public static string NewDirectoryName(string path, string newDirectory) {
-        var name = Path.GetFileName(path);
+        string name = Path.GetFileName(path);
         return Empty(newDirectory) ? name : Path.Combine(newDirectory, name);
     }
 
     // Получение пути с новым расширением файла
     public static string NewFileExtension(string path, string newExtension) {
-        var dir = Path.GetDirectoryName(path);
-        var name = Path.GetFileNameWithoutExtension(path);
-        var ext = Path.GetExtension(path);
+        string dir = Path.GetDirectoryName(path);
+        string name = Path.GetFileNameWithoutExtension(path);
+        string ext = Path.GetExtension(path);
         return Empty(dir) ? name + newExtension : dir + '\\' + name + newExtension;
     }
 
@@ -367,14 +367,14 @@ public static class __Utils //##
         Validate.FileExists(path1);
         Validate.FileExists(path2);
 
-        var file1Length = new FileInfo(path1).Length;
-        var file2Length = new FileInfo(path2).Length;
+        long file1Length = new FileInfo(path1).Length;
+        long file2Length = new FileInfo(path2).Length;
         if (file1Length != file2Length) {
             return false;
         }
 
-        var file1Hash = ToHexString(__Utils_GetMD5HashFromFile(path1));
-        var file2Hash = ToHexString(__Utils_GetMD5HashFromFile(path2));
+        string file1Hash = ToHexString(__Utils_GetMD5HashFromFile(path1));
+        string file2Hash = ToHexString(__Utils_GetMD5HashFromFile(path2));
         return file1Hash == file2Hash;
     }
 
@@ -383,7 +383,7 @@ public static class __Utils //##
 
     // Разбиение строки на 2 части по первому вхождению разделителя
     public static string[] DivideString(string value, string separator) {
-        var index = value.IndexOf(separator);
+        int index = value.IndexOf(separator);
         return index == -1 ?
             (new string[] { value }) :
             (new string[] { value.Remove(index), value.Substring(index + separator.Length) });
@@ -391,8 +391,8 @@ public static class __Utils //##
 
     // Получение HEX-строки из массива байт
     public static string ToHexString(byte[] data) {
-        var hashString = new StringBuilder(data.Length * 2);
-        for (var i = 0; i < data.Length; i++) {
+        StringBuilder hashString = new StringBuilder(data.Length * 2);
+        for (int i = 0; i < data.Length; i++) {
             hashString.Append(data[i].ToString("x2"));
         }
         return hashString.ToString();
@@ -403,14 +403,14 @@ public static class __Utils //##
 
     public static T DeserializeFromFile<T>(string filePath) {
         if (Exists(filePath)) {
-            var xml = ReadText(filePath);
+            string xml = ReadText(filePath);
             return DeserializeFromXml<T>(xml);
         }
         return default(T);
     }
 
     public static void SerializeToFile(object obj, string filePath) {
-        var xml = SerializeToXml(obj);
+        string xml = SerializeToXml(obj);
         if (Exists(filePath)) {
             File.Delete(filePath);
         }
@@ -419,37 +419,40 @@ public static class __Utils //##
     }
 
     public static string SerializeToXml(object obj) {
-        var xmlSerializer = __Utils_GetXmlSerializer(obj.GetType());
+        XmlSerializer xmlSerializer = __Utils_GetXmlSerializer(obj.GetType());
         string data;
 
-        using (var stringWriter = new StringWriter()) {
-            var xmlWriterSettings = new XmlWriterSettings {
+        using (StringWriter stringWriter = new StringWriter()) {
+            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings {
                 OmitXmlDeclaration = true,
                 Indent = true
             };
-            using (var xmlWriter = XmlWriter.Create(stringWriter, xmlWriterSettings)) {
+            using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, xmlWriterSettings)) {
                 xmlSerializer.Serialize(xmlWriter, obj);
             }
             data = stringWriter.ToString();
         }
 
         // костыль, чтобы сократить размер выходных данных
-        var splitData1 = DivideString(data, " ");
-        var splitData2 = DivideString(splitData1[1], ">");
+        string[] splitData1 = DivideString(data, " ");
+        string[] splitData2 = DivideString(splitData1[1], ">");
         data = splitData1[0] + ">" + splitData2[1];
 
         return data;
     }
 
     public static T DeserializeFromXml<T>(string xml) {
-        var xmlSerializer = __Utils_GetXmlSerializer(typeof(T));
-        using (var stringReader = new StringReader(xml)) {
-            var obj = (T)xmlSerializer.Deserialize(stringReader);
+        XmlSerializer xmlSerializer = __Utils_GetXmlSerializer(typeof(T));
+        using (StringReader stringReader = new StringReader(xml)) {
+            T obj = (T)xmlSerializer.Deserialize(stringReader);
 
             //  исправление многострочного string после десериализации XML
-            foreach (var property in obj.GetType().GetProperties()) {
+            foreach (System.Reflection.PropertyInfo property in obj.GetType().GetProperties()) {
                 if (property.PropertyType == typeof(string)) {
-                    var value = (string)property.GetValue(obj, null);
+                    if (!property.CanWrite || property.GetCustomAttributes(typeof(XmlIgnoreAttribute), false).Length > 0) {
+                        continue;
+                    }
+                    string value = (string)property.GetValue(obj, null);
                     if (value != null) {
                         value = value.Replace("\n", Environment.NewLine);
                         property.SetValue(obj, value, null);
@@ -508,12 +511,12 @@ public static class __Utils //##
     }
 
     public static string[] ReadLines(string searchMask, bool searchToAllDirectories = false) {
-        var file = GetFile(searchMask, searchToAllDirectories);
+        string file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllLines(file, Encoding.UTF8);
     }
 
     public static string ReadText(string searchMask, bool searchToAllDirectories = false) {
-        var file = GetFile(searchMask, searchToAllDirectories);
+        string file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllText(file, Encoding.UTF8);
     }
 
@@ -560,20 +563,20 @@ public static class __Utils //##
     }
 
     private static byte[] __Utils_GetMD5HashFromFile(string filePath) {
-        using (var md5 = MD5.Create()) {
-            using (var stream = File.OpenRead(filePath)) {
+        using (MD5 md5 = MD5.Create()) {
+            using (FileStream stream = File.OpenRead(filePath)) {
                 return md5.ComputeHash(stream);
             }
         }
     }
 
     private static void __Utils_BeginReadFromStream(Stream stream, Action<byte[]> onRead) {
-        var buffer = new byte[102400];
+        byte[] buffer = new byte[102400];
         AsyncCallback callback = null;
         callback = (asyncResult) => {
-            var readed = stream.EndRead(asyncResult);
+            int readed = stream.EndRead(asyncResult);
             if (readed > 0) {
-                var data = new byte[readed];
+                byte[] data = new byte[readed];
                 Array.Copy(buffer, data, readed);
                 onRead(data);
                 stream.BeginRead(buffer, 0, buffer.Length, callback, null);
@@ -584,7 +587,7 @@ public static class __Utils //##
 
     private static XmlSerializer __Utils_GetXmlSerializer(Type type) {
         if (!__Utils_XmlSerializers.ContainsKey(type)) {
-            var xmlSerializer = new XmlSerializer(type);
+            XmlSerializer xmlSerializer = new XmlSerializer(type);
             __Utils_XmlSerializers.Add(type, xmlSerializer);
         }
         return __Utils_XmlSerializers[type];
@@ -609,7 +612,7 @@ public class FileList : List<string>
 
     // Поиск файлов по пути или маске и добавление их в список
     public FileList Append(string searchMask, bool searchToAllDirectories = false) {
-        var searchOption = searchToAllDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        SearchOption searchOption = searchToAllDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         if (File.Exists(searchMask)) {
             Add(searchMask);
 
@@ -619,11 +622,11 @@ public class FileList : List<string>
 
         }
         else {
-            var directoryPath = Path.GetDirectoryName(searchMask);
+            string directoryPath = Path.GetDirectoryName(searchMask);
             if (string.IsNullOrEmpty(directoryPath)) {
                 directoryPath = Environment.CurrentDirectory;
             }
-            var fileMask = Path.GetFileName(searchMask);
+            string fileMask = Path.GetFileName(searchMask);
             AddRange(Directory.GetFiles(directoryPath, fileMask, searchOption));
         }
         return this;
@@ -631,7 +634,7 @@ public class FileList : List<string>
 
     // Поиск файлов по пути или маске и добавление их в список
     public FileList Append(IList<string> searchMasks, bool searchToAllDirectories = false) {
-        foreach (var searchMask in searchMasks) {
+        foreach (string searchMask in searchMasks) {
             AddRange(Append(searchMask, searchToAllDirectories));
         }
         return this;
@@ -639,8 +642,8 @@ public class FileList : List<string>
 
     // Удаление файлов
     public FileList Delete(int startIndex = 0) {
-        for (var i = startIndex; i < Count; i++) {
-            var file = this[i];
+        for (int i = startIndex; i < Count; i++) {
+            string file = this[i];
             File.Delete(file);
             RemoveAt(i--);
         }
@@ -656,8 +659,8 @@ public class FileList : List<string>
 
     // Удаление файлов. Если файл удалить невозможно, исключение не создаётся
     public FileList TryDelete(int startIndex = 0) {
-        for (var i = startIndex; i < Count; i++) {
-            var file = this[i];
+        for (int i = startIndex; i < Count; i++) {
+            string file = this[i];
             try {
                 File.Delete(file);
                 RemoveAt(i--);
@@ -691,8 +694,8 @@ public class FileList : List<string>
 
     // Сортировка файлов по дате изменения (по умолчанию старые файлы в начале массива)
     public FileList SortFilesByWriteTime(bool desc = false) {
-        var fileDates = new Dictionary<string, DateTime>();
-        foreach (var file in this) {
+        Dictionary<string, DateTime> fileDates = new Dictionary<string, DateTime>();
+        foreach (string file in this) {
             fileDates.Add(file, new FileInfo(file).LastWriteTime);
         }
         if (desc) {

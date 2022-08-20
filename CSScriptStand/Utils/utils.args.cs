@@ -9,23 +9,46 @@ using System.Text;
 
 //## #namespace
 
-public static class CommandArgumentUtils
+public abstract class CommandArguments : ICloneable
 {
-    public static string ToString(ConsoleArguments args) {
-        var str = new StringBuilder();
+    public object Clone() {
+        return MemberwiseClone();
+    }
 
-        var objType = args.GetType();
-        var properties = objType.GetProperties();
-        foreach (var property in properties) {
-            var attrArray = property.GetCustomAttributes(typeof(CommandArgumentAttribute), false);
+    public override string ToString() {
+        return ToString(this);
+    }
+
+    public static implicit operator string(CommandArguments args) {
+        return args.ToString();
+    }
+
+
+    public static string ToString(CommandArguments args) {
+        StringBuilder str = new StringBuilder();
+
+        Type objType = args.GetType();
+        System.Reflection.PropertyInfo[] properties = objType.GetProperties();
+        foreach (System.Reflection.PropertyInfo property in properties) {
+            object[] attrArray = property.GetCustomAttributes(typeof(CommandArgumentAttribute), false);
             if (attrArray.Length == 0) {
                 continue;
             }
-            var attr = (CommandArgumentAttribute)attrArray[0];
+            CommandArgumentAttribute attr = (CommandArgumentAttribute)attrArray[0];
 
-            var value = property.GetValue(args, null);
+            object value = property.GetValue(args, null);
             if (value == null) {
-                continue;
+                if (attr.DefaultValue != null) {
+                    value = attr.DefaultValue;
+                }
+                else {
+                    if (attr.Required) {
+                        throw new ArgumentException("Не указаны обязательные параметры.");
+                    }
+                    else {
+                        continue;
+                    }
+                }
             }
 
             if (attr.Flag) {
@@ -44,15 +67,15 @@ public static class CommandArgumentUtils
                     str.Append(attr.Names[0]);
                 }
                 if (value is IEnumerable && !(value is string)) {
-                    var enumerable = (IEnumerable)value;
-                    foreach (var item in enumerable) {
+                    IEnumerable enumerable = (IEnumerable)value;
+                    foreach (object item in enumerable) {
 
                         str.Append(attr.Separator);
 
                         if (attr.Quoted) {
                             str.Append('\"');
                         }
-                        str.Append(__GetArgumentValue(item, attr));
+                        str.Append(GetArgumentValue(item, attr));
                         if (attr.Quoted) {
                             str.Append('\"');
                         }
@@ -63,7 +86,7 @@ public static class CommandArgumentUtils
                     if (attr.Quoted) {
                         str.Append('\"');
                     }
-                    str.Append(__GetArgumentValue(value, attr));
+                    str.Append(GetArgumentValue(value, attr));
                     if (attr.Quoted) {
                         str.Append('\"');
                     }
@@ -73,10 +96,10 @@ public static class CommandArgumentUtils
         return str.ToString();
     }
 
-    private static string __GetArgumentValue(object value, CommandArgumentAttribute attr) {
+    private static string GetArgumentValue(object value, CommandArgumentAttribute attr) {
         string convertedValue;
         if (attr.Converter != null) {
-            var converter = (IConsoleArgumentConverter)Activator.CreateInstance(attr.Converter);
+            IConsoleArgumentConverter converter = (IConsoleArgumentConverter)Activator.CreateInstance(attr.Converter);
             convertedValue = converter.Convert(value);
         }
         else {
@@ -86,22 +109,7 @@ public static class CommandArgumentUtils
     }
 }
 
-public abstract class ConsoleArguments : ICloneable
-{
-    public object Clone() {
-        return MemberwiseClone();
-    }
-
-    public override string ToString() {
-        return CommandArgumentUtils.ToString(this);
-    }
-
-    public static implicit operator string(ConsoleArguments args) {
-        return args.ToString();
-    }
-}
-
-public abstract class ConsoleArguments<T> : ConsoleArguments
+public abstract class CommandArguments<T> : CommandArguments
 {
     public new T Clone() {
         return (T)base.Clone();
@@ -132,9 +140,20 @@ public sealed class CommandArgumentAttribute : Attribute
     public Type Converter { get; set; }
 
     /// <summary>
+    /// Указывает, является ли параметр обязательным.
+    /// </summary>
+    public bool Required { get; set; }
+
+    /// <summary>
+    /// Указывается значение по умолчанию в случае, если поле не заполнено.
+    /// </summary>
+    public string DefaultValue { get; set; }
+
+    /// <summary>
     /// Названия аргумента.
     /// </summary>
     public string[] Names { get; private set; }
+
 
     public CommandArgumentAttribute(params string[] names) {
         Names = names;
@@ -162,7 +181,7 @@ public class CommandArgumentBuilder
     }
 
     public CommandArgumentBuilder Add(string format, params object[] args) {
-        var value = string.Format(format, args);
+        string value = string.Format(format, args);
         value = value.Replace(Environment.NewLine, " ");
         if (builder.Length > 0 && builder[builder.Length - 1] != ' ') {
             builder.Append(' ');
@@ -179,7 +198,7 @@ public class CommandArgumentBuilder
     }
 
     public CommandArgumentBuilder Add(IEnumerable<string> values) {
-        foreach (var value in values) {
+        foreach (string value in values) {
             Add(value);
         }
         return this;
@@ -210,7 +229,7 @@ public class CommandArgumentBuilder
     }
 
     public CommandArgumentBuilder AddQuote(IEnumerable<string> values) {
-        foreach (var value in values) {
+        foreach (string value in values) {
             AddQuote(value);
         }
         return this;

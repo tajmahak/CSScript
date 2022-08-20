@@ -64,7 +64,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stand.cs" />
-    <Compile Include="Utils\utils.archive.cs" />
+    <Compile Include="Utils\utils.args.archive.cs" />
     <Compile Include="Utils\utils.args.cs" />
     <Compile Include="Utils\utils.crypto.cs" />
     <Compile Include="Utils\utils.net.cs" />
