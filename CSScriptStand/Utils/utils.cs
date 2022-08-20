@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -36,7 +35,7 @@ public static class __Utils //##
     // Получение входящего аргумента по индексу
     public static T GetArgument<T>(int index, T defaultValue) {
         if (__utils_Context.Args.Length > index) {
-            string value = __utils_Context.Args[index];
+            var value = __utils_Context.Args[index];
             if (!string.IsNullOrEmpty(value)) {
                 return (T)Convert.ChangeType(value, typeof(T));
             }
@@ -49,10 +48,10 @@ public static class __Utils //##
         __utils_Context.Write(value, color);
     }
     public static void Write(StreamReader reader, ConsoleColor? color = null) {
-        char[] buffer = new char[1024];
+        var buffer = new char[1024];
         while (!reader.EndOfStream) {
-            int readed = reader.Read(buffer, 0, buffer.Length);
-            string value = new string(buffer, 0, readed);
+            var readed = reader.Read(buffer, 0, buffer.Length);
+            var value = new string(buffer, 0, readed);
             Write(value, color);
         }
     }
@@ -67,9 +66,9 @@ public static class __Utils //##
 
     // Асинхронный вывод текста с переносом строки в контекст
     public static void BeginWrite(StreamReader reader, ConsoleColor? color = null) {
-        Encoding encoding = reader.CurrentEncoding;
+        var encoding = reader.CurrentEncoding;
         __Utils_BeginReadFromStream(reader.BaseStream, (data) => {
-            string value = encoding.GetString(data);
+            var value = encoding.GetString(data);
             Write(value, color);
         });
     }
@@ -79,10 +78,10 @@ public static class __Utils //##
         __utils_Context.WriteError(value);
     }
     public static void WriteError(StreamReader reader) {
-        char[] buffer = new char[1024];
+        var buffer = new char[1024];
         while (!reader.EndOfStream) {
-            int readed = reader.Read(buffer, 0, buffer.Length);
-            string value = new string(buffer, 0, readed);
+            var readed = reader.Read(buffer, 0, buffer.Length);
+            var value = new string(buffer, 0, readed);
             WriteError(value);
         }
     }
@@ -97,9 +96,9 @@ public static class __Utils //##
 
     // Асинхронный вывод текста с переносом строки в контекст
     public static void BeginWriteError(StreamReader reader) {
-        Encoding encoding = reader.CurrentEncoding;
+        var encoding = reader.CurrentEncoding;
         __Utils_BeginReadFromStream(reader.BaseStream, (data) => {
-            string value = encoding.GetString(data);
+            var value = encoding.GetString(data);
             WriteError(value);
         });
     }
@@ -118,33 +117,66 @@ public static class __Utils //##
     //  COLOR - цвет, поддерживаемый консолью;
     //  VALUE - значение, которое нужно вывести в указанном цвете.
     public static void WriteFormatted(string helpText, ConsoleColor? color = null) {
-        string[] split = helpText.Split('`');
-        for (int i = 0; i < split.Length; i++) {
-            ConsoleColor? writeColor = color;
-            bool newBlock = i % 2 != 0;
-            string fragment = split[i];
+        var split = helpText.Split('`');
+        for (var i = 0; i < split.Length; i++) {
+            var writeColor = color;
+            var newBlock = i % 2 != 0;
+            var fragment = split[i];
             if (newBlock) {
-                string[] fragmentBlock = DivideString(fragment, ":");
+                var fragmentBlock = DivideString(fragment, ":");
                 Validate.True(fragmentBlock.Length == 2, "Не удалось распознать строку форматирования '" + fragment + "'.");
                 fragment = fragmentBlock[1];
                 switch (fragmentBlock[0].ToLowerInvariant()) {
-                    case "black": writeColor = ConsoleColor.Black; break;
-                    case "darkblue": writeColor = ConsoleColor.DarkBlue; break;
-                    case "darkgreen": writeColor = ConsoleColor.DarkGreen; break;
-                    case "darkcyan": writeColor = ConsoleColor.DarkCyan; break;
-                    case "darkred": writeColor = ConsoleColor.DarkRed; break;
-                    case "darkmagenta": writeColor = ConsoleColor.DarkMagenta; break;
-                    case "darkyellow": writeColor = ConsoleColor.DarkYellow; break;
-                    case "gray": writeColor = ConsoleColor.Gray; break;
-                    case "darkgray": writeColor = ConsoleColor.DarkGray; break;
-                    case "blue": writeColor = ConsoleColor.Blue; break;
-                    case "green": writeColor = ConsoleColor.Green; break;
-                    case "cyan": writeColor = ConsoleColor.Cyan; break;
-                    case "red": writeColor = ConsoleColor.Red; break;
-                    case "magenta": writeColor = ConsoleColor.Magenta; break;
-                    case "yellow": writeColor = ConsoleColor.Yellow; break;
-                    case "white": writeColor = ConsoleColor.White; break;
-                    default: throw new Exception("Не удалось распознать идентификатор цвета '" + fragmentBlock[0] + "'.");
+                    case "black":
+                        writeColor = ConsoleColor.Black;
+                        break;
+                    case "darkblue":
+                        writeColor = ConsoleColor.DarkBlue;
+                        break;
+                    case "darkgreen":
+                        writeColor = ConsoleColor.DarkGreen;
+                        break;
+                    case "darkcyan":
+                        writeColor = ConsoleColor.DarkCyan;
+                        break;
+                    case "darkred":
+                        writeColor = ConsoleColor.DarkRed;
+                        break;
+                    case "darkmagenta":
+                        writeColor = ConsoleColor.DarkMagenta;
+                        break;
+                    case "darkyellow":
+                        writeColor = ConsoleColor.DarkYellow;
+                        break;
+                    case "gray":
+                        writeColor = ConsoleColor.Gray;
+                        break;
+                    case "darkgray":
+                        writeColor = ConsoleColor.DarkGray;
+                        break;
+                    case "blue":
+                        writeColor = ConsoleColor.Blue;
+                        break;
+                    case "green":
+                        writeColor = ConsoleColor.Green;
+                        break;
+                    case "cyan":
+                        writeColor = ConsoleColor.Cyan;
+                        break;
+                    case "red":
+                        writeColor = ConsoleColor.Red;
+                        break;
+                    case "magenta":
+                        writeColor = ConsoleColor.Magenta;
+                        break;
+                    case "yellow":
+                        writeColor = ConsoleColor.Yellow;
+                        break;
+                    case "white":
+                        writeColor = ConsoleColor.White;
+                        break;
+                    default:
+                        throw new Exception("Не удалось распознать идентификатор цвета '" + fragmentBlock[0] + "'.");
                 }
             }
             Write(fragment, writeColor);
@@ -165,8 +197,8 @@ public static class __Utils //##
 
     // Получение текстового лога
     public static string GetLog() {
-        StringBuilder log = new StringBuilder();
-        foreach (LogFragment logFragment in __utils_Context.Log) {
+        var log = new StringBuilder();
+        foreach (var logFragment in __utils_Context.Log) {
             log.Append(logFragment.Text);
         }
         return log.ToString();
@@ -174,13 +206,14 @@ public static class __Utils //##
 
     // Получение лога в формате HTML (для отправки по E-Mail)
     public static string GetHtmlLog() {
-        StringBuilder log = new StringBuilder();
+        var log = new StringBuilder();
         //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
         log.Append("<pre>");
-        foreach (LogFragment logFragment in __utils_Context.Log) {
+        foreach (var logFragment in __utils_Context.Log) {
             if (logFragment.Color != __utils_Context.ColorScheme.Foreground) {
                 log.Append("<font color=\"" + System.Drawing.ColorTranslator.ToHtml(__Utils_ConvertColor(logFragment.Color)) + "\">" + logFragment.Text + "</font>");
-            } else {
+            }
+            else {
                 log.Append(logFragment.Text);
             }
         }
@@ -197,20 +230,20 @@ public static class __Utils //##
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
     public static ScriptProcess CreateProcess(string fileName, object args = null) {
         Validate.FileExists(fileName, false);
-        string stringArgs = args == null ? null : args.ToString();
+        var stringArgs = args == null ? null : args.ToString();
         return new ScriptProcess(fileName, stringArgs);
     }
 
     // Создание контролируемого процесса (при аварийном завершении работы скрипта процесс принудительно завершится)
     public static ScriptProcess CreateManagedProcess(string fileName, object args = null) {
-        ScriptProcess process = CreateProcess(fileName, args);
+        var process = CreateProcess(fileName, args);
         __utils_Context.RegisterProcess(process);
         return process;
     }
 
     // Запуск процесса с выводом потоков в консоль и ожиданием его завершения
     public static int StartProcess(string fileName, object args = null, Encoding outputEncoding = null) {
-        ScriptProcess process = CreateManagedProcess(fileName, args);
+        var process = CreateManagedProcess(fileName, args);
         return StartProcess(process, outputEncoding);
     }
     public static int StartProcess(ScriptProcess process, Encoding outputEncoding = null) {
@@ -226,14 +259,14 @@ public static class __Utils //##
 
     // Запуск процесса в отдельном окне и ожиданием его завершения
     public static int StartNormalProcess(string fileName, object args = null) {
-        ScriptProcess process = CreateManagedProcess(fileName, args);
+        var process = CreateManagedProcess(fileName, args);
         process.StartAndWaitForExit();
         return process.ExitCode;
     }
 
     // Запуск скрытого процесса и ожидание его завершения
     public static int StartHiddenProcess(string fileName, object args = null) {
-        ScriptProcess process = CreateManagedProcess(fileName, args);
+        var process = CreateManagedProcess(fileName, args);
         process.Hidden();
         process.StartAndWaitForExit();
         return process.ExitCode;
@@ -244,7 +277,7 @@ public static class __Utils //##
 
     // Создание папки
     public static bool CreateDirectory(string path, bool isFilePath = false) {
-        string dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
+        var dirPath = isFilePath ? Path.GetDirectoryName(path) : path;
         if (Empty(dirPath)) {
             dirPath = Environment.CurrentDirectory;
         }
@@ -265,7 +298,7 @@ public static class __Utils //##
 
     // Поиск файла по пути или маске. Исключение в случае, если файл не найден или найдено несколько файлов
     public static string GetFile(string searchMask, bool searchToAllDirectories = false) {
-        FileList files = GetFiles(searchMask, searchToAllDirectories);
+        var files = GetFiles(searchMask, searchToAllDirectories);
         Validate.Throw(files.Count == 0, "По указанной маске '" + searchMask + "' не найдено файлов.");
         Validate.Throw(files.Count > 1, "По указанной маске '" + searchMask + "' найдено несколько файлов.");
         return files[0];
@@ -290,42 +323,42 @@ public static class __Utils //##
 
     // Получение пути с добавлением префикса к имени файла
     public static string AddFileNamePrefix(string path, string prefix) {
-        string dir = Path.GetDirectoryName(path);
-        string name = Path.GetFileNameWithoutExtension(path);
-        string ext = Path.GetExtension(path);
+        var dir = Path.GetDirectoryName(path);
+        var name = Path.GetFileNameWithoutExtension(path);
+        var ext = Path.GetExtension(path);
         return Empty(dir) ? prefix + name + ext : dir + "\\" + prefix + name + ext;
     }
 
     // Получение пути с добавлением суффикса к имени файла
     public static string AddFileNameSuffix(string path, string suffix) {
-        string dirPath = Path.GetDirectoryName(path);
-        string fileName = Path.GetFileNameWithoutExtension(path);
-        string ext = Path.GetExtension(path);
+        var dirPath = Path.GetDirectoryName(path);
+        var fileName = Path.GetFileNameWithoutExtension(path);
+        var ext = Path.GetExtension(path);
         return Empty(dirPath) ? fileName + suffix + ext : dirPath + "\\" + fileName + suffix + ext;
     }
 
     // Получение пути с новым именем файла
     public static string NewFileName(string path, string newName, bool includeExtension = false) {
-        string dir = Path.GetDirectoryName(path);
-        bool emptyDir = Empty(dir);
+        var dir = Path.GetDirectoryName(path);
+        var emptyDir = Empty(dir);
         if (includeExtension) {
             return emptyDir ? newName : dir + '\\' + newName;
         }
-        string ext = Path.GetExtension(path);
+        var ext = Path.GetExtension(path);
         return emptyDir ? newName + ext : dir + '\\' + newName + ext;
     }
 
     // Получение пути с новым именем директории
     public static string NewDirectoryName(string path, string newDirectory) {
-        string name = Path.GetFileName(path);
+        var name = Path.GetFileName(path);
         return Empty(newDirectory) ? name : Path.Combine(newDirectory, name);
     }
 
     // Получение пути с новым расширением файла
     public static string NewFileExtension(string path, string newExtension) {
-        string dir = Path.GetDirectoryName(path);
-        string name = Path.GetFileNameWithoutExtension(path);
-        string ext = Path.GetExtension(path);
+        var dir = Path.GetDirectoryName(path);
+        var name = Path.GetFileNameWithoutExtension(path);
+        var ext = Path.GetExtension(path);
         return Empty(dir) ? name + newExtension : dir + '\\' + name + newExtension;
     }
 
@@ -334,19 +367,15 @@ public static class __Utils //##
         Validate.FileExists(path1);
         Validate.FileExists(path2);
 
-        long file1Length = new FileInfo(path1).Length;
-        long file2Length = new FileInfo(path2).Length;
+        var file1Length = new FileInfo(path1).Length;
+        var file2Length = new FileInfo(path2).Length;
         if (file1Length != file2Length) {
             return false;
         }
 
-        string file1Hash = ToHexString(__Utils_GetMD5HashFromFile(path1));
-        string file2Hash = ToHexString(__Utils_GetMD5HashFromFile(path2));
-        if (file1Hash != file2Hash) {
-            return false;
-        }
-
-        return true;
+        var file1Hash = ToHexString(__Utils_GetMD5HashFromFile(path1));
+        var file2Hash = ToHexString(__Utils_GetMD5HashFromFile(path2));
+        return file1Hash == file2Hash;
     }
 
 
@@ -354,7 +383,7 @@ public static class __Utils //##
 
     // Разбиение строки на 2 части по первому вхождению разделителя
     public static string[] DivideString(string value, string separator) {
-        int index = value.IndexOf(separator);
+        var index = value.IndexOf(separator);
         return index == -1 ?
             (new string[] { value }) :
             (new string[] { value.Remove(index), value.Substring(index + separator.Length) });
@@ -362,8 +391,8 @@ public static class __Utils //##
 
     // Получение HEX-строки из массива байт
     public static string ToHexString(byte[] data) {
-        StringBuilder hashString = new StringBuilder(data.Length * 2);
-        for (int i = 0; i < data.Length; i++) {
+        var hashString = new StringBuilder(data.Length * 2);
+        for (var i = 0; i < data.Length; i++) {
             hashString.Append(data[i].ToString("x2"));
         }
         return hashString.ToString();
@@ -374,14 +403,14 @@ public static class __Utils //##
 
     public static T DeserializeFromFile<T>(string filePath) {
         if (Exists(filePath)) {
-            string xml = ReadText(filePath);
+            var xml = ReadText(filePath);
             return DeserializeFromXml<T>(xml);
         }
         return default(T);
     }
 
     public static void SerializeToFile(object obj, string filePath) {
-        string xml = SerializeToXml(obj);
+        var xml = SerializeToXml(obj);
         if (Exists(filePath)) {
             File.Delete(filePath);
         }
@@ -390,37 +419,37 @@ public static class __Utils //##
     }
 
     public static string SerializeToXml(object obj) {
-        XmlSerializer xmlSerializer = __Utils_GetXmlSerializer(obj.GetType());
+        var xmlSerializer = __Utils_GetXmlSerializer(obj.GetType());
         string data;
 
-        using (StringWriter stringWriter = new StringWriter()) {
-            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings {
+        using (var stringWriter = new StringWriter()) {
+            var xmlWriterSettings = new XmlWriterSettings {
                 OmitXmlDeclaration = true,
                 Indent = true
             };
-            using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, xmlWriterSettings)) {
+            using (var xmlWriter = XmlWriter.Create(stringWriter, xmlWriterSettings)) {
                 xmlSerializer.Serialize(xmlWriter, obj);
             }
             data = stringWriter.ToString();
         }
 
         // костыль, чтобы сократить размер выходных данных
-        string[] splitData1 = DivideString(data, " ");
-        string[] splitData2 = DivideString(splitData1[1], ">");
+        var splitData1 = DivideString(data, " ");
+        var splitData2 = DivideString(splitData1[1], ">");
         data = splitData1[0] + ">" + splitData2[1];
 
         return data;
     }
 
     public static T DeserializeFromXml<T>(string xml) {
-        XmlSerializer xmlSerializer = __Utils_GetXmlSerializer(typeof(T));
-        using (StringReader stringReader = new StringReader(xml)) {
-            T obj = (T)xmlSerializer.Deserialize(stringReader);
+        var xmlSerializer = __Utils_GetXmlSerializer(typeof(T));
+        using (var stringReader = new StringReader(xml)) {
+            var obj = (T)xmlSerializer.Deserialize(stringReader);
 
             //  исправление многострочного string после десериализации XML
-            foreach (PropertyInfo property in obj.GetType().GetProperties()) {
+            foreach (var property in obj.GetType().GetProperties()) {
                 if (property.PropertyType == typeof(string)) {
-                    string value = (string)property.GetValue(obj, null);
+                    var value = (string)property.GetValue(obj, null);
                     if (value != null) {
                         value = value.Replace("\n", Environment.NewLine);
                         property.SetValue(obj, value, null);
@@ -436,16 +465,8 @@ public static class __Utils //##
     // --- УПРОЩЁННЫЕ КОНСТРУКЦИИ ---
 
     public static bool Empty(object value) {
-        if (value == null) {
-            return true;
-        }
-        if (value is string) {
-            return string.IsNullOrEmpty((string)value);
-        }
-        if (value is IEnumerable) {
-            return (value as ICollection).Count == 0;
-        }
-        return false;
+        return value == null
+|| (value is string ? string.IsNullOrEmpty((string)value) : value is IEnumerable && (value as ICollection).Count == 0);
     }
 
     public static bool NotEmpty(object value) {
@@ -453,13 +474,9 @@ public static class __Utils //##
     }
 
     public static bool Blank(object value) {
-        if (value is string) {
-            return string.IsNullOrWhiteSpace((string)value);
-        }
-        if (value is ICollection) {
-            return (value as ICollection).Count == 0;
-        }
-        return Empty(value);
+        return value is string
+            ? string.IsNullOrWhiteSpace((string)value)
+            : value is ICollection ? (value as ICollection).Count == 0 : Empty(value);
     }
 
     public static bool NotBlank(object value) {
@@ -471,13 +488,7 @@ public static class __Utils //##
     }
 
     public static bool Exists(string path) {
-        if (File.Exists(path)) {
-            return true;
-        }
-        if (Directory.Exists(path)) {
-            return true;
-        }
-        return false;
+        return File.Exists(path) || Directory.Exists(path);
     }
 
     public static string[] Split(string value, params string[] separators) {
@@ -497,12 +508,12 @@ public static class __Utils //##
     }
 
     public static string[] ReadLines(string searchMask, bool searchToAllDirectories = false) {
-        string file = GetFile(searchMask, searchToAllDirectories);
+        var file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllLines(file, Encoding.UTF8);
     }
 
     public static string ReadText(string searchMask, bool searchToAllDirectories = false) {
-        string file = GetFile(searchMask, searchToAllDirectories);
+        var file = GetFile(searchMask, searchToAllDirectories);
         return File.ReadAllText(file, Encoding.UTF8);
     }
 
@@ -511,41 +522,58 @@ public static class __Utils //##
 
     private static System.Drawing.Color __Utils_ConvertColor(ConsoleColor consoleColor) {
         switch (consoleColor) {
-            case ConsoleColor.Black: return System.Drawing.Color.Black;
-            case ConsoleColor.DarkBlue: return System.Drawing.Color.DarkBlue;
-            case ConsoleColor.DarkGreen: return System.Drawing.Color.DarkGreen;
-            case ConsoleColor.DarkCyan: return System.Drawing.Color.DarkCyan;
-            case ConsoleColor.DarkRed: return System.Drawing.Color.DarkRed;
-            case ConsoleColor.DarkMagenta: return System.Drawing.Color.DarkMagenta;
-            case ConsoleColor.DarkYellow: return System.Drawing.Color.Orange;
-            case ConsoleColor.Gray: return System.Drawing.Color.Gray;
-            case ConsoleColor.DarkGray: return System.Drawing.Color.DarkGray;
-            case ConsoleColor.Blue: return System.Drawing.Color.Blue;
-            case ConsoleColor.Green: return System.Drawing.Color.Green;
-            case ConsoleColor.Cyan: return System.Drawing.Color.Cyan;
-            case ConsoleColor.Red: return System.Drawing.Color.Red;
-            case ConsoleColor.Magenta: return System.Drawing.Color.Magenta;
-            case ConsoleColor.Yellow: return System.Drawing.Color.Yellow;
-            case ConsoleColor.White: return System.Drawing.Color.White;
-            default: throw new NotImplementedException();
+            case ConsoleColor.Black:
+                return System.Drawing.Color.Black;
+            case ConsoleColor.DarkBlue:
+                return System.Drawing.Color.DarkBlue;
+            case ConsoleColor.DarkGreen:
+                return System.Drawing.Color.DarkGreen;
+            case ConsoleColor.DarkCyan:
+                return System.Drawing.Color.DarkCyan;
+            case ConsoleColor.DarkRed:
+                return System.Drawing.Color.DarkRed;
+            case ConsoleColor.DarkMagenta:
+                return System.Drawing.Color.DarkMagenta;
+            case ConsoleColor.DarkYellow:
+                return System.Drawing.Color.Orange;
+            case ConsoleColor.Gray:
+                return System.Drawing.Color.Gray;
+            case ConsoleColor.DarkGray:
+                return System.Drawing.Color.DarkGray;
+            case ConsoleColor.Blue:
+                return System.Drawing.Color.Blue;
+            case ConsoleColor.Green:
+                return System.Drawing.Color.Green;
+            case ConsoleColor.Cyan:
+                return System.Drawing.Color.Cyan;
+            case ConsoleColor.Red:
+                return System.Drawing.Color.Red;
+            case ConsoleColor.Magenta:
+                return System.Drawing.Color.Magenta;
+            case ConsoleColor.Yellow:
+                return System.Drawing.Color.Yellow;
+            case ConsoleColor.White:
+                return System.Drawing.Color.White;
+            default:
+                throw new NotImplementedException();
         }
     }
 
     private static byte[] __Utils_GetMD5HashFromFile(string filePath) {
-        using (MD5 md5 = MD5.Create()) {
-            using (FileStream stream = File.OpenRead(filePath)) {
+        using (var md5 = MD5.Create()) {
+            using (var stream = File.OpenRead(filePath)) {
                 return md5.ComputeHash(stream);
             }
         }
     }
 
     private static void __Utils_BeginReadFromStream(Stream stream, Action<byte[]> onRead) {
-        byte[] buffer = new byte[102400];
+        var buffer = new byte[102400];
         AsyncCallback callback = null;
         callback = (asyncResult) => {
-            int readed = stream.EndRead(asyncResult);
+            var readed = stream.EndRead(asyncResult);
             if (readed > 0) {
-                byte[] data = new byte[readed];
+                var data = new byte[readed];
                 Array.Copy(buffer, data, readed);
                 onRead(data);
                 stream.BeginRead(buffer, 0, buffer.Length, callback, null);
@@ -556,7 +584,7 @@ public static class __Utils //##
 
     private static XmlSerializer __Utils_GetXmlSerializer(Type type) {
         if (!__Utils_XmlSerializers.ContainsKey(type)) {
-            XmlSerializer xmlSerializer = new XmlSerializer(type);
+            var xmlSerializer = new XmlSerializer(type);
             __Utils_XmlSerializers.Add(type, xmlSerializer);
         }
         return __Utils_XmlSerializers[type];
@@ -581,19 +609,21 @@ public class FileList : List<string>
 
     // Поиск файлов по пути или маске и добавление их в список
     public FileList Append(string searchMask, bool searchToAllDirectories = false) {
-        SearchOption searchOption = searchToAllDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var searchOption = searchToAllDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         if (File.Exists(searchMask)) {
             Add(searchMask);
 
-        } else if (Directory.Exists(searchMask)) {
+        }
+        else if (Directory.Exists(searchMask)) {
             AddRange(Directory.GetFiles(searchMask, "*", searchOption));
 
-        } else {
-            string directoryPath = Path.GetDirectoryName(searchMask);
+        }
+        else {
+            var directoryPath = Path.GetDirectoryName(searchMask);
             if (string.IsNullOrEmpty(directoryPath)) {
                 directoryPath = Environment.CurrentDirectory;
             }
-            string fileMask = Path.GetFileName(searchMask);
+            var fileMask = Path.GetFileName(searchMask);
             AddRange(Directory.GetFiles(directoryPath, fileMask, searchOption));
         }
         return this;
@@ -601,7 +631,7 @@ public class FileList : List<string>
 
     // Поиск файлов по пути или маске и добавление их в список
     public FileList Append(IList<string> searchMasks, bool searchToAllDirectories = false) {
-        foreach (string searchMask in searchMasks) {
+        foreach (var searchMask in searchMasks) {
             AddRange(Append(searchMask, searchToAllDirectories));
         }
         return this;
@@ -609,8 +639,8 @@ public class FileList : List<string>
 
     // Удаление файлов
     public FileList Delete(int startIndex = 0) {
-        for (int i = startIndex; i < Count; i++) {
-            string file = this[i];
+        for (var i = startIndex; i < Count; i++) {
+            var file = this[i];
             File.Delete(file);
             RemoveAt(i--);
         }
@@ -626,12 +656,13 @@ public class FileList : List<string>
 
     // Удаление файлов. Если файл удалить невозможно, исключение не создаётся
     public FileList TryDelete(int startIndex = 0) {
-        for (int i = startIndex; i < Count; i++) {
-            string file = this[i];
+        for (var i = startIndex; i < Count; i++) {
+            var file = this[i];
             try {
                 File.Delete(file);
                 RemoveAt(i--);
-            } catch {
+            }
+            catch {
             }
         }
         return this;
@@ -641,7 +672,8 @@ public class FileList : List<string>
     public FileList TryDeleteAt(int index) {
         try {
             DeleteAt(index);
-        } catch {
+        }
+        catch {
         }
         return this;
     }
@@ -650,7 +682,8 @@ public class FileList : List<string>
     public FileList SortFiles(bool desc = false) {
         if (desc) {
             Sort((a, b) => string.Compare(a, b, true));
-        } else {
+        }
+        else {
             Sort((a, b) => string.Compare(b, a, true));
         }
         return this;
@@ -658,13 +691,14 @@ public class FileList : List<string>
 
     // Сортировка файлов по дате изменения (по умолчанию старые файлы в начале массива)
     public FileList SortFilesByWriteTime(bool desc = false) {
-        Dictionary<string, DateTime> fileDates = new Dictionary<string, DateTime>();
-        foreach (string file in this) {
+        var fileDates = new Dictionary<string, DateTime>();
+        foreach (var file in this) {
             fileDates.Add(file, new FileInfo(file).LastWriteTime);
         }
         if (desc) {
             Sort((a, b) => fileDates[b].CompareTo(fileDates[a]));
-        } else {
+        }
+        else {
             Sort((a, b) => fileDates[a].CompareTo(fileDates[b]));
         }
         return this;

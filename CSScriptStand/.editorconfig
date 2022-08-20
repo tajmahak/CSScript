@@ -46,7 +46,7 @@ dotnet_style_coalesce_expression = true
 dotnet_style_collection_initializer = true
 dotnet_style_explicit_tuple_names = true
 dotnet_style_namespace_match_folder = true
-dotnet_style_null_propagation = true
+dotnet_style_null_propagation = false
 dotnet_style_object_initializer = false
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_prefer_auto_properties = true
@@ -99,10 +99,10 @@ csharp_style_prefer_pattern_matching = false
 csharp_style_prefer_switch_expression = false
 
 # Настройки проверки на null
-csharp_style_conditional_delegate_call = true
+csharp_style_conditional_delegate_call = false
 
 # Предпочтения модификатора
-csharp_prefer_static_local_function = true
+csharp_prefer_static_local_function = false
 csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async
 
 # Предпочтения для блоков кода
@@ -113,12 +113,12 @@ csharp_style_prefer_method_group_conversion = true
 csharp_style_prefer_top_level_statements = false
 
 # Выражения уровень предпочтения
-csharp_prefer_simple_default_expression = true
+csharp_prefer_simple_default_expression = false
 csharp_style_deconstructed_variable_declaration = false
-csharp_style_implicit_object_creation_when_type_is_apparent = true
+csharp_style_implicit_object_creation_when_type_is_apparent = false
 csharp_style_inlined_variable_declaration = false
 csharp_style_prefer_index_operator = false
-csharp_style_prefer_local_over_anonymous_function = true
+csharp_style_prefer_local_over_anonymous_function = false
 csharp_style_prefer_null_check_over_type_check = true
 csharp_style_prefer_range_operator = false
 csharp_style_prefer_tuple_swap = true

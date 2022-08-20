@@ -27,12 +27,12 @@ public static class WindowsUtils
 {
     // Перемещение файла в корзину Windows
     public static bool MoveFileToRecycleBin(string path, bool silent = false) {
-        __FileOperationFlags flags = silent ?
+        var flags = silent ?
             (__FileOperationFlags.FOF_NOCONFIRMATION | __FileOperationFlags.FOF_NOERRORUI | __FileOperationFlags.FOF_SILENT) :
             (__FileOperationFlags.FOF_NOCONFIRMATION | __FileOperationFlags.FOF_WANTNUKEWARNING);
         try {
             if (IntPtr.Size == 8) {
-                __SHFILEOPSTRUCT_x64 fs = new __SHFILEOPSTRUCT_x64 {
+                var fs = new __SHFILEOPSTRUCT_x64 {
                     wFunc = __FileOperationType.FO_DELETE,
                     pFrom = path + '\0' + '\0',
                     fFlags = __FileOperationFlags.FOF_ALLOWUNDO | flags
@@ -41,7 +41,7 @@ public static class WindowsUtils
 
             }
             else {
-                __SHFILEOPSTRUCT_x86 fs = new __SHFILEOPSTRUCT_x86 {
+                var fs = new __SHFILEOPSTRUCT_x86 {
                     wFunc = __FileOperationType.FO_DELETE,
                     pFrom = path + '\0' + '\0',
                     fFlags = __FileOperationFlags.FOF_ALLOWUNDO | flags
@@ -153,7 +153,7 @@ public class ScriptWindow : Window
     }
 
     public ScriptWindow SetScrollable() {
-        ScrollViewer scrollViewer = new ScrollViewer {
+        var scrollViewer = new ScrollViewer {
             Content = mainPanel
         };
         Content = scrollViewer;
@@ -171,9 +171,9 @@ public class ScriptWindow : Window
     }
 
     public ScriptWindow SetIcon(string base64Image) {
-        byte[] rawImage = Convert.FromBase64String(base64Image);
-        ImageSourceConverter imageConverter = new ImageSourceConverter();
-        BitmapSource image = (BitmapSource)imageConverter.ConvertFrom(rawImage);
+        var rawImage = Convert.FromBase64String(base64Image);
+        var imageConverter = new ImageSourceConverter();
+        var image = (BitmapSource)imageConverter.ConvertFrom(rawImage);
         Icon = image;
 
         return this;
@@ -279,7 +279,7 @@ public class ScriptStackPanel : StackPanel
 
 
     public TextBlock AddTextBlock(string text = "", bool bold = false) {
-        TextBlock textBlock = new TextBlock {
+        var textBlock = new TextBlock {
             Text = text
         };
         if (bold) {
@@ -296,11 +296,11 @@ public class ScriptStackPanel : StackPanel
     }
 
     public TextBox AddTextBox(string text = "") {
-        TextBox textBox = new TextBox {
+        var textBox = new TextBox {
             Text = text,
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         textBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         textBox.Padding = new Thickness(window.PaddingValue);
 
@@ -309,7 +309,7 @@ public class ScriptStackPanel : StackPanel
     }
 
     public TextBox AddMultiLineTextBox(double height, string text = "") {
-        TextBox textBox = AddTextBox(text);
+        var textBox = AddTextBox(text);
 
         textBox.Height = height;
         textBox.TextWrapping = TextWrapping.NoWrap;
@@ -321,13 +321,13 @@ public class ScriptStackPanel : StackPanel
     }
 
     public ComboBox AddComboBox(IEnumerable itemsSource = null, string selectedItem = "") {
-        ComboBox comboBox = new ComboBox {
+        var comboBox = new ComboBox {
             IsEditable = true,
             ItemsSource = itemsSource,
             Text = selectedItem
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         comboBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         comboBox.Padding = new Thickness(window.PaddingValue);
 
@@ -336,12 +336,12 @@ public class ScriptStackPanel : StackPanel
     }
 
     public CheckBox AddCheckBox(string text, bool isChecked = false) {
-        CheckBox checkBox = new CheckBox {
+        var checkBox = new CheckBox {
             Content = text,
             IsChecked = isChecked
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         checkBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         //checkBox.Padding = new Thickness(window.PaddingValue);
 
@@ -350,12 +350,12 @@ public class ScriptStackPanel : StackPanel
     }
 
     public RadioButton AddRadioButton(string text, bool isChecked = false) {
-        RadioButton radioButton = new RadioButton {
+        var radioButton = new RadioButton {
             Content = text,
             IsChecked = isChecked
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         radioButton.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         //radioButton.Padding = new Thickness(window.PaddingValue);
 
@@ -364,14 +364,14 @@ public class ScriptStackPanel : StackPanel
     }
 
     public Button AddButton(string text, bool boldFont = false) {
-        Button button = new Button {
+        var button = new Button {
             Content = text,
         };
         if (boldFont) {
             button.FontWeight = FontWeights.Bold;
         }
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         button.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         button.Padding = new Thickness(window.PaddingValue);
 
@@ -380,12 +380,12 @@ public class ScriptStackPanel : StackPanel
     }
 
     public ListBox AddListBox(double height, IEnumerable itemsSource = null) {
-        ListBox listBox = new ListBox {
+        var listBox = new ListBox {
             Height = height,
             ItemsSource = itemsSource
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         listBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         listBox.Padding = new Thickness(window.PaddingValue);
 
@@ -394,12 +394,12 @@ public class ScriptStackPanel : StackPanel
     }
 
     public ScriptCheckedListBox AddCheckedListBox(double height, ICollection itemsSource = null) {
-        ScriptCheckedListBox checkedListBox = new ScriptCheckedListBox(window) {
+        var checkedListBox = new ScriptCheckedListBox(window) {
             Height = height,
             Items = itemsSource
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         checkedListBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         checkedListBox.Padding = new Thickness(window.PaddingValue);
 
@@ -408,33 +408,33 @@ public class ScriptStackPanel : StackPanel
     }
 
     public Button AddOKButton(string text, bool boldFont = false) {
-        Button button = AddButton(text, boldFont);
+        var button = AddButton(text, boldFont);
         button.Click += (sender, e) => window.DialogResult = true;
         return button;
     }
 
     public ScriptUniformGrid AddGrid(int columnsCount = 2) {
-        ScriptUniformGrid grid = new ScriptUniformGrid(window, columnsCount);
+        var grid = new ScriptUniformGrid(window, columnsCount);
 
         Children.Add(grid);
         return grid;
     }
 
     public ScriptListView AddListView(double height, IEnumerable itemsSource, IEnumerable<ScriptListViewColumn> columns) {
-        ScriptListView listView = new ScriptListView {
+        var listView = new ScriptListView {
             Height = height,
             ItemsSource = itemsSource
         };
 
-        double topMargin = Last() is TextBlock ? 0 : window.MarginValue;
+        var topMargin = Last() is TextBlock ? 0 : window.MarginValue;
         listView.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         listView.Padding = new Thickness(window.PaddingValue);
 
-        GridView gridView = new GridView {
+        var gridView = new GridView {
             AllowsColumnReorder = true
         };
-        foreach (ScriptListViewColumn column in columns) {
-            GridViewColumn gridViewColumn = new GridViewColumn {
+        foreach (var column in columns) {
+            var gridViewColumn = new GridViewColumn {
                 DisplayMemberBinding = new Binding(column.Binding),
                 Header = column.Header,
             };
@@ -472,8 +472,8 @@ public class ScriptCheckedListBox : ScrollViewer
             items = value;
             panel.Children.Clear();
             if (items != null) {
-                foreach (object item in items) {
-                    CheckBox checkBox = new CheckBox {
+                foreach (var item in items) {
+                    var checkBox = new CheckBox {
                         Content = item,
                         Margin = new Thickness(window.PaddingValue),
                     };
@@ -484,12 +484,12 @@ public class ScriptCheckedListBox : ScrollViewer
     }
 
     public void SetItemChecked(int index, bool isChecked) {
-        CheckBox checkBox = (CheckBox)panel.Children[index];
+        var checkBox = (CheckBox)panel.Children[index];
         checkBox.IsChecked = isChecked;
     }
 
     public bool GetItemChecked(int index) {
-        CheckBox checkBox = (CheckBox)panel.Children[index];
+        var checkBox = (CheckBox)panel.Children[index];
         return checkBox.IsChecked.Value;
     }
 }
@@ -502,8 +502,8 @@ public class ScriptUniformGrid : UniformGrid
         Rows = 1;
 
         panels = new ScriptStackPanel[columnsCount];
-        for (int c = 0; c < columnsCount; c++) {
-            ScriptStackPanel panel = new ScriptStackPanel(window);
+        for (var c = 0; c < columnsCount; c++) {
+            var panel = new ScriptStackPanel(window);
             panels[c] = panel;
             Children.Add(panel);
         }
@@ -517,7 +517,7 @@ public class ScriptUniformGrid : UniformGrid
 
     public void SetScrollable(int index, double height) {
         Children.RemoveAt(index);
-        ScrollViewer scrollViewer = new ScrollViewer {
+        var scrollViewer = new ScrollViewer {
             Height = height,
             Content = panels[index]
         };
