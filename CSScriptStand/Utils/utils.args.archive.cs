@@ -11,7 +11,7 @@ using System.Text;
 /// <summary>
 /// Параметры для 7-Zip.
 /// </summary>
-public class SevenZipCommandArgs : CommandArguments<SevenZipCommandArgs>
+public class SevenZipCommandArgs : CommandArgument<SevenZipCommandArgs>
 {
     /// <summary>
     /// a - Add;
@@ -26,55 +26,55 @@ public class SevenZipCommandArgs : CommandArguments<SevenZipCommandArgs>
     /// u - Update;
     /// x - eXtract with full paths;
     /// </summary>
-    [CommandArgument(Quoted = false, Required = true)]
+    [CommandOption(Quoted = false, Required = true)]
     public string Command { get; set; }
 
     /// <summary>
     /// Disables most of the normal user queries during 7-Zip execution.
     /// </summary>
-    [CommandArgument("-y", Flag = true)]
+    [CommandOption("-y", Flag = true)]
     public bool AssumeYes { get; set; }
 
     /// <summary>
     /// Specifies the type of archive. It can be: *, #, 7z, xz, split, zip, gzip, bzip2, tar, .... 
     /// </summary>
-    [CommandArgument("-t", Quoted = false, Separator = "")]
+    [CommandOption("-t", Quoted = false, ValueSeparator = "")]
     public string ArchiveType { get; set; }
 
     /// <summary>
     /// Sets level of compression.
     /// </summary>
-    [CommandArgument("-mx", Quoted = false, Separator = "")]
+    [CommandOption("-mx", Quoted = false, ValueSeparator = "")]
     public int? CompressionLevel { get; set; }
 
     /// <summary>
     /// Compresses files open for writing by another applications. If this switch is not set, 7-zip doesn't include such files to archive.
     /// </summary>
-    [CommandArgument("-ssw", Flag = true)]
+    [CommandOption("-ssw", Flag = true)]
     public bool IncludeOpenForWritingFiles { get; set; }
 
     /// <summary>
     /// Specifies password.
     /// </summary>
-    [CommandArgument("-p", Quoted = false, Separator = "")]
+    [CommandOption("-p", Quoted = false, ValueSeparator = "")]
     public string Password { get; set; }
 
     /// <summary>
     /// Enables or disables archive header encryption.
     /// </summary>
-    [CommandArgument("-mhe", Quoted = false, Flag = true)]
+    [CommandOption("-mhe", Quoted = false, Flag = true)]
     public bool? HeaderEncryption { get; set; }
 
     /// <summary>
     /// Specifies volume sizes.
     /// </summary>
-    [CommandArgument("-v", Quoted = false, Separator = "")]
+    [CommandOption("-v", Quoted = false, ValueSeparator = "")]
     public string VolumeSize { get; set; }
 
-    [CommandArgument]
+    [CommandOption]
     public string Output { get; set; }
 
-    [CommandArgument]
+    [CommandOption]
     public string Input { get; set; }
 
 

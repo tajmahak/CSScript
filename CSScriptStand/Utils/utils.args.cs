@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 // utils.args
@@ -9,7 +10,7 @@ using System.Text;
 
 //## #namespace
 
-public abstract class CommandArguments : ICloneable
+public abstract class CommandArgument : ICloneable
 {
     public object Clone() {
         return MemberwiseClone();
@@ -19,22 +20,21 @@ public abstract class CommandArguments : ICloneable
         return ToString(this);
     }
 
-    public static implicit operator string(CommandArguments args) {
+    public static implicit operator string(CommandArgument args) {
         return args.ToString();
     }
 
-
-    public static string ToString(CommandArguments args) {
+    public static string ToString(CommandArgument args) {
         StringBuilder str = new StringBuilder();
 
         Type objType = args.GetType();
-        System.Reflection.PropertyInfo[] properties = objType.GetProperties();
-        foreach (System.Reflection.PropertyInfo property in properties) {
-            object[] attrArray = property.GetCustomAttributes(typeof(CommandArgumentAttribute), false);
+        PropertyInfo[] properties = objType.GetProperties();
+        foreach (PropertyInfo property in properties) {
+            object[] attrArray = property.GetCustomAttributes(typeof(CommandOptionAttribute), false);
             if (attrArray.Length == 0) {
                 continue;
             }
-            CommandArgumentAttribute attr = (CommandArgumentAttribute)attrArray[0];
+            CommandOptionAttribute attr = (CommandOptionAttribute)attrArray[0];
 
             object value = property.GetValue(args, null);
             if (value == null) {
@@ -43,7 +43,7 @@ public abstract class CommandArguments : ICloneable
                 }
                 else {
                     if (attr.Required) {
-                        throw new ArgumentException("Не указаны обязательные параметры.");
+                        throw new ArgumentException("Не указано значение для обязательного параметра \"" + property.Name + "\".");
                     }
                     else {
                         continue;
@@ -54,35 +54,70 @@ public abstract class CommandArguments : ICloneable
             if (attr.Flag) {
                 if (Equals(value, true)) {
                     if (str.Length > 0) {
-                        str.Append(' ');
+                        str.Append(attr.OptionSeparator);
                     }
-                    str.Append(attr.Names[0]);
+                    str.Append(attr.Options[0]);
                 }
             }
             else {
-                if (attr.Names.Length > 0) {
-                    if (str.Length > 0) {
-                        str.Append(' ');
-                    }
-                    str.Append(attr.Names[0]);
-                }
-                if (value is IEnumerable && !(value is string)) {
-                    IEnumerable enumerable = (IEnumerable)value;
-                    foreach (object item in enumerable) {
+                if (value is ICollection) {
+                    ICollection collection = (ICollection)value;
+                    if (collection.Count > 0) {
 
-                        str.Append(attr.Separator);
-
-                        if (attr.Quoted) {
-                            str.Append('\"');
+                        if (str.Length > 0) {
+                            str.Append(attr.OptionSeparator);
                         }
-                        str.Append(GetArgumentValue(item, attr));
-                        if (attr.Quoted) {
-                            str.Append('\"');
+                        if (!attr.RepeatOption) {
+                            if (attr.Options.Length > 0) {
+                                str.Append(attr.Options[0]);
+                            }
+                        }
+
+                        int collectionOptionsCount = 0;
+                        foreach (object item in collection) {
+
+                            if (attr.RepeatOption) {
+                                if (str.Length > 0) {
+                                    str.Append(' ');
+                                }
+                                if (attr.Options.Length > 0) {
+                                    str.Append(attr.Options[0]);
+                                }
+                            }
+
+                            if (collectionOptionsCount == 0) {
+                                if (str.Length > 0) {
+                                    str.Append(attr.OptionSeparator);
+                                }
+                            }
+                            else {
+                                str.Append(attr.ValueSeparator);
+                            }
+
+                            if (attr.Quoted) {
+                                str.Append('\"');
+                            }
+                            str.Append(GetArgumentValue(item, attr));
+                            if (attr.Quoted) {
+                                str.Append('\"');
+                            }
+
+                            collectionOptionsCount++;
                         }
                     }
                 }
                 else {
-                    str.Append(attr.Separator);
+
+                    if (str.Length > 0) {
+                        str.Append(attr.OptionSeparator);
+                    }
+
+                    if (attr.Options.Length > 0) {
+                        str.Append(attr.Options[0]);
+                    }
+
+                    str.Append(attr.ValueSeparator);
+
                     if (attr.Quoted) {
                         str.Append('\"');
                     }
@@ -96,7 +131,7 @@ public abstract class CommandArguments : ICloneable
         return str.ToString();
     }
 
-    private static string GetArgumentValue(object value, CommandArgumentAttribute attr) {
+    private static string GetArgumentValue(object value, CommandOptionAttribute attr) {
         string convertedValue;
         if (attr.Converter != null) {
             IConsoleArgumentConverter converter = (IConsoleArgumentConverter)Activator.CreateInstance(attr.Converter);
@@ -109,7 +144,7 @@ public abstract class CommandArguments : ICloneable
     }
 }
 
-public abstract class CommandArguments<T> : CommandArguments
+public abstract class CommandArgument<T> : CommandArgument
 {
     public new T Clone() {
         return (T)base.Clone();
@@ -117,7 +152,7 @@ public abstract class CommandArguments<T> : CommandArguments
 }
 
 [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
-public sealed class CommandArgumentAttribute : Attribute
+public sealed class CommandOptionAttribute : Attribute
 {
     /// <summary>
     /// Указывает, является ли параметр флагом (без указания значения)
@@ -132,7 +167,9 @@ public sealed class CommandArgumentAttribute : Attribute
     /// <summary>
     /// Разделитель между названием параметра и значением.
     /// </summary>
-    public string Separator { get; set; }
+    public string ValueSeparator { get; set; }
+
+    public string OptionSeparator { get; set; }
 
     /// <summary>
     /// Конвертер значений типа <see cref="IConsoleArgumentConverter"/>.
@@ -150,15 +187,21 @@ public sealed class CommandArgumentAttribute : Attribute
     public string DefaultValue { get; set; }
 
     /// <summary>
+    /// Если в качестве значения указано перечисление, название опции добавляется 1 раз в начале перечисления
+    /// </summary>
+    public bool RepeatOption { get; set; }
+
+    /// <summary>
     /// Названия аргумента.
     /// </summary>
-    public string[] Names { get; private set; }
+    public string[] Options { get; private set; }
 
 
-    public CommandArgumentAttribute(params string[] names) {
-        Names = names;
+    public CommandOptionAttribute(params string[] options) {
+        Options = options;
         Quoted = true;
-        Separator = " ";
+        ValueSeparator = " ";
+        OptionSeparator = " ";
     }
 }
 

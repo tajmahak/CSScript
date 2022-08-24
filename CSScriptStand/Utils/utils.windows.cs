@@ -66,6 +66,21 @@ public static class WindowsUtils
         }
     }
 
+    // Получение пути к директории из списка известных директорий
+    public static string GetKnownFolderPath(KnownFolder knownFolder) {
+        return __SHGetKnownFolderPath(__knownFolders[knownFolder], 0);
+    }
+    public enum KnownFolder
+    {
+        Contacts,
+        Downloads,
+        Favorites,
+        Links,
+        SavedGames,
+        SavedSearches
+    }
+
+
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
@@ -80,6 +95,10 @@ public static class WindowsUtils
 
     [DllImport("shell32.dll", CharSet = CharSet.Auto, EntryPoint = "SHFileOperation")]
     private static extern int __SHFileOperation_x64(ref __SHFILEOPSTRUCT_x64 FileOp);
+
+    [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false, EntryPoint = "SHGetKnownFolderPath")]
+    private static extern string __SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, int hToken = 0);
+
 
     private enum __FileOperationType : uint
     {
@@ -129,6 +148,18 @@ public static class WindowsUtils
         public IntPtr hNameMappings;
         public string lpszProgressTitle;
     }
+
+
+    static WindowsUtils() {
+        __knownFolders.Add(KnownFolder.Contacts, new Guid("56784854-C6CB-462B-8169-88E350ACB882"));
+        __knownFolders.Add(KnownFolder.Downloads, new Guid("374DE290-123F-4565-9164-39C4925E467B"));
+        __knownFolders.Add(KnownFolder.Favorites, new Guid("1777F761-68AD-4D8A-87BD-30B759FA33DD"));
+        __knownFolders.Add(KnownFolder.Links, new Guid("BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968"));
+        __knownFolders.Add(KnownFolder.SavedGames, new Guid("4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4"));
+        __knownFolders.Add(KnownFolder.SavedSearches, new Guid("7D1D3A04-DEBB-4115-95CF-2F29DA2920DA"));
+    }
+
+    private static readonly Dictionary<KnownFolder, Guid> __knownFolders = new Dictionary<KnownFolder, Guid>();
 
     private const int __SW_HIDE = 0;
     private const int __SW_SHOW = 5;
