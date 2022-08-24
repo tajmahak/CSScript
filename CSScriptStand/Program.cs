@@ -1,7 +1,6 @@
 ﻿using CSScript;
 using CSScript.Core;
 using System;
-using System.Runtime.Remoting.Contexts;
 
 namespace CSScriptStand
 {
@@ -12,7 +11,7 @@ namespace CSScriptStand
         private static readonly bool UseSimpleExecutor = true;
         private static ConsoleScriptHandler handler;
 
-        private static Type defaultStand = typeof(Stand);
+        private static readonly Type defaultStand = typeof(Stand);
 
         [STAThread]
         private static void Main(string[] args) {

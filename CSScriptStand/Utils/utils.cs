@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Mail;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -25,7 +28,7 @@ using System.Xml.Serialization;
 public static class __Utils //##
 { //##
 
-    /// --- РАБОТА С КОНТЕКСТОМ ---
+    // --- РАБОТА С КОНТЕКСТОМ ---
 
     // Установка режима ожидания действий со стороны пользователя
     public static void Pause(bool pause = true) {
@@ -207,7 +210,7 @@ public static class __Utils //##
     // Получение лога в формате HTML (для отправки по E-Mail)
     public static string GetHtmlLog() {
         StringBuilder log = new StringBuilder();
-        //log.Append("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
+        //log.AppendFiles("<div style=\"background-color: "+ ColorTranslator.ToHtml(__GetColor(Colors.Background)) + ";\">");
         log.Append("<pre>");
         foreach (LogFragment logFragment in __utils_Context.Log) {
             if (logFragment.Color != __utils_Context.ColorScheme.Foreground) {
@@ -219,13 +222,13 @@ public static class __Utils //##
         }
         log.Replace(Environment.NewLine, "<br>");
         log.Append("</pre>");
-        //log.Append("</div>");
+        //log.AppendFiles("</div>");
 
         return log.ToString();
     }
 
 
-    /// --- РАБОТА С ПРОЦЕССАМИ ---
+    // --- РАБОТА С ПРОЦЕССАМИ ---
 
     // Создание неконтролируемого процесса (при аварийном завершении работы скрипта процесс продолжит работу)
     public static ScriptProcess CreateProcess(string fileName, object args = null) {
@@ -273,7 +276,7 @@ public static class __Utils //##
     }
 
 
-    /// --- РАБОТА С ФАЙЛАМИ / ПАПКАМИ ---
+    // --- РАБОТА С ФАЙЛАМИ / ПАПКАМИ ---
 
     // Создание папки
     public static bool CreateDirectory(string path, bool isFilePath = false) {
@@ -290,7 +293,7 @@ public static class __Utils //##
 
     // Поиск файлов по пути или маске
     public static FileList GetFiles(string searchMask, bool searchToAllDirectories = false) {
-        return new FileList().Append(searchMask, searchToAllDirectories);
+        return new FileList().AppendFiles(searchMask, searchToAllDirectories);
     }
     public static FileList GetFiles(IList<string> searchMasks, bool searchToAllDirectories = false) {
         return new FileList().Append(searchMasks, searchToAllDirectories);
@@ -379,7 +382,7 @@ public static class __Utils //##
     }
 
 
-    /// --- РАБОТА СО СТРОКАМИ ---
+    // --- РАБОТА СО СТРОКАМИ ---
 
     // Разбиение строки на 2 части по первому вхождению разделителя
     public static string[] DivideString(string value, string separator) {
@@ -399,7 +402,7 @@ public static class __Utils //##
     }
 
 
-    /// --- СЕРИАЛИЗАЦИЯ ---
+    // --- СЕРИАЛИЗАЦИЯ ---
 
     public static T DeserializeFromFile<T>(string filePath) {
         if (Exists(filePath)) {
@@ -462,6 +465,85 @@ public static class __Utils //##
 
             return obj;
         }
+    }
+
+
+    // --- ШИФРОВАНИЕ --- <summary>
+
+    // Выполняет симметричное шифрование с помощью алгоритма AES с использованием ключа (128/192/256 бит)
+    public static byte[] EncryptAES(byte[] data, byte[] key) {
+        using (Aes aes = Aes.Create()) {
+            aes.KeySize = key.Length * 8;
+            aes.BlockSize = 128;
+            aes.Padding = PaddingMode.Zeros;
+
+            aes.Key = key;
+            aes.GenerateIV();
+
+            using (MemoryStream ms = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            using (ICryptoTransform encryptor = aes.CreateEncryptor()) {
+                writer.Write(data.Length);
+                writer.Write(aes.IV);
+                writer.Write(__Utils_PerformCryptography(data, encryptor));
+                return ms.ToArray();
+            }
+        }
+    }
+
+    // Выполняет симметричное дешифрование с помощью алгоритма AES с использованием ключа (128/192/256 бит)
+    public static byte[] DecryptAES(byte[] data, byte[] key) {
+        using (Aes aes = Aes.Create()) {
+            aes.KeySize = key.Length * 8;
+            aes.BlockSize = 128;
+            aes.Padding = PaddingMode.Zeros;
+
+            using (MemoryStream ms = new MemoryStream(data))
+            using (BinaryReader reader = new BinaryReader(ms)) {
+                int dataLength = reader.ReadInt32();
+
+                aes.Key = key;
+                aes.IV = reader.ReadBytes(aes.IV.Length);
+
+                using (ICryptoTransform decryptor = aes.CreateDecryptor()) {
+                    byte[] decryptData = reader.ReadBytes((int)(ms.Length - ms.Position));
+                    decryptData = __Utils_PerformCryptography(decryptData, decryptor);
+
+                    if (decryptData.Length != dataLength) {
+                        Array.Resize(ref decryptData, dataLength);
+                    }
+
+                    return decryptData;
+                }
+            }
+        }
+    }
+
+    // Выполняет шифрование строки. Для расшифровки используется DecryptString
+    public static string EncryptString(string data) {
+        byte[] key = new byte[128 / 8];
+        using (RandomNumberGenerator random = RandomNumberGenerator.Create()) {
+            random.GetBytes(key);
+        }
+        byte[] encrypt = EncryptAES(Encoding.UTF8.GetBytes(data), key);
+        return Convert.ToBase64String(encrypt) + "-" + Convert.ToBase64String(key);
+    }
+
+    // Выполняет расшифровку строки, зашифрованной с помощью EncryptString
+    public static string DecryptString(string encrypt) {
+        string[] split = encrypt.Split('-');
+        return Encoding.UTF8.GetString(DecryptAES(Convert.FromBase64String(split[0]), Convert.FromBase64String(split[1])));
+    }
+
+    // --- РАБОТА С СЕТЬЮ
+
+    // Отправка электронного письма с использованием SMTP-сервера Mail.Ru
+    public static void SendEmailFromMailRu(MailMessage message, string login, string password) {
+        SmtpClient smtp = new SmtpClient("smtp.mail.ru", 25) {
+            Credentials = new NetworkCredential(login, password),
+            EnableSsl = true
+        };
+        smtp.Send(message);
     }
 
 
@@ -585,6 +667,15 @@ public static class __Utils //##
         stream.BeginRead(buffer, 0, buffer.Length, callback, null);
     }
 
+    private static byte[] __Utils_PerformCryptography(byte[] data, ICryptoTransform cryptoTransform) {
+        using (MemoryStream ms = new MemoryStream())
+        using (CryptoStream cryptoStream = new CryptoStream(ms, cryptoTransform, CryptoStreamMode.Write)) {
+            cryptoStream.Write(data, 0, data.Length);
+            cryptoStream.FlushFinalBlock();
+            return ms.ToArray();
+        }
+    }
+
     private static XmlSerializer __Utils_GetXmlSerializer(Type type) {
         if (!__Utils_XmlSerializers.ContainsKey(type)) {
             XmlSerializer xmlSerializer = new XmlSerializer(type);
@@ -611,7 +702,7 @@ public class FileList : List<string>
 
 
     // Поиск файлов по пути или маске и добавление их в список
-    public FileList Append(string searchMask, bool searchToAllDirectories = false) {
+    public FileList AppendFiles(string searchMask, bool searchToAllDirectories = false) {
         SearchOption searchOption = searchToAllDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         if (File.Exists(searchMask)) {
             Add(searchMask);
@@ -635,7 +726,7 @@ public class FileList : List<string>
     // Поиск файлов по пути или маске и добавление их в список
     public FileList Append(IList<string> searchMasks, bool searchToAllDirectories = false) {
         foreach (string searchMask in searchMasks) {
-            AddRange(Append(searchMask, searchToAllDirectories));
+            AddRange(AppendFiles(searchMask, searchToAllDirectories));
         }
         return this;
     }
@@ -855,5 +946,319 @@ public class ScriptProcess : Process
     }
     public StreamReader GetError() {
         return StandardError;
+    }
+}
+
+
+public abstract class CommandArgument : ICloneable
+{
+    public object Clone() {
+        return MemberwiseClone();
+    }
+
+    public override string ToString() {
+        return ToString(this);
+    }
+
+    public static implicit operator string(CommandArgument args) {
+        return args.ToString();
+    }
+
+    public static string ToString(CommandArgument args) {
+        StringBuilder str = new StringBuilder();
+
+        Type objType = args.GetType();
+        PropertyInfo[] properties = objType.GetProperties();
+        foreach (PropertyInfo property in properties) {
+            object[] attrArray = property.GetCustomAttributes(typeof(CommandOptionAttribute), false);
+            if (attrArray.Length == 0) {
+                continue;
+            }
+            CommandOptionAttribute attr = (CommandOptionAttribute)attrArray[0];
+
+            object value = property.GetValue(args, null);
+            if (value == null) {
+                if (attr.DefaultValue != null) {
+                    value = attr.DefaultValue;
+                }
+                else {
+                    if (attr.Required) {
+                        throw new ArgumentException("Не указано значение для обязательного параметра \"" + property.Name + "\".");
+                    }
+                    else {
+                        continue;
+                    }
+                }
+            }
+
+            if (attr.Flag) {
+                if (Equals(value, true)) {
+                    if (str.Length > 0) {
+                        str.Append(attr.OptionSeparator);
+                    }
+                    str.Append(attr.Options[0]);
+                }
+            }
+            else {
+                if (value is ICollection) {
+                    ICollection collection = (ICollection)value;
+                    if (collection.Count > 0) {
+
+                        if (str.Length > 0) {
+                            str.Append(attr.OptionSeparator);
+                        }
+                        if (!attr.RepeatOption) {
+                            if (attr.Options.Length > 0) {
+                                str.Append(attr.Options[0]);
+                            }
+                        }
+
+                        int collectionOptionsCount = 0;
+                        foreach (object item in collection) {
+
+                            if (attr.RepeatOption) {
+                                if (str.Length > 0) {
+                                    str.Append(' ');
+                                }
+                                if (attr.Options.Length > 0) {
+                                    str.Append(attr.Options[0]);
+                                }
+                            }
+
+                            if (collectionOptionsCount == 0) {
+                                if (str.Length > 0) {
+                                    str.Append(attr.OptionSeparator);
+                                }
+                            }
+                            else {
+                                str.Append(attr.ValueSeparator);
+                            }
+
+                            if (attr.Quoted) {
+                                str.Append('\"');
+                            }
+                            str.Append(GetArgumentValue(item, attr));
+                            if (attr.Quoted) {
+                                str.Append('\"');
+                            }
+
+                            collectionOptionsCount++;
+                        }
+                    }
+                }
+                else {
+
+                    if (str.Length > 0) {
+                        str.Append(attr.OptionSeparator);
+                    }
+
+                    if (attr.Options.Length > 0) {
+                        str.Append(attr.Options[0]);
+                    }
+
+                    str.Append(attr.ValueSeparator);
+
+                    if (attr.Quoted) {
+                        str.Append('\"');
+                    }
+                    str.Append(GetArgumentValue(value, attr));
+                    if (attr.Quoted) {
+                        str.Append('\"');
+                    }
+                }
+            }
+        }
+        return str.ToString();
+    }
+
+    private static string GetArgumentValue(object value, CommandOptionAttribute attr) {
+        string convertedValue;
+        if (attr.Converter != null) {
+            IConsoleArgumentConverter converter = (IConsoleArgumentConverter)Activator.CreateInstance(attr.Converter);
+            convertedValue = converter.Convert(value);
+        }
+        else {
+            convertedValue = value is bool ? Equals(value, true) ? "true" : "false" : value.ToString();
+        }
+        return convertedValue;
+    }
+}
+
+public abstract class CommandArgument<T> : CommandArgument
+{
+    public new T Clone() {
+        return (T)base.Clone();
+    }
+}
+
+[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+public sealed class CommandOptionAttribute : Attribute
+{
+    /// <summary>
+    /// Указывает, является ли параметр флагом (без указания значения)
+    /// </summary>
+    public bool Flag { get; set; }
+
+    /// <summary>
+    /// Будет ли значение параметра указано в кавычках
+    /// </summary>
+    public bool Quoted { get; set; }
+
+    /// <summary>
+    /// Разделитель между названием параметра и значением.
+    /// </summary>
+    public string ValueSeparator { get; set; }
+
+    public string OptionSeparator { get; set; }
+
+    /// <summary>
+    /// Конвертер значений типа <see cref="IConsoleArgumentConverter"/>.
+    /// </summary>
+    public Type Converter { get; set; }
+
+    /// <summary>
+    /// Указывает, является ли параметр обязательным.
+    /// </summary>
+    public bool Required { get; set; }
+
+    /// <summary>
+    /// Указывается значение по умолчанию в случае, если поле не заполнено.
+    /// </summary>
+    public string DefaultValue { get; set; }
+
+    /// <summary>
+    /// Если в качестве значения указано перечисление, название опции добавляется 1 раз в начале перечисления
+    /// </summary>
+    public bool RepeatOption { get; set; }
+
+    /// <summary>
+    /// Названия аргумента.
+    /// </summary>
+    public string[] Options { get; private set; }
+
+
+    public CommandOptionAttribute(params string[] options) {
+        Options = options;
+        Quoted = true;
+        ValueSeparator = " ";
+        OptionSeparator = " ";
+    }
+}
+
+public interface IConsoleArgumentConverter
+{
+    string Convert(object value);
+}
+
+/// <summary>
+/// Конструктор строки аргументов.
+/// </summary>
+public class CommandArgumentBuilder
+{
+    public CommandArgumentBuilder() {
+
+    }
+
+    public CommandArgumentBuilder(string value) : this() {
+        Add(value);
+    }
+
+    public CommandArgumentBuilder Add(string format, params object[] args) {
+        string value = string.Format(format, args);
+        value = value.Replace(Environment.NewLine, " ");
+        if (builder.Length > 0 && builder[builder.Length - 1] != ' ') {
+            builder.Append(' ');
+        }
+        builder.Append(value);
+        return this;
+    }
+
+    public CommandArgumentBuilder Add(bool condition, string format, params object[] args) {
+        if (condition) {
+            Add(format, args);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder Add(IEnumerable<string> values) {
+        foreach (string value in values) {
+            Add(value);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder Add(bool condition, IEnumerable<string> values) {
+        if (condition) {
+            Add(values);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder AddQuote(string value) {
+        if (value.StartsWith("\"") && value.EndsWith("\"")) {
+            Add(value);
+        }
+        else {
+            Add("\"{0}\"", value);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder AddQuote(bool condition, string value) {
+        if (condition) {
+            AddQuote(value);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder AddQuote(IEnumerable<string> values) {
+        foreach (string value in values) {
+            AddQuote(value);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder AddQuote(bool condition, IEnumerable<string> values) {
+        if (condition) {
+            AddQuote(values);
+        }
+        return this;
+    }
+
+    public CommandArgumentBuilder AddQuote() {
+        Add("\"");
+        return this;
+    }
+
+    public CommandArgumentBuilder Clone() {
+        return new CommandArgumentBuilder(ToString());
+    }
+
+
+    public override string ToString() {
+        return builder.ToString();
+    }
+
+    public static implicit operator string(CommandArgumentBuilder builder) {
+        return builder.ToString();
+    }
+
+    private readonly StringBuilder builder = new StringBuilder();
+}
+
+public class ScriptWebClient : WebClient
+{
+    public CookieContainer CookieContainer { get; set; }
+
+    public ScriptWebClient() {
+        Encoding = Encoding.UTF8;
+        Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip, deflate");
+    }
+
+    protected override WebRequest GetWebRequest(Uri address) {
+        HttpWebRequest request = base.GetWebRequest(address) as HttpWebRequest;
+        request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+        request.CookieContainer = CookieContainer;
+        return request;
     }
 }

@@ -54,15 +54,18 @@ namespace CSScript
                     throw thread.ThreadException;
                 }
 
-            } catch (ThreadAbortException) {
+            }
+            catch (ThreadAbortException) {
                 context.ExitCode = 1;
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 context.ExitCode = 1;
                 context.WriteLine();
                 WriteException(ex);
 
-            } finally {
+            }
+            finally {
                 Environment.ExitCode = context.ExitCode;
 
                 AbortRegisteredProcesses();
@@ -71,7 +74,8 @@ namespace CSScript
                     context.WriteErrorLine($"# Прервано");
                     executed = false;
 
-                } else if (!context.HiddenMode && context.Pause) {
+                }
+                else if (!context.HiddenMode && context.Pause) {
                     executed = false;
 
                     context.WriteLine();
@@ -156,7 +160,8 @@ namespace CSScript
                     }
                 }
 
-            } else {
+            }
+            else {
                 // Удаление неработоспособной сбоки скрипта, без попытки загрузки её в домен
                 File.Delete(assemblyPath);
                 File.Delete(brokenMakPath);
@@ -229,14 +234,17 @@ namespace CSScript
 
                         if (i == lineIndex) {
                             context.WriteLine(sourceCodeLine, context.ColorScheme.Error);
-                        } else if (sourceCodeLine.TrimStart().StartsWith("//")) {
+                        }
+                        else if (sourceCodeLine.TrimStart().StartsWith("//")) {
                             context.WriteLine(sourceCodeLine, ConsoleColor.Green);
-                        } else {
+                        }
+                        else {
                             context.WriteLine(sourceCodeLine);
                         }
                     }
 
-                } else {
+                }
+                else {
                     context.WriteErrorLine($"# {errorNumber++}: {error.ErrorText}");
                 }
 
@@ -268,10 +276,10 @@ namespace CSScript
         private void AbortRegisteredProcesses() {
             foreach (Process process in context.RegisteredProcesses) {
                 if (!process.HasExited) {
-                    if (process.MainWindowHandle != (IntPtr)0) {
-                        // если процесс не интегрирован в текущую консоль, он не будет остановлен с текущей консолью
-                        process.Kill();
-                    }
+                    //if (process.MainWindowHandle != (IntPtr)0) {
+                    // если процесс не интегрирован в текущую консоль, он не будет остановлен с текущей консолью
+                    process.Kill();
+                    //}
                     process.WaitForExit();
                 }
             }
