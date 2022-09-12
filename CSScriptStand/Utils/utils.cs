@@ -296,7 +296,7 @@ public static class __Utils //##
         return new FileList().AppendFiles(searchMask, searchToAllDirectories);
     }
     public static FileList GetFiles(IList<string> searchMasks, bool searchToAllDirectories = false) {
-        return new FileList().Append(searchMasks, searchToAllDirectories);
+        return new FileList().AppendFiles(searchMasks, searchToAllDirectories);
     }
 
     // Поиск файла по пути или маске. Исключение в случае, если файл не найден или найдено несколько файлов
@@ -696,7 +696,7 @@ public static class __Utils //##
 // Работа со списком файлов
 public class FileList : List<string>
 {
-    public FileList() { }
+    public FileList() : base() { }
 
     public FileList(IEnumerable<string> collection) : base(collection) { }
 
@@ -724,9 +724,9 @@ public class FileList : List<string>
     }
 
     // Поиск файлов по пути или маске и добавление их в список
-    public FileList Append(IList<string> searchMasks, bool searchToAllDirectories = false) {
+    public FileList AppendFiles(IList<string> searchMasks, bool searchToAllDirectories = false) {
         foreach (string searchMask in searchMasks) {
-            AddRange(AppendFiles(searchMask, searchToAllDirectories));
+            AppendFiles(searchMask, searchToAllDirectories);
         }
         return this;
     }
