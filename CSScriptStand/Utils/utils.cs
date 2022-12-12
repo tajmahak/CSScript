@@ -798,6 +798,20 @@ public class FileList : List<string>
         return this;
     }
 
+    public FileList Filter(Func<string, bool> filter) {
+        for (int i = 0; i < Count; i++) {
+            if (!filter(this[i])) {
+                RemoveAt(i);
+                i--;
+            }
+        }
+        return this;
+    }
+
+    public FileList FilterByExtension(string extension) {
+        extension = extension.ToLower();
+        return Filter(x => Path.GetExtension(x).ToLower() == extension);
+    }
 
     public static implicit operator string[](FileList fileList) {
         return fileList.ToArray();
