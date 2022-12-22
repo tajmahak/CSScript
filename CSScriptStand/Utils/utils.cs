@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
@@ -808,9 +809,9 @@ public class FileList : List<string>
         return this;
     }
 
-    public FileList FilterByExtension(string extension) {
-        extension = extension.ToLower();
-        return Filter(x => Path.GetExtension(x).ToLower() == extension);
+    public FileList FilterByExtension(params string[] extensions) {
+        var preparedExtensions = extensions.Select(x => x.ToLower());
+        return Filter(x =>  preparedExtensions.Contains(Path.GetExtension(x).ToLower()));
     }
 
     public static implicit operator string[](FileList fileList) {

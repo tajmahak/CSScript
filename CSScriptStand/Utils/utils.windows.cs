@@ -326,7 +326,7 @@ public class ScriptStackPanel : StackPanel
         return textBlock;
     }
 
-    public TextBox AddTextBox(string text = "") {
+    public TextBox AddTextBox(string text = "", bool dragFiles = true) {
         TextBox textBox = new TextBox {
             Text = text,
         };
@@ -335,12 +335,18 @@ public class ScriptStackPanel : StackPanel
         textBox.Margin = new Thickness(window.MarginValue, topMargin, window.MarginValue, 0);
         textBox.Padding = new Thickness(window.PaddingValue);
 
+        if (dragFiles) {
+            textBox.AllowDrop = true;
+            textBox.PreviewDragOver += TextBox_PreviewDragOver;
+            textBox.Drop += TextBox_Drop;
+        }
+
         Children.Add(textBox);
         return textBox;
     }
 
-    public TextBox AddMultiLineTextBox(double height, string text = "") {
-        TextBox textBox = AddTextBox(text);
+    public TextBox AddMultiLineTextBox(double height, string text = "", bool dragFiles = true) {
+        TextBox textBox = AddTextBox(text, dragFiles);
 
         textBox.Height = height;
         textBox.TextWrapping = TextWrapping.NoWrap;
@@ -479,6 +485,21 @@ public class ScriptStackPanel : StackPanel
 
         Children.Add(listView);
         return listView;
+    }
+
+
+    private void TextBox_PreviewDragOver(object sender, DragEventArgs e) {
+        e.Handled = e.Data.GetDataPresent(DataFormats.FileDrop);
+    }
+
+    private void TextBox_Drop(object sender, DragEventArgs e) {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            TextBox textBox = (TextBox)sender;
+            textBox.Text = textBox.AcceptsReturn
+                ? string.Join(Environment.NewLine, files)
+                : files[0];
+        }
     }
 }
 
