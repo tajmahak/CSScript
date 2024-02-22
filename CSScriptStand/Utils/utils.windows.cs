@@ -73,14 +73,17 @@ public static class WindowsUtils
     public enum KnownFolder
     {
         Contacts,
-        Downloads,
-        Favorites,
-        Links,
-        SavedGames,
-        SavedSearches
+		Desktop,
+		Documents,
+		Downloads,
+		Favorites,
+		Links,
+		Music,
+		Pictures,
+		SavedGames,
+		Searches,
+		Videos
     }
-
-
 
     /// --- ВНУТРЕННИЕ СУЩНОСТИ (НЕ ИСПОЛЬЗУЮТСЯ НАПРЯМУЮ) ---
 
@@ -151,12 +154,18 @@ public static class WindowsUtils
 
 
     static WindowsUtils() {
+		// HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
         __knownFolders.Add(KnownFolder.Contacts, new Guid("56784854-C6CB-462B-8169-88E350ACB882"));
+		__knownFolders.Add(KnownFolder.Desktop, new Guid("754AC886-DF64-4CBA-86B5-F7FBF4FBCEF5"));
+		__knownFolders.Add(KnownFolder.Documents, new Guid("F42EE2D3-909F-4907-8871-4C22FC0BF756"));
         __knownFolders.Add(KnownFolder.Downloads, new Guid("374DE290-123F-4565-9164-39C4925E467B"));
         __knownFolders.Add(KnownFolder.Favorites, new Guid("1777F761-68AD-4D8A-87BD-30B759FA33DD"));
         __knownFolders.Add(KnownFolder.Links, new Guid("BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968"));
+		__knownFolders.Add(KnownFolder.Music, new Guid("A0C69A99-21C8-4671-8703-7934162FCF1D"));
+		__knownFolders.Add(KnownFolder.Pictures, new Guid("0DDD015D-B06C-45D5-8C4C-F59713854639"));
         __knownFolders.Add(KnownFolder.SavedGames, new Guid("4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4"));
-        __knownFolders.Add(KnownFolder.SavedSearches, new Guid("7D1D3A04-DEBB-4115-95CF-2F29DA2920DA"));
+        __knownFolders.Add(KnownFolder.Searches, new Guid("7D1D3A04-DEBB-4115-95CF-2F29DA2920DA"));
+		__knownFolders.Add(KnownFolder.Videos, new Guid("35286A68-3C57-41A1-BBB1-0EAE73D76C95"));
     }
 
     private static readonly Dictionary<KnownFolder, Guid> __knownFolders = new Dictionary<KnownFolder, Guid>();
